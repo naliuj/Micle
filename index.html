@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MicGuessr — Daily Microphone Guessing Game</title>
+  <meta name="description" content="Guess the studio microphone of the day. A Wordle-style game for audio nerds." />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>MicGuessr<span class="tagline">🎙️ a daily microphone guessing game</span></h1>
+    <div class="header-actions">
+      <span id="day-label" class="day-label"></span>
+      <button id="stats-btn" type="button" class="icon-btn" aria-label="View stats">📊</button>
+    </div>
+  </header>
+
+  <main>
+    <p class="instructions">
+      Guess today's studio microphone. Each guess compares
+      <strong>manufacturer origin</strong>, <strong>operating principle</strong>,
+      <strong>polar pattern</strong>, <strong>manufacturer</strong>, and
+      <strong>release year</strong> against the answer. You have 10 guesses.
+    </p>
+
+    <form id="guess-form" class="guess-form" autocomplete="off">
+      <div class="autocomplete">
+        <label for="guess-input" class="visually-hidden">Guess a microphone</label>
+        <input
+          id="guess-input"
+          type="text"
+          placeholder="Type a microphone name…"
+          role="combobox"
+          aria-expanded="false"
+          aria-autocomplete="list"
+          aria-controls="ac-list"
+        />
+        <ul id="ac-list" class="ac-list" role="listbox" hidden></ul>
+      </div>
+    </form>
+
+    <p id="guesses-left" class="guesses-left"></p>
+    <p id="status-banner" class="status-banner" hidden></p>
+
+    <div id="board" class="board" role="table" aria-label="Guess history"></div>
+  </main>
+
+  <div id="stats-modal" class="modal" hidden>
+    <div class="modal-content" role="dialog" aria-labelledby="stats-title">
+      <div class="modal-header">
+        <h2 id="stats-title">Statistics</h2>
+        <button id="stats-close" type="button" class="icon-btn" aria-label="Close">✕</button>
+      </div>
+      <div id="stats-body"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <p>Mic pool sourced from a real recording-studio equipment inventory. Data compiled from public manufacturer specs.</p>
+  </footer>
+
+  <script src="data/mics.js"></script>
+  <script src="data/schedule.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/compare.js"></script>
+  <script src="js/autocomplete.js"></script>
+  <script src="js/schedule.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
