@@ -10,7 +10,7 @@ Two modes, switchable via tabs above the guess box: **Daily Puzzle** (the shared
 
 Random Mic also has an **Infinity** checkbox that lifts the 6-guess cap for that mode entirely — toggle it anytime mid-round to keep guessing past the normal limit (or re-impose it by unchecking). It has no effect on Daily Puzzle, which always keeps the 6-guess cap.
 
-A **🎲** button next to the guess input submits a random unguessed mic from the eligible pool as your next guess — in any mode, Daily included. It's available for the whole round (not just the opening guess) and disables along with the input once the round ends.
+A dice-icon button next to the guess input submits a random unguessed mic from the eligible pool as your next guess — in any mode, Daily included. It's available for the whole round (not just the opening guess) and disables along with the input once the round ends.
 
 ## Project structure
 

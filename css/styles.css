@@ -133,6 +133,9 @@ body {
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: none;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -240,6 +243,9 @@ main {
 }
 
 .new-random-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -280,6 +286,9 @@ main {
 .autocomplete { position: relative; flex: 1; }
 
 .random-guess-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-4);
   font-size: var(--fs-md);
   line-height: 1;
@@ -483,6 +492,21 @@ main {
   line-height: 1;
 }
 
+.cell-icon svg,
+.legend-swatch svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.icon-btn svg,
+.new-random-btn svg,
+.share-btn svg,
+.random-guess-btn svg {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
 /* Safety net only — the abbreviations in app.js should keep every value in the
    110-mic pool to two lines. Assertion #3 in the plan enforces that. */
 .cell-text {
@@ -534,7 +558,10 @@ main {
 .stats-grid span { font-size: var(--fs-2xs); color: var(--muted); }
 
 .share-btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
   width: 100%;
   margin-top: var(--space-5);
   padding: var(--space-3) var(--space-4);
@@ -551,7 +578,7 @@ main {
 .share-btn:hover { opacity: 0.9; }
 
 .share-btn--page {
-  display: inline-block;
+  display: inline-flex;
   width: auto;
   margin: 0 0 var(--space-5);
 }

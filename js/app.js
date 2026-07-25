@@ -1,6 +1,21 @@
 (function () {
   const HI_LO_KEYS = new Set(["year", "price"]);
 
+  // Inline Lucide icons (https://lucide.dev, ISC license) for the states this
+  // file generates dynamically. Static, HTML-only buttons keep their own
+  // inline <svg> markup directly in index.html instead of being duplicated
+  // here — these are only the ones actually built by JS.
+  const SVG_ATTRS = 'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  const ICONS = {
+    check: `<svg ${SVG_ATTRS}><path d="M20 6 9 17l-5-5"/></svg>`,
+    x: `<svg ${SVG_ATTRS}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+    circleDashed: `<svg ${SVG_ATTRS}><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg>`,
+    arrowUp: `<svg ${SVG_ATTRS}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>`,
+    arrowDown: `<svg ${SVG_ATTRS}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`,
+    circleQuestion: `<svg ${SVG_ATTRS}><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>`,
+    clipboardCopy: `<svg ${SVG_ATTRS}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg>`,
+  };
+
   // Tiles are a fixed height, so the longest values have to shorten to fit two
   // lines. Unabbreviated text is kept in each cell's `title` and `aria-label`,
   // so nothing is actually lost. Purely presentational: comparePatterns() reads
@@ -258,12 +273,12 @@
       cell.className = `cell cell--${state}`;
       let text = cat.getValue(guessMic);
       const fullText = cat.getFullValue ? cat.getFullValue(guessMic) : text;
-      let icon = state === "match" ? "✓" : state === "partial" ? "◐" : "✗";
+      let icon = state === "match" ? ICONS.check : state === "partial" ? ICONS.circleDashed : ICONS.x;
       if (isHiLo && !won) {
-        if (state === "higher") icon = "↑";
-        else if (state === "lower") icon = "↓";
-        else if (state === "unknown") icon = "?";
-        else icon = "✓";
+        if (state === "higher") icon = ICONS.arrowUp;
+        else if (state === "lower") icon = ICONS.arrowDown;
+        else if (state === "unknown") icon = ICONS.circleQuestion;
+        else icon = ICONS.check;
       }
       // Card mode surfaces the category name via CSS content: attr(data-label).
       cell.dataset.label = cat.label;
@@ -484,9 +499,9 @@
 
   async function handleShareClick(btn) {
     const ok = await copyShareText();
-    btn.textContent = ok ? "✅ Copied!" : "Couldn't copy — select text manually";
+    btn.innerHTML = ok ? `${ICONS.check} Copied!` : "Couldn't copy — select text manually";
     setTimeout(() => {
-      btn.textContent = "📋 Share Results";
+      btn.innerHTML = `${ICONS.clipboardCopy} Share Results`;
     }, 2000);
   }
 

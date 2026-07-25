@@ -253,6 +253,20 @@ const MIC_DB = [
     needsVerification: false,
   },
   {
+    id: "at-at4050",
+    manufacturer: "Audio-Technica",
+    model: "AT4050",
+    displayName: "Audio-Technica AT4050",
+    aliases: ["AT-4050"],
+    countryOfOrigin: "Japan",
+    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
+    switchable: true,
+    releaseYear: 1994, // Audio-Technica's own blog marked its 25th anniversary at AES 2019.
+    msrp: 895, // Current street price is lower, ~$699-769.
+    needsVerification: false,
+  },
+  {
     id: "at-at5047",
     manufacturer: "Audio-Technica",
     model: "AT5047",

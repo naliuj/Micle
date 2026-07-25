@@ -21,7 +21,9 @@
       <span id="day-label" class="day-label"></span>
       <span id="guesses-left" class="guesses-left"></span>
       <button id="help-btn" type="button" class="icon-btn" aria-label="How to play" aria-expanded="false" aria-controls="instructions">?</button>
-      <button id="stats-btn" type="button" class="icon-btn" aria-label="View stats">📊</button>
+      <button id="stats-btn" type="button" class="icon-btn" aria-label="View stats">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+      </button>
     </div>
   </header>
 
@@ -29,12 +31,12 @@
     <div id="instructions" class="instructions" hidden>
       <p>Guess the studio microphone in 6 tries. Each guess is compared against the answer across six categories. In Random Mic mode, toggle Infinity to drop the guess limit entirely.</p>
       <ul class="legend">
-        <li><span class="legend-swatch legend-swatch--match" aria-hidden="true">✓</span> Exact match</li>
-        <li><span class="legend-swatch legend-swatch--partial" aria-hidden="true">◐</span> Partial — some polar patterns overlap</li>
-        <li><span class="legend-swatch legend-swatch--no-match" aria-hidden="true">✗</span> No match</li>
-        <li><span class="legend-swatch legend-swatch--hint" aria-hidden="true">↑</span> Answer is higher (year or price)</li>
-        <li><span class="legend-swatch legend-swatch--hint" aria-hidden="true">↓</span> Answer is lower</li>
-        <li><span class="legend-swatch legend-swatch--unknown" aria-hidden="true">?</span> Price unknown for this mic</li>
+        <li><span class="legend-swatch legend-swatch--match" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span> Exact match</li>
+        <li><span class="legend-swatch legend-swatch--partial" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.1 2.182a10 10 0 0 1 3.8 0"/><path d="M13.9 21.818a10 10 0 0 1-3.8 0"/><path d="M17.609 3.721a10 10 0 0 1 2.69 2.7"/><path d="M2.182 13.9a10 10 0 0 1 0-3.8"/><path d="M20.279 17.609a10 10 0 0 1-2.7 2.69"/><path d="M21.818 10.1a10 10 0 0 1 0 3.8"/><path d="M3.721 6.391a10 10 0 0 1 2.7-2.69"/><path d="M6.391 20.279a10 10 0 0 1-2.69-2.7"/></svg></span> Partial — some polar patterns overlap</li>
+        <li><span class="legend-swatch legend-swatch--no-match" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span> No match</li>
+        <li><span class="legend-swatch legend-swatch--hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg></span> Answer is higher (year or price)</li>
+        <li><span class="legend-swatch legend-swatch--hint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg></span> Answer is lower</li>
+        <li><span class="legend-swatch legend-swatch--unknown" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></span> Price unknown for this mic</li>
       </ul>
       <p class="instructions-note">Long values are shortened to fit: LDC and SDC are large- and small-diaphragm condensers, and Omni, Fig-8, Super, Hyper and Wide are the matching polar patterns. Hover a tile for the full text.</p>
     </div>
@@ -48,7 +50,10 @@
         <input type="checkbox" id="infinity-toggle" />
         ∞ Infinity (no guess limit)
       </label>
-      <button type="button" id="new-random-btn" class="new-random-btn" hidden>🔀 New Mic</button>
+      <button type="button" id="new-random-btn" class="new-random-btn" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></svg>
+        New Mic
+      </button>
     </div>
     <p id="mode-note" class="mode-note" hidden>Practice mode — unlimited replays, doesn't count toward your streak or stats.</p>
 
@@ -77,12 +82,17 @@
           />
           <ul id="ac-list" class="ac-list" role="listbox" hidden></ul>
         </div>
-        <button type="button" id="random-guess-btn" class="random-guess-btn" aria-label="Random guess">🎲</button>
+        <button type="button" id="random-guess-btn" class="random-guess-btn" aria-label="Random guess">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+        </button>
       </div>
     </div>
 
     <p id="status-banner" class="status-banner" hidden></p>
-    <button id="share-btn-page" type="button" class="share-btn share-btn--page" hidden>📋 Share Results</button>
+    <button id="share-btn-page" type="button" class="share-btn share-btn--page" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg>
+      Share Results
+    </button>
 
     <div id="board" class="board" role="table" aria-label="Guess history"></div>
   </main>
@@ -94,7 +104,10 @@
         <button id="stats-close" type="button" class="icon-btn" aria-label="Close">✕</button>
       </div>
       <div id="stats-body"></div>
-      <button id="share-btn" type="button" class="share-btn" hidden>📋 Share Results</button>
+      <button id="share-btn" type="button" class="share-btn" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg>
+        Share Results
+      </button>
     </div>
   </div>
 
