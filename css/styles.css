@@ -11,6 +11,36 @@
   --partial-bg: #fbf1d9;
   --no-match: #8a8a92;
   --no-match-bg: #ececee;
+
+  /* Year/price higher-lower hints. Deliberately the same hue as --accent, but
+     only ever used as tint + border + text — never a solid fill — so a hint
+     tile can't be mistaken for a button the way .mode-btn--active is. */
+  --hint: #3a5ba0;
+  --hint-bg: #e7ecf9;
+  --loss: #b04a4a;
+  --loss-bg: #fbe9e9;
+
+  --space-1: 0.25rem;
+  --space-2: 0.375rem;
+  --space-3: 0.5rem;
+  --space-4: 0.75rem;
+  --space-5: 1rem;
+  --space-6: 1.25rem;
+  --space-7: 2rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+
+  --fs-2xs: 0.6875rem;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.25rem;
+  --fs-2xl: 1.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,10 +57,20 @@
     --partial-bg: #332b12;
     --no-match: #8f8f98;
     --no-match-bg: #2a2a30;
+    --hint: #8fb0f0;
+    --hint-bg: #1c2542;
+    --loss: #f08a8a;
+    --loss-bg: #3a1e1e;
   }
 }
 
 * { box-sizing: border-box; }
+
+/* Author-stylesheet `display` rules beat the UA's [hidden] { display: none }
+   regardless of specificity, so every flex/grid/inline-block element here would
+   silently ignore the `hidden` attribute that app.js uses for all visibility.
+   This one rule makes `hidden` authoritative everywhere. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -305,10 +345,6 @@ main {
   justify-content: center;
   padding: 1rem;
   z-index: 100;
-}
-
-.modal[hidden] {
-  display: none;
 }
 
 .modal-content {
