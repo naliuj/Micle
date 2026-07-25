@@ -1346,21 +1346,6 @@ const MIC_DB = [
 
   // ---------------------------------------------------------------- Soyuz
   {
-    id: "soyuz-013",
-    manufacturer: "Soyuz",
-    model: "013",
-    displayName: "Soyuz 013",
-    aliases: [],
-    countryOfOrigin: "Russia",
-    operatingPrinciple: "Condenser (Small-Diaphragm)",
-    polarPatterns: ["Cardioid"],
-    switchable: false,
-    releaseYear: 2019,
-    msrp: 3399,
-    needsVerification: false,
-    verificationNote: "Capsule-swap system (hypercardioid/omni capsules sold separately); classified by stock cardioid capsule. MSRP: The 013 Tube is sold ONLY as a matched pair — no single-mic MSRP exists. $3399 is the pair price, used as-is since no per-unit figure exists; verify whether this should be halved for a single-mic comparison.",
-  },
-  {
     id: "soyuz-013fet",
     manufacturer: "Soyuz",
     model: "013 FET",
