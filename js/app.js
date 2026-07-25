@@ -1,18 +1,59 @@
 (function () {
   const HI_LO_KEYS = new Set(["year", "price"]);
 
+  // Tiles are a fixed height, so the longest values have to shorten to fit two
+  // lines. Unabbreviated text is kept in each cell's `title` and `aria-label`,
+  // so nothing is actually lost. Purely presentational: comparePatterns() reads
+  // the raw polarPatterns array and buildShareText() never calls getValue.
+  const PATTERN_ABBR = {
+    Omnidirectional: "Omni",
+    "Figure-8": "Fig-8",
+    Supercardioid: "Super",
+    Hypercardioid: "Hyper",
+    "Wide Cardioid": "Wide",
+  };
+
+  const PRINCIPLE_ABBR = {
+    "Condenser (Large-Diaphragm)": "Condenser (LDC)",
+    "Condenser (Small-Diaphragm)": "Condenser (SDC)",
+  };
+
   const CATEGORIES = [
     { key: "country", label: "Origin", getValue: (m) => m.countryOfOrigin },
-    { key: "principle", label: "Principle", getValue: (m) => m.operatingPrinciple },
-    { key: "pattern", label: "Polar Pattern", getValue: patternLabel },
+    {
+      key: "principle",
+      label: "Principle",
+      getValue: (m) => PRINCIPLE_ABBR[m.operatingPrinciple] || m.operatingPrinciple,
+      getFullValue: (m) => m.operatingPrinciple,
+    },
+    { key: "pattern", label: "Polar Pattern", getValue: patternLabel, getFullValue: patternLabelFull },
     { key: "manufacturer", label: "Manufacturer", getValue: (m) => m.manufacturer },
     { key: "year", label: "Year", getValue: (m) => String(m.releaseYear) },
     { key: "price", label: "Price", getValue: msrpLabel },
   ];
 
-  function patternLabel(mic) {
-    const base = mic.polarPatterns.join(" / ");
+  // Screen-reader phrasing for each cell state. Without these the icon glyph is
+  // aria-hidden, so a cell announced as bare "Austria" with no match state.
+  const STATE_LABEL = {
+    match: "correct",
+    partial: "partial match",
+    "no-match": "incorrect",
+    unknown: "unknown",
+    higher: "answer is higher",
+    lower: "answer is lower",
+  };
+
+  function withSwitchable(mic, base) {
     return mic.switchable ? `${base} (Switchable)` : base;
+  }
+
+  function patternLabel(mic) {
+    const base = mic.polarPatterns.map((p) => PATTERN_ABBR[p] || p).join(" / ");
+    return withSwitchable(mic, base);
+  }
+
+  function patternLabelFull(mic) {
+    return withSwitchable(mic, mic.polarPatterns.join(" / "));
   }
 
   function msrpLabel(mic) {
@@ -101,6 +142,8 @@
     modeRandomBtn: document.getElementById("mode-random-btn"),
     modeNote: document.getElementById("mode-note"),
     newRandomBtn: document.getElementById("new-random-btn"),
+    helpBtn: document.getElementById("help-btn"),
+    instructions: document.getElementById("instructions"),
   };
 
   // Two independent game sessions living side by side: the persistent daily
@@ -137,28 +180,36 @@
   function renderHeaderRow() {
     const row = document.createElement("div");
     row.className = "board-row board-row--header";
+    row.setAttribute("role", "row");
     const guessCell = document.createElement("div");
     guessCell.className = "cell cell--guess";
+    guessCell.setAttribute("role", "columnheader");
     guessCell.textContent = "Guess";
     row.appendChild(guessCell);
     for (const cat of CATEGORIES) {
       const c = document.createElement("div");
       c.className = "cell cell--header";
+      c.setAttribute("role", "columnheader");
       c.textContent = cat.label;
       row.appendChild(c);
     }
     els.board.appendChild(row);
   }
 
-  function renderGuessRow(guessMic) {
+  // `animate` is only true for a freshly submitted guess. renderBoard() must
+  // leave it false: it rebuilds the whole board from state.guesses, so passing
+  // true there would replay the reveal on every page load and mode switch.
+  function renderGuessRow(guessMic, animate) {
     const target = session().target;
     const result = compareGuess(guessMic, target);
     const won = isWinningGuess(guessMic, target);
     const row = document.createElement("div");
-    row.className = "board-row";
+    row.className = animate ? "board-row board-row--reveal" : "board-row";
+    row.setAttribute("role", "row");
 
     const nameCell = document.createElement("div");
     nameCell.className = "cell cell--guess";
+    nameCell.setAttribute("role", "rowheader");
     nameCell.textContent = guessMic.displayName;
     row.appendChild(nameCell);
 
@@ -168,6 +219,7 @@
       const state = won ? "match" : isHiLo ? result[cat.key].state : result[cat.key];
       cell.className = `cell cell--${state}`;
       let text = cat.getValue(guessMic);
+      const fullText = cat.getFullValue ? cat.getFullValue(guessMic) : text;
       let icon = state === "match" ? "✓" : state === "partial" ? "◐" : "✗";
       if (isHiLo && !won) {
         if (state === "higher") icon = "↑";
@@ -175,6 +227,14 @@
         else if (state === "unknown") icon = "?";
         else icon = "✓";
       }
+      // Card mode surfaces the category name via CSS content: attr(data-label).
+      cell.dataset.label = cat.label;
+      // The role has to land with the label — aria-label on a role-less div is
+      // silently discarded. aria-label also suppresses descendant and generated
+      // text, so the ::before label can't be announced twice.
+      cell.setAttribute("role", "cell");
+      cell.setAttribute("aria-label", `${cat.label}: ${fullText}, ${STATE_LABEL[state]}`);
+      if (fullText !== text) cell.title = fullText;
       cell.innerHTML = `<span class="cell-icon" aria-hidden="true">${icon}</span><span class="cell-text">${text}</span>`;
       row.appendChild(cell);
     }
@@ -183,9 +243,11 @@
 
   function renderBoard() {
     els.board.innerHTML = "";
-    renderHeaderRow();
+    // No column labels over an empty board — they read as a stray row before
+    // the first guess exists.
+    if (session().state.guesses.length > 0) renderHeaderRow();
     for (const id of session().state.guesses) {
-      renderGuessRow(micById(id));
+      renderGuessRow(micById(id), false);
     }
     updateGuessesLeft();
   }
@@ -215,14 +277,18 @@
     els.input.placeholder = "Type a microphone name…";
   }
 
-  function showStatus(message) {
+  // `state` is "win" or "loss" — the banner has no colour of its own, so
+  // omitting it would render a loss in the same green as a win.
+  function showStatus(message, state) {
     els.status.textContent = message;
+    els.status.className = `status-banner status-banner--${state}`;
     els.status.hidden = false;
   }
 
   function hideStatus() {
     els.status.hidden = true;
     els.status.textContent = "";
+    els.status.className = "status-banner";
   }
 
   function submitGuess(mic) {
@@ -234,7 +300,10 @@
 
     s.guessedIds.add(mic.id);
     s.state.guesses.push(mic.id);
-    renderGuessRow(mic);
+    // This appends rather than rebuilding, so the first guess has to bring the
+    // column header with it — renderBoard() withholds it while the board is empty.
+    if (!els.board.querySelector(".board-row--header")) renderHeaderRow();
+    renderGuessRow(mic, true);
     updateGuessesLeft();
 
     const won = isWinningGuess(mic, target);
@@ -246,7 +315,10 @@
       }
       updateGuessesLeft();
       lockInput();
-      showStatus(`Solved in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`);
+      showStatus(
+        `Solved in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`,
+        "win"
+      );
       if (isDaily) openStats();
       return;
     }
@@ -259,7 +331,7 @@
       }
       updateGuessesLeft();
       lockInput();
-      showStatus(`Out of guesses. The answer was the ${target.displayName}.`);
+      showStatus(`Out of guesses. The answer was the ${target.displayName}.`, "loss");
       if (isDaily) openStats();
       return;
     }
@@ -302,8 +374,17 @@
     els.modeRandomBtn.setAttribute("aria-selected", String(mode === "random"));
     els.modeNote.hidden = mode !== "random";
     els.newRandomBtn.hidden = mode !== "random";
-    els.dayLabel.textContent =
-      mode === "daily" ? `Puzzle #${daily.dayIndex + 1} · ${formatDateLabel(daily.dateStr)}` : "Random Mode";
+    if (mode === "daily") {
+      // The date sits in its own span so narrow screens can drop it and keep the
+      // puzzle number, which is the part that identifies the puzzle.
+      els.dayLabel.textContent = `Puzzle #${daily.dayIndex + 1}`;
+      const date = document.createElement("span");
+      date.className = "day-label__date";
+      date.textContent = ` · ${formatDateLabel(daily.dateStr)}`;
+      els.dayLabel.appendChild(date);
+    } else {
+      els.dayLabel.textContent = "Random Mode";
+    }
   }
 
   function refreshView() {
@@ -318,7 +399,8 @@
       showStatus(
         s.state.solved
           ? `Already solved ${scope} in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}. It was the ${s.target.displayName}.`
-          : `Already out of guesses for ${scope}. The answer was the ${s.target.displayName}.`
+          : `Already out of guesses for ${scope}. The answer was the ${s.target.displayName}.`,
+        s.state.solved ? "win" : "loss"
       );
     } else {
       unlockInput();
@@ -332,6 +414,15 @@
     autocomplete.reset();
     refreshView();
   }
+
+  // A plain inline disclosure rather than a second modal: #stats-modal is
+  // single-purpose and generalising openStats for another consumer is more risk
+  // than this is worth.
+  els.helpBtn.addEventListener("click", () => {
+    const open = els.instructions.hidden;
+    els.instructions.hidden = !open;
+    els.helpBtn.setAttribute("aria-expanded", String(open));
+  });
 
   els.statsBtn.addEventListener("click", openStats);
   els.statsClose.addEventListener("click", () => {

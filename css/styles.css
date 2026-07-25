@@ -11,6 +11,40 @@
   --partial-bg: #fbf1d9;
   --no-match: #8a8a92;
   --no-match-bg: #ececee;
+
+  /* Year/price higher-lower hints. Deliberately the same hue as --accent, but
+     only ever used as tint + border + text — never a solid fill — so a hint
+     tile can't be mistaken for a button the way .mode-btn--active is. */
+  --hint: #3a5ba0;
+  --hint-bg: #e7ecf9;
+  --loss: #b04a4a;
+  --loss-bg: #fbe9e9;
+
+  --space-1: 0.25rem;
+  --space-2: 0.375rem;
+  --space-3: 0.5rem;
+  --space-4: 0.75rem;
+  --space-5: 1rem;
+  --space-6: 1.25rem;
+  --space-7: 2rem;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+
+  --fs-2xs: 0.6875rem;
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1rem;
+  --fs-lg: 1.125rem;
+  --fs-xl: 1.25rem;
+  --fs-2xl: 1.5rem;
+
+  /* Uniform tile height: icon line + two text lines + padding. Tuned against
+     the widest real values in the pool, not derived arithmetically. */
+  --tile-h: 4.25rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -27,10 +61,20 @@
     --partial-bg: #332b12;
     --no-match: #8f8f98;
     --no-match-bg: #2a2a30;
+    --hint: #8fb0f0;
+    --hint-bg: #1c2542;
+    --loss: #f08a8a;
+    --loss-bg: #3a1e1e;
   }
 }
 
 * { box-sizing: border-box; }
+
+/* Author-stylesheet `display` rules beat the UA's [hidden] { display: none }
+   regardless of specificity, so every flex/grid/inline-block element here would
+   silently ignore the `hidden` attribute that app.js uses for all visibility.
+   This one rule makes `hidden` authoritative everywhere. */
+[hidden] { display: none !important; }
 
 body {
   margin: 0;
@@ -52,21 +96,27 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.25rem;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--border);
   background: var(--surface);
 }
 
-.site-header h1 {
-  font-size: 1.25rem;
-  margin: 0;
+.site-title {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.site-header h1 {
+  font-size: var(--fs-xl);
+  margin: 0;
 }
 
 .tagline {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 400;
   color: var(--muted);
 }
@@ -74,22 +124,23 @@ body {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 
 .day-label {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
 }
 
 .icon-btn {
   background: none;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 1rem;
-  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-md);
+  padding: var(--space-1) var(--space-3);
   cursor: pointer;
   color: var(--text);
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
 
 .icon-btn:hover { background: var(--bg); }
@@ -97,30 +148,81 @@ body {
 main {
   max-width: 920px;
   margin: 0 auto;
-  padding: 1.25rem 1rem;
+  padding: var(--space-6) var(--space-5);
 }
 
 .instructions {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: var(--fs-base);
   line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  margin: 0 0 var(--space-5);
+}
+
+.instructions p { margin: 0 0 var(--space-4); }
+.instructions-note { font-size: var(--fs-sm); margin: var(--space-4) 0 0 !important; }
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.legend-swatch {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}
+
+.legend-swatch--match { background: var(--match-bg); border-color: var(--match); color: var(--match); }
+.legend-swatch--partial { background: var(--partial-bg); border-color: var(--partial); color: var(--partial); }
+.legend-swatch--no-match { background: var(--no-match-bg); color: var(--no-match); }
+.legend-swatch--hint { background: var(--hint-bg); border-color: var(--hint); color: var(--hint); }
+.legend-swatch--unknown { background: var(--no-match-bg); color: var(--muted); border-style: dashed; }
+
+/* Mode pills and the random-mic button share one row — the button used to sit
+   on its own line, which cost vertical space on exactly the screens with least. */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .mode-switcher {
   display: flex;
-  gap: 0.4rem;
-  margin-top: 0.9rem;
+  gap: var(--space-2);
 }
 
 .mode-btn {
-  padding: 0.4rem 0.9rem;
-  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
   font-weight: 600;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 .mode-btn:hover { background: var(--bg); }
@@ -132,37 +234,39 @@ main {
 }
 
 .mode-note {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--muted);
-  margin: 0.5rem 0 0;
+  margin: var(--space-3) 0 0;
 }
 
 .new-random-btn {
-  margin-top: 0.6rem;
-  padding: 0.45rem 0.8rem;
-  font-size: 0.85rem;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
   font-weight: 600;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--text);
   cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
 
 .new-random-btn:hover { background: var(--bg); }
 
-.guess-form { margin: 1rem 0 0.5rem; }
+.guess-form { margin: var(--space-5) 0 var(--space-3); }
 
 .autocomplete { position: relative; }
 
 #guess-input {
   width: 100%;
-  padding: 0.7rem 0.9rem;
-  font-size: 1rem;
+  padding: var(--space-4) var(--space-4);
+  /* Must stay >= 16px: anything smaller makes iOS Safari zoom on focus. */
+  font-size: var(--fs-md);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--surface);
   color: var(--text);
+  transition: border-color 120ms ease;
 }
 
 #guess-input:disabled { opacity: 0.6; }
@@ -174,21 +278,21 @@ main {
   left: 0;
   right: 0;
   margin: 0;
-  padding: 0.25rem;
+  padding: var(--space-1);
   list-style: none;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   max-height: 280px;
   overflow-y: auto;
 }
 
 .ac-list li {
-  padding: 0.5rem 0.6rem;
-  border-radius: 6px;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: var(--fs-base);
 }
 
 .ac-list li:hover,
@@ -203,43 +307,67 @@ main {
 }
 
 .guesses-left {
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--muted);
-  margin: 0.25rem 0 1rem;
+  margin: 0;
+  white-space: nowrap;
 }
 
+/* State-neutral base — app.js appends --win or --loss. Without the variants a
+   loss ("Out of guesses") rendered in celebration green. */
 .status-banner {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: var(--fs-base);
+  margin-bottom: var(--space-5);
+}
+
+.status-banner--win {
   background: var(--match-bg);
   color: var(--match);
-  border: 1px solid var(--match);
-  border-radius: 8px;
-  padding: 0.7rem 0.9rem;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  border-color: var(--match);
 }
 
+.status-banner--loss {
+  background: var(--loss-bg);
+  color: var(--loss);
+  border-color: var(--loss);
+}
+
+/* overflow must stay visible: `overflow-x: auto` forces overflow-y to compute
+   to auto, which makes .board the nearest scrollport and silently defeats the
+   sticky header row below. Narrow screens are handled by card mode, not scroll. */
 .board {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  overflow-x: auto;
+  gap: var(--space-2);
+  overflow: visible;
 }
 
+/* Polar Pattern gets a wide column because it holds by far the longest value in
+   the pool — AKG C414's "Cardioid / Omni / Fig-8 / Super / Hyper / Wide
+   (Switchable)". Measured: it needs ~213px to stay within two lines, and every
+   other value in all 110 mics fits comfortably at these ratios. */
 .board-row {
   display: grid;
-  grid-template-columns: 1.3fr repeat(6, minmax(0, 1fr));
-  gap: 0.3rem;
-  min-width: 640px;
+  grid-template-columns: 1.4fr 1fr 1.1fr 2.1fr 1fr 0.8fr 0.95fr;
+  gap: var(--space-2);
 }
 
 .board-row--header {
-  min-width: 640px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  /* Opaque or guess rows scroll through underneath. */
+  background: var(--bg);
 }
 
 .cell {
-  border-radius: 8px;
-  padding: 0.45rem 0.35rem;
-  font-size: 0.8rem;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-1);
+  font-size: var(--fs-xs);
+  min-height: var(--tile-h);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -251,11 +379,21 @@ main {
   background: var(--surface);
 }
 
+/* The header row's first cell is `cell cell--guess`, not `cell--header`, so
+   scoping these resets to .cell--header would leave an oversized header row
+   with a filled tile sitting where a plain column label belongs. */
+.board-row--header > .cell {
+  min-height: 0;
+  background: transparent;
+  border: none;
+}
+
 .cell--guess {
   align-items: flex-start;
   text-align: left;
   font-weight: 600;
   background: var(--surface);
+  padding: var(--space-2) var(--space-3);
 }
 
 .cell--header {
@@ -265,7 +403,7 @@ main {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  font-size: 0.68rem;
+  font-size: var(--fs-2xs);
 }
 
 .cell--match {
@@ -293,8 +431,31 @@ main {
   color: var(--no-match);
 }
 
-.cell-icon { font-size: 1rem; }
-.cell-text { font-size: 0.72rem; }
+/* Year/price hi-lo hints. These classes are emitted by app.js but had no styles
+   at all before, so the two most information-dense columns rendered as plain
+   surface with a bare arrow as the only signal. */
+.cell--higher,
+.cell--lower {
+  background: var(--hint-bg);
+  border-color: var(--hint);
+  color: var(--hint);
+}
+
+.cell-icon {
+  font-size: var(--fs-md);
+  line-height: 1;
+}
+
+/* Safety net only — the abbreviations in app.js should keep every value in the
+   110-mic pool to two lines. Assertion #3 in the plan enforces that. */
+.cell-text {
+  font-size: var(--fs-xs);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 
 .modal {
   position: fixed;
@@ -303,18 +464,14 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: var(--space-5);
   z-index: 100;
-}
-
-.modal[hidden] {
-  display: none;
 }
 
 .modal-content {
   background: var(--surface);
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
   max-width: 360px;
   width: 100%;
 }
@@ -323,34 +480,35 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-4);
 }
 
-.modal-header h2 { margin: 0; font-size: 1.1rem; }
+.modal-header h2 { margin: 0; font-size: var(--fs-lg); }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
+  gap: var(--space-3);
   text-align: center;
 }
 
 .stats-grid div { display: flex; flex-direction: column; }
-.stats-grid strong { font-size: 1.4rem; }
-.stats-grid span { font-size: 0.7rem; color: var(--muted); }
+.stats-grid strong { font-size: var(--fs-2xl); }
+.stats-grid span { font-size: var(--fs-2xs); color: var(--muted); }
 
 .share-btn {
   display: block;
   width: 100%;
-  margin-top: 1rem;
-  padding: 0.6rem 0.9rem;
-  font-size: 0.9rem;
+  margin-top: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-base);
   font-weight: 600;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--match);
   color: #fff;
   cursor: pointer;
+  transition: opacity 120ms ease;
 }
 
 .share-btn:hover { opacity: 0.9; }
@@ -358,17 +516,161 @@ main {
 .share-btn--page {
   display: inline-block;
   width: auto;
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-5);
 }
 
 .site-footer {
   text-align: center;
   color: var(--muted);
-  font-size: 0.75rem;
-  padding: 2rem 1rem;
+  font-size: var(--fs-xs);
+  padding: var(--space-7) var(--space-5);
+}
+
+/* There were no focus styles at all before this — UA default rings only. */
+.icon-btn:focus-visible,
+.mode-btn:focus-visible,
+.new-random-btn:focus-visible,
+.share-btn:focus-visible,
+#guess-input:focus-visible,
+.ac-list li:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The input's border is its main affordance, so tint it too. */
+#guess-input:focus-visible {
+  border-color: var(--accent);
+}
+
+/* Staggered left-to-right reveal, applied only to a freshly submitted guess —
+   app.js withholds .board-row--reveal when it rebuilds the board from saved
+   state, so reloading a finished puzzle doesn't replay every row. */
+@keyframes tile-reveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+.board-row--reveal > .cell {
+  animation: tile-reveal 220ms ease-out backwards;
+}
+
+.board-row--reveal > .cell:nth-child(1) { animation-delay: 0ms; }
+.board-row--reveal > .cell:nth-child(2) { animation-delay: 60ms; }
+.board-row--reveal > .cell:nth-child(3) { animation-delay: 120ms; }
+.board-row--reveal > .cell:nth-child(4) { animation-delay: 180ms; }
+.board-row--reveal > .cell:nth-child(5) { animation-delay: 240ms; }
+.board-row--reveal > .cell:nth-child(6) { animation-delay: 300ms; }
+.board-row--reveal > .cell:nth-child(7) { animation-delay: 360ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Card mode. The two breakpoints are measured, not chosen:
+   - 800px, because the Polar Pattern column needs ~213px to hold its longest
+     value in two lines, which stops being possible below an 801px viewport.
+   - 520px, because at 375px a 3-column chip grid leaves each value only ~80px,
+     which wraps past two lines and clips. */
+@media (max-width: 800px) {
+  .board {
+    gap: var(--space-3);
+  }
+
+  /* Each row becomes a self-contained card, so the shared column header no
+     longer applies — the category name moves onto each chip instead. */
+  .board-row--header {
+    display: none;
+  }
+
+  .board-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+
+  .cell--guess {
+    grid-column: 1 / -1;
+    border: none;
+    background: transparent;
+    padding: 0 var(--space-1) var(--space-1);
+    font-size: var(--fs-md);
+    min-height: 0;
+  }
+
+  /* Label and icon share the top row so the value gets the chip's full width.
+     Giving the icon its own column costs ~20px and pushes the longest values
+     past two lines. Keyed to .cell-icon / .cell-text rather than nth-child, so
+     reordering CATEGORIES in app.js can't silently break the layout. */
+  .board-row > .cell:not(.cell--guess) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    gap: 0 var(--space-1);
+    text-align: left;
+    min-height: 3.1rem;
+    padding: var(--space-2);
+  }
+
+  .board-row > .cell:not(.cell--guess)::before {
+    content: attr(data-label);
+    grid-column: 1;
+    grid-row: 1;
+    font-size: var(--fs-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+    opacity: 0.75;
+  }
+
+  .board-row > .cell:not(.cell--guess) > .cell-icon {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: var(--fs-sm);
+  }
+
+  .board-row > .cell:not(.cell--guess) > .cell-text {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    /* One line more headroom than the desktop grid: card chips are narrower, and
+       a card row that grows is harmless since cards aren't height-matched. */
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  /* Polar Pattern holds values several times longer than any other category, so
+     it takes the full card width instead of one narrow chip. Without this it
+     clips at every viewport below 430px — including 375 and 390, the two most
+     common phone widths. Keyed to the CATEGORIES label in app.js: if that label
+     is renamed this rule stops applying, and the clamp above absorbs it. */
+  .board-row > .cell[data-label="Polar Pattern"] {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .board-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .tagline { display: none; }
+  /* The puzzle number stays; the date is the first thing to go when the header
+     runs out of room. */
+  .day-label__date { display: none; }
 }
 
 @media (max-width: 480px) {
-  .site-header h1 { font-size: 1.05rem; }
-  .tagline { display: none; }
+  .site-header h1 { font-size: var(--fs-md); }
+  .header-actions { gap: var(--space-3); }
 }
