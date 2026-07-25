@@ -239,19 +239,6 @@ const MIC_DB = [
     needsVerification: false,
   },
   {
-    id: "at-at4050",
-    manufacturer: "Audio-Technica",
-    model: "AT4050",
-    displayName: "Audio-Technica AT4050",
-    aliases: ["AT-4050", "AT4050/CM5", "AT-4050cM5"],
-    countryOfOrigin: "Japan",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
-    switchable: true,
-    releaseYear: 1994,
-    msrp: 895, // Current street price ~$769-799.
-  },
-  {
     id: "at-at5047",
     manufacturer: "Audio-Technica",
     model: "AT5047",
@@ -263,20 +250,6 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2017,
     msrp: 3499, // Audio-Technica official press release.
-  },
-  {
-    id: "at-at4041",
-    manufacturer: "Audio-Technica",
-    model: "AT4041",
-    displayName: "Audio-Technica AT4041",
-    aliases: [],
-    countryOfOrigin: "Japan",
-    operatingPrinciple: "Condenser (Small-Diaphragm)",
-    polarPatterns: ["Cardioid"],
-    switchable: false,
-    releaseYear: 2000,
-    msrp: 405, // Current street price ~$329.
-    needsVerification: false,
   },
   {
     id: "at-at4060",
@@ -305,47 +278,6 @@ const MIC_DB = [
     msrp: null, // No credible official MSRP found despite extensive search; only used/street prices $75-200.
     needsVerification: false,
     verificationNote: "A boundary/PZM-style condenser, not a handheld mic as its name might suggest.",
-  },
-  {
-    id: "at-atm89r",
-    manufacturer: "Audio-Technica",
-    model: "ATM89R",
-    displayName: "Audio-Technica ATM89R",
-    aliases: ["ATM-89R"],
-    countryOfOrigin: "Japan",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Hypercardioid"],
-    switchable: false,
-    releaseYear: 1990,
-    msrp: 325,
-    needsVerification: false,
-  },
-  {
-    id: "at-atm250",
-    manufacturer: "Audio-Technica",
-    model: "ATM250",
-    displayName: "Audio-Technica ATM250",
-    aliases: [],
-    countryOfOrigin: "Japan",
-    operatingPrinciple: "Dynamic",
-    polarPatterns: ["Hypercardioid"],
-    switchable: false,
-    releaseYear: 2006,
-    msrp: 329, // Current Sweetwater sale price is lower, $229.
-  },
-  {
-    id: "at-atm710",
-    manufacturer: "Audio-Technica",
-    model: "ATM710",
-    displayName: "Audio-Technica ATM710",
-    aliases: [],
-    countryOfOrigin: "Japan",
-    operatingPrinciple: "Condenser (Small-Diaphragm)",
-    polarPatterns: ["Cardioid"],
-    switchable: false,
-    releaseYear: 2008,
-    msrp: 259, // Street price, consistent across Sweetwater/Musician's Friend/Guitar Center.
-    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- Audix
