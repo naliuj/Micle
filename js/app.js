@@ -142,15 +142,19 @@
     modeRandomBtn: document.getElementById("mode-random-btn"),
     modeNote: document.getElementById("mode-note"),
     newRandomBtn: document.getElementById("new-random-btn"),
+    infinityToggleLabel: document.getElementById("infinity-toggle-label"),
+    infinityToggle: document.getElementById("infinity-toggle"),
     helpBtn: document.getElementById("help-btn"),
     instructions: document.getElementById("instructions"),
   };
 
   // Two independent game sessions living side by side: the persistent daily
-  // puzzle (saved to localStorage, feeds stats/streak) and an ephemeral,
-  // unlimited-replay random session (in-memory only — resets on reload,
-  // never touches stats). `mode` picks which one the UI is currently
-  // driving; switching modes never mutates the other session's state.
+  // puzzle (saved to localStorage, feeds stats/streak) and an ephemeral
+  // random session (in-memory only — resets on reload, never touches stats).
+  // `mode` picks which one the UI is currently driving; switching modes never
+  // mutates the other session's state. Within Random Mic, the Infinity
+  // checkbox (`randomInfinity`) lifts the MAX_GUESSES cap for that session —
+  // it's a toggle on the random session, not a session of its own.
   const daily = (() => {
     const { dayIndex, dateStr, mic } = todayTargetMic();
     const state = loadDayState(dayIndex);
@@ -158,6 +162,7 @@
   })();
 
   let random = null;
+  let randomInfinity = false;
 
   function newRandomRound() {
     random = {
@@ -171,6 +176,24 @@
 
   function session() {
     return mode === "daily" ? daily : random;
+  }
+
+  // Random is the only mode where the guess cap can be lifted — via the
+  // Infinity checkbox — so the round only ends by solving it.
+  function isUnlimited() {
+    return mode === "random" && randomInfinity;
+  }
+
+  // Toggling mid-round re-derives `exhausted` from the current guess count
+  // rather than just flipping a flag, so turning Infinity on unlocks a round
+  // that just ran out of guesses, and turning it off re-locks one that's
+  // already past the cap.
+  function setRandomInfinity(enabled) {
+    randomInfinity = enabled;
+    if (random && !random.state.solved) {
+      random.state.exhausted = !randomInfinity && random.state.guesses.length >= MAX_GUESSES;
+    }
+    refreshView();
   }
 
   function micById(id) {
@@ -254,12 +277,17 @@
 
   function updateGuessesLeft() {
     const s = session();
-    const remaining = MAX_GUESSES - s.state.guesses.length;
-    els.guessesLeft.textContent = s.state.solved
-      ? "Solved!"
-      : s.state.exhausted
-        ? "Out of guesses"
-        : `${remaining} guess${remaining === 1 ? "" : "es"} left`;
+    if (s.state.solved) {
+      els.guessesLeft.textContent = "Solved!";
+    } else if (s.state.exhausted) {
+      els.guessesLeft.textContent = "Out of guesses";
+    } else if (isUnlimited()) {
+      const count = s.state.guesses.length;
+      els.guessesLeft.textContent = `${count} guess${count === 1 ? "" : "es"} so far`;
+    } else {
+      const remaining = MAX_GUESSES - s.state.guesses.length;
+      els.guessesLeft.textContent = `${remaining} guess${remaining === 1 ? "" : "es"} left`;
+    }
   }
 
   function lockInput() {
@@ -323,7 +351,7 @@
       return;
     }
 
-    if (s.state.guesses.length >= MAX_GUESSES) {
+    if (!isUnlimited() && s.state.guesses.length >= MAX_GUESSES) {
       s.state.exhausted = true;
       if (isDaily) {
         saveDayState(daily.dayIndex, daily.state);
@@ -374,6 +402,8 @@
     els.modeRandomBtn.setAttribute("aria-selected", String(mode === "random"));
     els.modeNote.hidden = mode !== "random";
     els.newRandomBtn.hidden = mode !== "random";
+    els.infinityToggleLabel.hidden = mode !== "random";
+    els.infinityToggle.checked = randomInfinity;
     if (mode === "daily") {
       // The date sits in its own span so narrow screens can drop it and keep the
       // puzzle number, which is the part that identifies the puzzle.
@@ -383,7 +413,7 @@
       date.textContent = ` · ${formatDateLabel(daily.dateStr)}`;
       els.dayLabel.appendChild(date);
     } else {
-      els.dayLabel.textContent = "Random Mode";
+      els.dayLabel.textContent = randomInfinity ? "Random Mode (Infinity)" : "Random Mode";
     }
   }
 
@@ -450,6 +480,7 @@
     autocomplete.reset();
     refreshView();
   });
+  els.infinityToggle.addEventListener("change", (e) => setRandomInfinity(e.target.checked));
 
   const autocomplete = createAutocomplete({
     input: els.input,

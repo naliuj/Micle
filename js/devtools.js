@@ -3,7 +3,7 @@
 //   MicleDebug.getState()      -> { dayIndex, dateStr, target, dayState, stats }
 //   MicleDebug.revealAnswer()  -> logs + returns today's target mic
 //   MicleDebug.winInstantly()  -> marks today solved with the correct guess, reloads
-//   MicleDebug.loseInstantly() -> fills today with 10 wrong guesses, reloads
+//   MicleDebug.loseInstantly() -> fills today with MAX_GUESSES wrong guesses, reloads
 //   MicleDebug.resetToday()    -> clears today's progress, reloads
 //   MicleDebug.resetAll()      -> clears all Micle localStorage, reloads
 //   MicleDebug.gotoDate(str)   -> jumps to that calendar date (adds ?debug=1&date=..., reloads)

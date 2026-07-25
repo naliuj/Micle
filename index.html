@@ -25,7 +25,7 @@
 
   <main>
     <div id="instructions" class="instructions" hidden>
-      <p>Guess the studio microphone in 10 tries. Each guess is compared against the answer across six categories.</p>
+      <p>Guess the studio microphone in 6 tries. Each guess is compared against the answer across six categories. In Random Mic mode, toggle Infinity to drop the guess limit entirely.</p>
       <ul class="legend">
         <li><span class="legend-swatch legend-swatch--match" aria-hidden="true">✓</span> Exact match</li>
         <li><span class="legend-swatch legend-swatch--partial" aria-hidden="true">◐</span> Partial — some polar patterns overlap</li>
@@ -42,6 +42,10 @@
         <button type="button" id="mode-daily-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-mode="daily">Daily Puzzle</button>
         <button type="button" id="mode-random-btn" class="mode-btn" role="tab" aria-selected="false" data-mode="random">Random Mic</button>
       </div>
+      <label id="infinity-toggle-label" class="infinity-toggle" hidden>
+        <input type="checkbox" id="infinity-toggle" />
+        ∞ Infinity (no guess limit)
+      </label>
       <button type="button" id="new-random-btn" class="new-random-btn" hidden>🔀 New Mic</button>
     </div>
     <p id="mode-note" class="mode-note" hidden>Practice mode — unlimited replays, doesn't count toward your streak or stats.</p>
@@ -66,6 +70,7 @@
           data-1p-ignore="true"
           data-bwignore="true"
           data-form-type="other"
+          data-protonpass-ignore="true"
         />
         <ul id="ac-list" class="ac-list" role="listbox" hidden></ul>
       </div>
@@ -89,7 +94,7 @@
   </div>
 
   <footer class="site-footer">
-    <p>Mic pool sourced from a real recording-studio equipment inventory. Data compiled from public manufacturer specs.</p>
+    <p>Mic pool sourced from the Berklee College of Music microphone inventory. Price data is sourced from MSRP, the <a href="https://reverb.com/price-guide/">Reverb Price Guide</a>, and in some cases with rare mics, educated guesstimations.</p>
   </footer>
 
   <script src="data/mics.js"></script>

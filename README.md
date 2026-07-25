@@ -2,11 +2,13 @@
 
 A Wordle-style daily guessing game for studio microphones. Static site, no build step, no backend — deploys straight to GitHub Pages.
 
-Guess today's microphone by exact product name (autocomplete assists). Each guess compares six categories against the answer: **manufacturer origin (country)**, **operating principle**, **polar pattern** (marked "Switchable" if the mic offers more than one), **manufacturer**, **release year** (with a higher/lower hint), and **price** (also higher/lower — shows "Unknown" if no MSRP could be sourced). You get 10 guesses per day.
+Guess today's microphone by exact product name (autocomplete assists). Each guess compares six categories against the answer: **manufacturer origin (country)**, **operating principle**, **polar pattern** (marked "Switchable" if the mic offers more than one), **manufacturer**, **release year** (with a higher/lower hint), and **price** (also higher/lower — shows "Unknown" if no MSRP could be sourced). You get 6 guesses per day.
 
 The mic pool is sourced from a real recording-studio equipment inventory — every mic in the game actually exists in that inventory.
 
-Two modes, switchable via tabs above the guess box: **Daily Puzzle** (the shared, persistent puzzle described above — saved to localStorage, feeds your stats/streak) and **Random Mic** (unlimited practice — pulls a fresh random mic from the same eligible pool, "New Random Mic" starts another round anytime, and none of it touches your stats or persists across a reload). Both share the same board/comparison UI; only where the target comes from and whether progress is saved differs.
+Two modes, switchable via tabs above the guess box: **Daily Puzzle** (the shared, persistent puzzle described above — saved to localStorage, feeds your stats/streak) and **Random Mic** (unlimited practice — pulls a fresh random mic from the same eligible pool, "New Mic" starts another round anytime, and none of it touches your stats or persists across a reload). Both share the same board/comparison UI; only where the target comes from and whether progress is saved differs.
+
+Random Mic also has an **Infinity** checkbox that lifts the 6-guess cap for that mode entirely — toggle it anytime mid-round to keep guessing past the normal limit (or re-impose it by unchecking). It has no effect on Daily Puzzle, which always keeps the 6-guess cap.
 
 ## Project structure
 
@@ -75,7 +77,7 @@ No server needed — just open `index.html` directly in a browser (double-click 
 ```js
 MicleDebug.revealAnswer()      // logs + returns today's target mic
 MicleDebug.winInstantly()      // marks today solved with the correct guess, reloads
-MicleDebug.loseInstantly()     // fills today with 10 wrong guesses, reloads
+MicleDebug.loseInstantly()     // fills today with 6 wrong guesses, reloads
 MicleDebug.resetToday()        // clears today's progress, reloads
 MicleDebug.resetAll()          // clears all Micle localStorage, reloads
 MicleDebug.gotoDate("2026-08-15") // jumps to that date (adds ?debug=1&date=..., reloads)

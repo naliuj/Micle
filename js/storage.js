@@ -3,7 +3,7 @@
 // — the calendar date is only used for display.
 
 const STORAGE_VERSION = "v1";
-const MAX_GUESSES = 10;
+const MAX_GUESSES = 6;
 
 function statsKey() {
   return `micle_${STORAGE_VERSION}_stats`;
