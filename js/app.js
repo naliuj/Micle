@@ -7,7 +7,7 @@
     { key: "pattern", label: "Polar Pattern", getValue: patternLabel },
     { key: "manufacturer", label: "Manufacturer", getValue: (m) => m.manufacturer },
     { key: "year", label: "Year", getValue: (m) => String(m.releaseYear) },
-    { key: "price", label: "MSRP", getValue: msrpLabel },
+    { key: "price", label: "Price", getValue: msrpLabel },
   ];
 
   function patternLabel(mic) {

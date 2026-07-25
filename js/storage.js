@@ -6,11 +6,11 @@ const STORAGE_VERSION = "v1";
 const MAX_GUESSES = 10;
 
 function statsKey() {
-  return `micguessr_${STORAGE_VERSION}_stats`;
+  return `micle_${STORAGE_VERSION}_stats`;
 }
 
 function dayKey(dayIndex) {
-  return `micguessr_${STORAGE_VERSION}_day_${dayIndex}`;
+  return `micle_${STORAGE_VERSION}_day_${dayIndex}`;
 }
 
 function defaultStats() {

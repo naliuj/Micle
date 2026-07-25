@@ -1,8 +1,8 @@
-# MicGuessr
+# Micle
 
 A Wordle-style daily guessing game for studio microphones. Static site, no build step, no backend — deploys straight to GitHub Pages.
 
-Guess today's microphone by exact product name (autocomplete assists). Each guess compares six categories against the answer: **manufacturer origin (country)**, **operating principle**, **polar pattern** (marked "Switchable" if the mic offers more than one), **manufacturer**, **release year** (with a higher/lower hint), and **MSRP** (also higher/lower — shows "Unknown" if no price could be sourced). You get 10 guesses per day.
+Guess today's microphone by exact product name (autocomplete assists). Each guess compares six categories against the answer: **manufacturer origin (country)**, **operating principle**, **polar pattern** (marked "Switchable" if the mic offers more than one), **manufacturer**, **release year** (with a higher/lower hint), and **price** (also higher/lower — shows "Unknown" if no MSRP could be sourced). You get 10 guesses per day.
 
 The mic pool is sourced from a real recording-studio equipment inventory — every mic in the game actually exists in that inventory.
 
@@ -71,14 +71,14 @@ No server needed — just open `index.html` directly in a browser (double-click 
 `js/devtools.js` always exposes a console API — no URL flag needed:
 
 ```js
-MicGuessrDebug.revealAnswer()      // logs + returns today's target mic
-MicGuessrDebug.winInstantly()      // marks today solved with the correct guess, reloads
-MicGuessrDebug.loseInstantly()     // fills today with 10 wrong guesses, reloads
-MicGuessrDebug.resetToday()        // clears today's progress, reloads
-MicGuessrDebug.resetAll()          // clears all MicGuessr localStorage, reloads
-MicGuessrDebug.gotoDate("2026-08-15") // jumps to that date (adds ?debug=1&date=..., reloads)
-MicGuessrDebug.getState()          // { dayIndex, dateStr, target, dayState, stats }
-MicGuessrDebug.poolStats()         // { total, eligible, quarantined, scheduleLength }
+MicleDebug.revealAnswer()      // logs + returns today's target mic
+MicleDebug.winInstantly()      // marks today solved with the correct guess, reloads
+MicleDebug.loseInstantly()     // fills today with 10 wrong guesses, reloads
+MicleDebug.resetToday()        // clears today's progress, reloads
+MicleDebug.resetAll()          // clears all Micle localStorage, reloads
+MicleDebug.gotoDate("2026-08-15") // jumps to that date (adds ?debug=1&date=..., reloads)
+MicleDebug.getState()          // { dayIndex, dateStr, target, dayState, stats }
+MicleDebug.poolStats()         // { total, eligible, quarantined, scheduleLength }
 ```
 
 Add `?debug=1` to the URL for a visual panel (bottom-right) with the same actions as buttons, plus a date-jump input. `?debug=1&date=YYYY-MM-DD` also lets you preview any date's mic without touching your system clock — the date override in `js/schedule.js` only activates when `debug=1` is present, so it can't be triggered by accident via a stray query string.

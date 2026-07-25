@@ -1,4 +1,4 @@
-// Curated microphone database for MicGuessr.
+// Curated microphone database for Micle.
 //
 // Every entry is a real, commercially identifiable microphone that appears
 // in the source studio inventory spreadsheet. Non-mics (DI boxes, cables),

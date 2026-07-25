@@ -1,14 +1,14 @@
-// Debug helpers for MicGuessr.
+// Debug helpers for Micle.
 //
 // Console API (always available, no URL flag needed):
-//   MicGuessrDebug.getState()      -> { dayIndex, dateStr, target, dayState, stats }
-//   MicGuessrDebug.revealAnswer()  -> logs + returns today's target mic
-//   MicGuessrDebug.winInstantly()  -> marks today solved with the correct guess, reloads
-//   MicGuessrDebug.loseInstantly() -> fills today with 10 wrong guesses, reloads
-//   MicGuessrDebug.resetToday()    -> clears today's progress, reloads
-//   MicGuessrDebug.resetAll()      -> clears all MicGuessr localStorage, reloads
-//   MicGuessrDebug.gotoDate(str)   -> jumps to that calendar date (requires ?debug=1, reloads)
-//   MicGuessrDebug.poolStats()     -> { total, eligible, quarantined, scheduleLength }
+//   MicleDebug.getState()      -> { dayIndex, dateStr, target, dayState, stats }
+//   MicleDebug.revealAnswer()  -> logs + returns today's target mic
+//   MicleDebug.winInstantly()  -> marks today solved with the correct guess, reloads
+//   MicleDebug.loseInstantly() -> fills today with 10 wrong guesses, reloads
+//   MicleDebug.resetToday()    -> clears today's progress, reloads
+//   MicleDebug.resetAll()      -> clears all Micle localStorage, reloads
+//   MicleDebug.gotoDate(str)   -> jumps to that calendar date (requires ?debug=1, reloads)
+//   MicleDebug.poolStats()     -> { total, eligible, quarantined, scheduleLength }
 //
 // Visual panel: add ?debug=1 to the URL (also unlocks ?date=YYYY-MM-DD to
 // preview any date's puzzle without touching your system clock).
@@ -51,7 +51,7 @@
 
   function resetAll() {
     Object.keys(localStorage)
-      .filter((k) => k.startsWith("micguessr_"))
+      .filter((k) => k.startsWith("micle_"))
       .forEach((k) => localStorage.removeItem(k));
     location.reload();
   }
@@ -70,11 +70,11 @@
 
   function revealAnswer() {
     const { mic, dayIndex, dateStr } = currentTarget();
-    console.log(`[MicGuessr] Puzzle #${dayIndex + 1} (${dateStr}) answer:`, mic.displayName, mic);
+    console.log(`[Micle] Puzzle #${dayIndex + 1} (${dateStr}) answer:`, mic.displayName, mic);
     return mic;
   }
 
-  window.MicGuessrDebug = {
+  window.MicleDebug = {
     getState,
     revealAnswer,
     winInstantly,
@@ -95,7 +95,7 @@
     const panel = document.createElement("div");
     panel.id = "mg-debug-panel";
     panel.innerHTML = `
-      <strong>MicGuessr Debug</strong>
+      <strong>Micle Debug</strong>
       <div>Puzzle #${dayIndex + 1} — ${dateStr}</div>
       <div>Pool: ${stats.eligible} eligible / ${stats.total} total (${stats.quarantined} quarantined)</div>
       <div>Schedule covers ${stats.scheduleLength} days${dayIndex >= stats.scheduleLength ? " ⚠️ past buffer, re-run build-schedule.mjs" : ""}</div>
