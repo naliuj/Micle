@@ -91,8 +91,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2009,
     msrp: 2299,
-    needsVerification: true,
-    verificationNote: "Stereo Blumlein-pair ribbon mic (two crossed figure-8 ribbon elements in one body). Original R88 released 2009; the 'mk2' update (removable cable) came in 2010 with the same capsules/specs. $2299 is current street price — AEA does not publish a separate official MSRP that was confirmed.",
+    verificationNote: "Stereo Blumlein-pair ribbon mic (two crossed figure-8 ribbon elements in one body). Original R88 released 2009; the 'mk2' update (removable cable) came in 2010 with the same capsules/specs. MSRP ($2299) is street price, maintainer-confirmed as acceptable in place of an official AEA MSRP.",
   },
   // ---------------------------------------------------------------- AKG
   {
@@ -640,9 +639,9 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1992,
-    msrp: null,
+    msrp: 1000,
     needsVerification: true,
-    verificationNote: "Legacy DPA 'Compact Cardioid' design, discontinued ~2011 and succeeded by the modular 4011ES/4011ER. Exact release year undocumented — using DPA's 1992 founding as a placeholder estimate, consistent with other legacy DPA/Bruel & Kjaer-lineage entries. No credible original launch MSRP found.",
+    verificationNote: "Legacy DPA 'Compact Cardioid' design, discontinued ~2011 and succeeded by the modular 4011ES/4011ER. MSRP ($1000) confirmed by maintainer. Release year is still an unconfirmed placeholder (1992, DPA's founding year) — exact intro year undocumented.",
   },
   {
     id: "dpa-4055",
@@ -962,9 +961,8 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1979,
-    msrp: 7598,
-    needsVerification: true,
-    verificationNote: "Stereo MS/XY mic, two 5-position capsules (simplified to 4 core patterns here). Year (1979) is the SM69/USM69 lineage's origin; the current 'i' version is a continuous evolution rather than a hard reissue, but the $7598 MSRP reflects today's product — flagged for the same year/price-era mismatch reason as other continuously-evolved classics.",
+    msrp: 2500,
+    verificationNote: "Stereo MS/XY mic, two 5-position capsules (simplified to 4 core patterns here). Year (1979) is the documented SM69/USM69 lineage origin. MSRP confirmed by maintainer.",
   },
   {
     id: "neumann-sm23c",
@@ -977,9 +975,8 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1961,
-    msrp: null,
-    needsVerification: true,
-    verificationNote: "Stereo MS/XY tube mic (two independent switchable-pattern capsules in one body), part of the SM 2 lineage, produced 1961-1966. No credible original launch price found — only current vintage/collector market prices exist, which don't reflect launch-era MSRP.",
+    msrp: 8000,
+    verificationNote: "Stereo MS/XY tube mic (two independent switchable-pattern capsules in one body), part of the SM 2 lineage, produced 1961-1966. MSRP confirmed by maintainer.",
   },
   {
     id: "neumann-km84",
@@ -992,9 +989,8 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1966,
-    msrp: null,
-    needsVerification: true,
-    verificationNote: "Discontinued 1992, replaced by the KM 184. No single credible original launch price found; vintage dealers loosely cite $600-700 in the 1980s, not confirmed as an actual launch MSRP.",
+    msrp: 1900,
+    verificationNote: "Discontinued 1992, replaced by the KM 184. MSRP confirmed by maintainer.",
   },
   {
     id: "neumann-u47",
@@ -1007,9 +1003,8 @@ const MIC_DB = [
     polarPatterns: ["Cardioid", "Omnidirectional"],
     switchable: true,
     releaseYear: 1949,
-    msrp: 400,
-    needsVerification: true,
-    verificationNote: "The original vintage U 47 (VF14 tube, M7 capsule) — distinct from the solid-state 'U 47 FET' already in this database. Neumann does not currently sell a U 47 reissue (unlike the U 67), so there is no current MSRP to fall back on; ~$400 is an early-1950s era estimate, not a firmly documented figure.",
+    msrp: 14000,
+    verificationNote: "The original vintage U 47 (VF14 tube, M7 capsule) — distinct from the solid-state 'U 47 FET' already in this database. Neumann does not currently sell a U 47 reissue. MSRP ($14,000) is maintainer-confirmed and reflects current vintage-market value, not the original ~1949 launch price.",
   },
   {
     id: "neumann-u67",
@@ -1022,9 +1017,8 @@ const MIC_DB = [
     polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
     switchable: true,
     releaseYear: 1960,
-    msrp: 8299,
-    needsVerification: true,
-    verificationNote: "Original U 67 produced 1960-1971; original launch price undocumented. Neumann relaunched an identical-spec reissue in 2018 (currently sold as the 'U67 Collector's Edition'); $8299 is that CURRENT reissue price, not the 1960 launch price — flagged for the year/price-era mismatch, same as the U 47 FET entry.",
+    msrp: 10000,
+    verificationNote: "Original U 67 produced 1960-1971. Neumann relaunched an identical-spec reissue in 2018. MSRP ($10,000) confirmed by maintainer.",
   },
   {
     id: "neumann-km86",
@@ -1037,9 +1031,8 @@ const MIC_DB = [
     polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
     switchable: true,
     releaseYear: 1968,
-    msrp: null,
-    needsVerification: true,
-    verificationNote: "FET successor to the tube KM 66, discontinued 1986. No credible original launch price found, only vintage resale prices.",
+    msrp: 3000,
+    verificationNote: "FET successor to the tube KM 66, discontinued 1986. MSRP confirmed by maintainer.",
   },
   {
     id: "neumann-ku100",
@@ -1052,9 +1045,8 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional"],
     switchable: false,
     releaseYear: 1992,
-    msrp: 9995,
-    needsVerification: true,
-    verificationNote: "Binaural dummy-head mic — two fixed-omni capsules built into a life-size head/ears; directionality comes from the head shape itself, not a switchable pattern. Exact official Neumann MSRP not separately published; $9995 is Sweetwater's current listing, other dealers show figures as low as ~$8400.",
+    msrp: 9000,
+    verificationNote: "Binaural dummy-head mic — two fixed-omni capsules built into a life-size head/ears; directionality comes from the head shape itself, not a switchable pattern. MSRP confirmed by maintainer.",
   },
   // --------------------------------------------------------------- Pearlman
   {
@@ -1347,9 +1339,9 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 1963,
-    msrp: null,
+    msrp: 800,
     needsVerification: true,
-    verificationNote: "Discontinued mid-1980s (succeeded by the MD 509, then e 609). Exact release year undocumented even by Sennheiser's own retrospective materials; 1963 is a rough estimate within the 'early-to-mid 1960s' range most sources suggest. No credible original launch price found.",
+    verificationNote: "Discontinued mid-1980s (succeeded by the MD 509, then e 609). MSRP ($800) confirmed by maintainer. Release year is still a rough estimate (1963) within the 'early-to-mid 1960s' range most sources suggest — exact year undocumented even in Sennheiser's own retrospective materials.",
   },
   {
     id: "sennheiser-mkh418s",
@@ -1363,8 +1355,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2003,
     msrp: 3799,
-    needsVerification: true,
-    verificationNote: "Fixed M-S stereo shotgun: a mid capsule (lobar/shotgun blending to supercardioid at low frequencies, MKH 416-derived) plus a side figure-8 capsule, decoded to stereo in post — not a player-switchable pattern. Sennheiser doesn't publish an official MSRP; $3799 is a mid-estimate from dealer street pricing ($3300-$4000 range seen).",
+    verificationNote: "Fixed M-S stereo shotgun: a mid capsule (lobar/shotgun blending to supercardioid at low frequencies, MKH 416-derived) plus a side figure-8 capsule, decoded to stereo in post — not a player-switchable pattern. MSRP ($3799) is a mid-estimate from dealer street pricing, maintainer-confirmed as acceptable in place of an official Sennheiser MSRP.",
   },
   // ---------------------------------------------------------------- Shure
   {
@@ -1595,8 +1586,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2001,
     msrp: 11995,
-    needsVerification: true,
-    verificationNote: "Modern reissue of the vintage 1959 ELA M 251 (originally AKG-built in Austria for the German Telefunken brand — that original is a genuinely different historical product). This entry is the CURRENT reissue, hand-built in the USA by Telefunken Elektroakustik (founded 2000-2001, Connecticut). Release year (~2001-2002) and MSRP ($10,995-$12,995 across dealers, using ~$11,995) both have some source variance.",
+    verificationNote: "Modern reissue of the vintage 1959 ELA M 251 (originally AKG-built in Austria for the German Telefunken brand — that original is a genuinely different historical product). This entry is the CURRENT reissue, hand-built in the USA by Telefunken Elektroakustik (founded 2000-2001, Connecticut). Release year (2001) and MSRP ($11,995) both maintainer-confirmed.",
   },
   // ------------------------------------------------------------ Warm Audio
   {
