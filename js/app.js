@@ -25,6 +25,15 @@
     return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   }
 
+  function eligibleMics() {
+    return MIC_DB.filter((m) => m.needsVerification !== true);
+  }
+
+  function randomEligibleMic() {
+    const pool = eligibleMics();
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
   const els = {
     input: document.getElementById("guess-input"),
     list: document.getElementById("ac-list"),
@@ -37,13 +46,38 @@
     statsModal: document.getElementById("stats-modal"),
     statsBody: document.getElementById("stats-body"),
     statsClose: document.getElementById("stats-close"),
+    modeDailyBtn: document.getElementById("mode-daily-btn"),
+    modeRandomBtn: document.getElementById("mode-random-btn"),
+    modeNote: document.getElementById("mode-note"),
+    newRandomBtn: document.getElementById("new-random-btn"),
   };
 
-  const { dayIndex, dateStr, mic: target } = todayTargetMic();
-  let dayState = loadDayState(dayIndex);
-  const guessedIds = new Set(dayState.guesses);
+  // Two independent game sessions living side by side: the persistent daily
+  // puzzle (saved to localStorage, feeds stats/streak) and an ephemeral,
+  // unlimited-replay random session (in-memory only — resets on reload,
+  // never touches stats). `mode` picks which one the UI is currently
+  // driving; switching modes never mutates the other session's state.
+  const daily = (() => {
+    const { dayIndex, dateStr, mic } = todayTargetMic();
+    const state = loadDayState(dayIndex);
+    return { dayIndex, dateStr, target: mic, state, guessedIds: new Set(state.guesses) };
+  })();
 
-  els.dayLabel.textContent = `Puzzle #${dayIndex + 1} · ${formatDateLabel(dateStr)}`;
+  let random = null;
+
+  function newRandomRound() {
+    random = {
+      target: randomEligibleMic(),
+      state: { guesses: [], solved: false, exhausted: false },
+      guessedIds: new Set(),
+    };
+  }
+
+  let mode = "daily";
+
+  function session() {
+    return mode === "daily" ? daily : random;
+  }
 
   function micById(id) {
     return MIC_DB.find((m) => m.id === id);
@@ -66,6 +100,7 @@
   }
 
   function renderGuessRow(guessMic) {
+    const target = session().target;
     const result = compareGuess(guessMic, target);
     const won = isWinningGuess(guessMic, target);
     const row = document.createElement("div");
@@ -98,24 +133,35 @@
   function renderBoard() {
     els.board.innerHTML = "";
     renderHeaderRow();
-    for (const id of dayState.guesses) {
+    for (const id of session().state.guesses) {
       renderGuessRow(micById(id));
     }
     updateGuessesLeft();
   }
 
   function updateGuessesLeft() {
-    const remaining = MAX_GUESSES - dayState.guesses.length;
-    els.guessesLeft.textContent = dayState.solved
+    const s = session();
+    const remaining = MAX_GUESSES - s.state.guesses.length;
+    els.guessesLeft.textContent = s.state.solved
       ? "Solved!"
-      : dayState.exhausted
+      : s.state.exhausted
         ? "Out of guesses"
         : `${remaining} guess${remaining === 1 ? "" : "es"} left`;
   }
 
   function lockInput() {
+    const s = session();
     els.input.disabled = true;
-    els.input.placeholder = dayState.solved ? "You got it!" : "Better luck tomorrow";
+    els.input.placeholder = s.state.solved
+      ? "You got it!"
+      : mode === "daily"
+        ? "Better luck tomorrow"
+        : "Try a new random mic!";
+  }
+
+  function unlockInput() {
+    els.input.disabled = false;
+    els.input.placeholder = "Type a microphone name…";
   }
 
   function showStatus(message) {
@@ -123,39 +169,51 @@
     els.status.hidden = false;
   }
 
-  function submitGuess(mic) {
-    if (dayState.solved || dayState.exhausted) return;
-    if (guessedIds.has(mic.id)) return;
+  function hideStatus() {
+    els.status.hidden = true;
+    els.status.textContent = "";
+  }
 
-    guessedIds.add(mic.id);
-    dayState.guesses.push(mic.id);
+  function submitGuess(mic) {
+    const s = session();
+    const target = s.target;
+    const isDaily = mode === "daily";
+    if (s.state.solved || s.state.exhausted) return;
+    if (s.guessedIds.has(mic.id)) return;
+
+    s.guessedIds.add(mic.id);
+    s.state.guesses.push(mic.id);
     renderGuessRow(mic);
     updateGuessesLeft();
 
     const won = isWinningGuess(mic, target);
     if (won) {
-      dayState.solved = true;
-      saveDayState(dayIndex, dayState);
-      recordCompletion(dayIndex, true, dayState.guesses.length);
+      s.state.solved = true;
+      if (isDaily) {
+        saveDayState(daily.dayIndex, daily.state);
+        recordCompletion(daily.dayIndex, true, s.state.guesses.length);
+      }
       updateGuessesLeft();
       lockInput();
-      showStatus(`Solved in ${dayState.guesses.length} guess${dayState.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`);
-      openStats();
+      showStatus(`Solved in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`);
+      if (isDaily) openStats();
       return;
     }
 
-    if (dayState.guesses.length >= MAX_GUESSES) {
-      dayState.exhausted = true;
-      saveDayState(dayIndex, dayState);
-      recordCompletion(dayIndex, false, dayState.guesses.length);
+    if (s.state.guesses.length >= MAX_GUESSES) {
+      s.state.exhausted = true;
+      if (isDaily) {
+        saveDayState(daily.dayIndex, daily.state);
+        recordCompletion(daily.dayIndex, false, s.state.guesses.length);
+      }
       updateGuessesLeft();
       lockInput();
       showStatus(`Out of guesses. The answer was the ${target.displayName}.`);
-      openStats();
+      if (isDaily) openStats();
       return;
     }
 
-    saveDayState(dayIndex, dayState);
+    if (isDaily) saveDayState(daily.dayIndex, daily.state);
   }
 
   function openStats() {
@@ -172,6 +230,43 @@
     els.statsModal.hidden = false;
   }
 
+  function updateModeUI() {
+    els.modeDailyBtn.classList.toggle("mode-btn--active", mode === "daily");
+    els.modeRandomBtn.classList.toggle("mode-btn--active", mode === "random");
+    els.modeDailyBtn.setAttribute("aria-selected", String(mode === "daily"));
+    els.modeRandomBtn.setAttribute("aria-selected", String(mode === "random"));
+    els.modeNote.hidden = mode !== "random";
+    els.newRandomBtn.hidden = mode !== "random";
+    els.dayLabel.textContent =
+      mode === "daily" ? `Puzzle #${daily.dayIndex + 1} · ${formatDateLabel(daily.dateStr)}` : "Random Mode";
+  }
+
+  function refreshView() {
+    updateModeUI();
+    renderBoard();
+    hideStatus();
+    const s = session();
+    if (s.state.solved || s.state.exhausted) {
+      lockInput();
+      const scope = mode === "daily" ? "today's puzzle" : "this round";
+      showStatus(
+        s.state.solved
+          ? `Already solved ${scope} in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}. It was the ${s.target.displayName}.`
+          : `Already out of guesses for ${scope}. The answer was the ${s.target.displayName}.`
+      );
+    } else {
+      unlockInput();
+    }
+  }
+
+  function switchMode(newMode) {
+    if (newMode === mode) return;
+    mode = newMode;
+    if (mode === "random" && !random) newRandomRound();
+    autocomplete.reset();
+    refreshView();
+  }
+
   els.statsBtn.addEventListener("click", openStats);
   els.statsClose.addEventListener("click", () => {
     els.statsModal.hidden = true;
@@ -182,20 +277,20 @@
 
   els.form.addEventListener("submit", (e) => e.preventDefault());
 
-  createAutocomplete({
+  els.modeDailyBtn.addEventListener("click", () => switchMode("daily"));
+  els.modeRandomBtn.addEventListener("click", () => switchMode("random"));
+  els.newRandomBtn.addEventListener("click", () => {
+    newRandomRound();
+    autocomplete.reset();
+    refreshView();
+  });
+
+  const autocomplete = createAutocomplete({
     input: els.input,
     listEl: els.list,
-    isGuessed: (id) => guessedIds.has(id),
+    isGuessed: (id) => session().guessedIds.has(id),
     onSelect: submitGuess,
   });
 
-  renderBoard();
-
-  if (dayState.solved) {
-    lockInput();
-    showStatus(`Already solved today's puzzle in ${dayState.guesses.length} guess${dayState.guesses.length === 1 ? "" : "es"}. It was the ${target.displayName}.`);
-  } else if (dayState.exhausted) {
-    lockInput();
-    showStatus(`Already out of guesses today. The answer was the ${target.displayName}.`);
-  }
+  refreshView();
 })();

@@ -18,12 +18,19 @@
 
   <main>
     <p class="instructions">
-      Guess today's studio microphone. Each guess compares
+      Guess the studio microphone. Each guess compares
       <strong>manufacturer origin</strong>, <strong>operating principle</strong>,
       <strong>polar pattern</strong>, <strong>manufacturer</strong>,
       <strong>release year</strong>, and <strong>price</strong> against the
       answer. You have 10 guesses.
     </p>
+
+    <div class="mode-switcher" role="tablist">
+      <button type="button" id="mode-daily-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-mode="daily">Daily Puzzle</button>
+      <button type="button" id="mode-random-btn" class="mode-btn" role="tab" aria-selected="false" data-mode="random">Random Mic</button>
+    </div>
+    <p id="mode-note" class="mode-note" hidden>Practice mode — unlimited replays, doesn't count toward your streak or stats.</p>
+    <button type="button" id="new-random-btn" class="new-random-btn" hidden>🔀 New Random Mic</button>
 
     <form id="guess-form" class="guess-form" autocomplete="off">
       <div class="autocomplete">

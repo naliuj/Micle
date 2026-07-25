@@ -6,6 +6,8 @@ Guess today's microphone by exact product name (autocomplete assists). Each gues
 
 The mic pool is sourced from a real recording-studio equipment inventory — every mic in the game actually exists in that inventory.
 
+Two modes, switchable via tabs above the guess box: **Daily Puzzle** (the shared, persistent puzzle described above — saved to localStorage, feeds your stats/streak) and **Random Mic** (unlimited practice — pulls a fresh random mic from the same eligible pool, "New Random Mic" starts another round anytime, and none of it touches your stats or persists across a reload). Both share the same board/comparison UI; only where the target comes from and whether progress is saved differs.
+
 ## Project structure
 
 ```
