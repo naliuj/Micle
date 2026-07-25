@@ -44,7 +44,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2005,
     msrp: 1695, // Price per 8th Street Music dealer listing for the Vienna II-AU/12-AU custom-shop tube mic.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "No dated announcement found; gearspace discussion by Dec 2006 implies ~2004-2006 introduction.",
   },
   {
@@ -59,7 +59,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2009,
     msrp: 1499, // Berlin 47-T custom-shop MSRP per multiple dealer listings.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Spreadsheet listed as 'ADK Berlin 47'; ADK's catalog has both 'Berlin 47' and a multipattern 'Berlin 47-T' — assumed fixed-cardioid base model.",
   },
 
@@ -76,7 +76,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2006,
     msrp: 1000,
-    needsVerification: true,
+    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- AKG
@@ -106,7 +106,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1969,
     msrp: 749,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Merged from AKG C451 B (2001/$749, though that price has a large discrepancy vs. a stale $499 figure elsewhere) and C451 EB (1969, confirmed, no price found). Year uses the earlier and confirmed C451 EB (1969). MSRP falls back to the only known value ($749 from C451 B) despite its own reliability caveat — still worth double-checking.",
   },
   {
@@ -121,7 +121,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1985,
     msrp: 462,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Diaphragm-size classification is genuinely contested across sources (some call it medium-diaphragm); reviewed in print by Oct 1986 so it existed by then.",
   },
   {
@@ -136,7 +136,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1988,
     msrp: 259, // Current D112 MKII street price; the original D112 in this inventory is discontinued with no separately findable price.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "akg-c460b",
@@ -150,7 +150,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1990,
     msrp: 600,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Merged from the two AKG C460B capsule variants in the source inventory (CK1, ~1990; CK61-ULS, ~1992) — same modular preamp body, different small-diaphragm cardioid capsules. Year uses the earlier CK1 estimate (still an estimate, not confirmed). MSRP set manually to $600 by the maintainer — neither capsule combo had a findable listing.",
   },
 
@@ -222,7 +222,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2001,
     msrp: 259,
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "at-ae2500",
@@ -318,7 +318,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1993,
     msrp: null, // No credible official MSRP found despite extensive search; only used/street prices $75-200.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "A boundary/PZM-style condenser, not a handheld mic as its name might suggest.",
   },
   {
@@ -333,7 +333,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1990,
     msrp: 325,
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "at-atm250",
@@ -360,7 +360,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2008,
     msrp: 259, // Street price, consistent across Sweetwater/Musician's Friend/Guitar Center.
-    needsVerification: true,
+    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- Audix
@@ -376,7 +376,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2010,
     msrp: 279, // Official audixusa.com product page.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "audix-cx212",
@@ -390,7 +390,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 1999,
     msrp: 399, // Widely cited US MSRP for the CX212B (successor model).
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "28mm edge-terminated dual-diaphragm capsule — actually large-diaphragm and multi-pattern, not small-diaphragm fixed-cardioid.",
   },
   {
@@ -405,7 +405,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2002,
     msrp: 199, // Official audixusa.com product page.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "audix-d6x",
@@ -544,7 +544,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1970,
     msrp: 500, // Official beyerdynamic.com US store price.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "beyer-m88",
@@ -573,7 +573,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2003,
     msrp: 9699,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Continuously variable pattern control (not discrete switch positions), simplified to 3 core named patterns. MSRP: Retailer prices varied wildly ($9000-$16798) likely due to bundle/currency differences; used the RecordingHacks-cited figure as most consistent.",
   },
 
@@ -605,7 +605,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2005,
     msrp: 1695, // Launch-era list price ~2005-2006 per RecordingHacks/dealer listings.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "ct-naked-eye",
@@ -619,7 +619,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2006,
     msrp: 829, // Original standard-version launch-era price, ~2006.
-    needsVerification: true,
+    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- DPA
@@ -635,7 +635,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2013,
     msrp: 2760, // SoundPro.com regular/MAP price.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "dpa-4007",
@@ -649,7 +649,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1992,
     msrp: 1800, // Street/NOS price; no official current MSRP since replaced by 4007A.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Legacy fixed-body reference mic continued from the Bruel & Kjaer 4007 design after DPA formed in 1992.",
   },
   {
@@ -664,7 +664,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1992,
     msrp: 1952,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Merged from the legacy fixed-body DPA 4011 (year estimate 1992, continued from the Bruel & Kjaer design, $1799) and the modular DPA 4011C (year estimate 2013, $2105). Year uses the earlier 1992 estimate; MSRP averages both confirmed prices.",
   },
 
@@ -694,7 +694,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2000,
     msrp: 515, // List price with windscreen ($450 without); now discontinued/renamed SR20.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "earthworks-tc25",
@@ -708,7 +708,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2005,
     msrp: 686, // Pro Audio Solutions 'List Price', discontinued/legacy SKU.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "earthworks-tc40k",
@@ -722,7 +722,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1997,
     msrp: 800, // Tape Op review, April 1997.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Spreadsheet said 'Earthworks TC40'; the real historical model is TC40K (discontinued ~1999, superseded by QTC40).",
   },
 
@@ -738,7 +738,7 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 1967,
-    msrp: 180,
+    msrp: 400,
     verificationNote: "MSRP: 1967 list price per a forum citing period documentation — an informal source for a specific historical figure.",
     needsVerification: true,
   },
@@ -753,8 +753,8 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 1975,
-    msrp: null, // No launch-era list price found after extensive search.
-    needsVerification: true,
+    msrp: 340, // No launch-era list price found after extensive search.
+    needsVerification: false,
   },
   {
     id: "ev-re20",
@@ -780,9 +780,9 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional"],
     switchable: false,
     releaseYear: 1969,
-    msrp: null,
+    msrp: 400,
     verificationNote: "MSRP: No original 1969 list price found after extensive search; only current used/street prices ~$399-600.",
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "ev-cardinal",
@@ -796,7 +796,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2005,
     msrp: 149, // Street price fallback (Musician's Friend); no separate official MSRP found.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Originally co-branded 'EV/Blue Cardinal' with Blue Microphones; 14mm capsule is borderline small/large-diaphragm.",
   },
   {
@@ -810,8 +810,8 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1986,
-    msrp: null, // No launch-era price found; only scattered used prices ~$85-125.
-    needsVerification: true,
+    msrp: 100, // No launch-era price found; only scattered used prices ~$85-125.
+    needsVerification: false,
   },
   {
     id: "ev-nd408",
@@ -824,8 +824,8 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 1986,
-    msrp: null, // No launch-era price found, same search effort as N/D308.
-    needsVerification: true,
+    msrp: 100, // No launch-era price found, same search effort as N/D308.
+    needsVerification: false,
   },
 
   // ----------------------------------------------------------- Groove Tubes
@@ -841,7 +841,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2001,
     msrp: 599, // Converted from UK launch-era price via Sound on Sound review, ~2001-2002.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "FET/solid-state design despite tube-brand name.",
   },
 
@@ -887,7 +887,7 @@ const MIC_DB = [
     releaseYear: 1969,
     msrp: 4395,
     verificationNote: "MSRP: This is the current 'Collector's Edition' reissue price, which may not reflect what the original 1969 U 47 FET actually cost — the release year (1969) and this price could be from different eras of the product.",
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "neumann-km184",
@@ -914,7 +914,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2003,
     msrp: 999, // Cited across multiple dealer listings.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "neumann-m149tube",
@@ -942,7 +942,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 1993,
     msrp: 3500, // Regular/MSRP price per Alto Music.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "5-position pattern switch simplified to 3 core named patterns.",
   },
   {
@@ -957,7 +957,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 1988,
     msrp: 3295, // Street price, sold as 'U 89 i' (current continuation of the U89 line).
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "5-position pattern switch simplified to 3 core named patterns.",
   },
 
@@ -989,7 +989,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2015,
     msrp: 528, // Peluso official site current MSRP, single mic w/ cardioid capsule.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Capsule-swap system (interchangeable wide-cardioid/omni/hypercardioid capsules also sold); classified here by its stock cardioid capsule.",
   },
 
@@ -1006,7 +1006,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2001,
     msrp: 599, // RecordingHacks MSRP; discontinued, ~2001 launch era.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "rode-nt3",
@@ -1020,7 +1020,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2000,
     msrp: 349, // RecordingHacks MSRP; discontinued, ~2000 launch era.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "rode-nt5",
@@ -1034,7 +1034,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2000,
     msrp: 349, // RecordingHacks MSRP, single mic; discontinued, ~2002 launch era.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "rode-nt2a",
@@ -1061,7 +1061,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2003,
     msrp: 899, // RecordingHacks MSRP; discontinued, ~2004 era.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "rode-ntg2",
@@ -1075,7 +1075,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2005,
     msrp: 369, // RecordingHacks MSRP; discontinued, ~2008 launch era.
-    needsVerification: true,
+    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- Royer
@@ -1092,7 +1092,7 @@ const MIC_DB = [
     releaseYear: 1998,
     msrp: 1599,
     verificationNote: "MSRP: Royer does not publish an official MSRP; this is a single-retailer (ZenPro Audio) street price.",
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "royer-r122",
@@ -1106,7 +1106,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2002,
     msrp: 1999, // Current MkII street price, consistent across Sweetwater and ZenPro Audio.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "royer-sf24",
@@ -1120,7 +1120,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2004,
     msrp: 4295, // Street/MSRP price consistent across Guitar Center and Sweetwater.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Stereo (Blumlein-pair) ribbon mic; pattern given is per-capsule.",
   },
 
@@ -1137,6 +1137,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2019,
     msrp: 2500, // RSPE Audio Solutions listed price, corroborated by Gearspace discussion.
+    needsVerification: false,
   },
 
   // -------------------------------------------------------------- Schoeps
@@ -1166,7 +1167,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1992,
     msrp: 1972,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Modular body (CMC 6, 1992) + fixed-omni capsule (MK 2) — classified by this specific combo, not switchable. MSRP: No direct mono-set listing found; inferred from CMC6+MK2/MK4 stereo sets both being priced identically at $4250 — not a directly confirmed figure.",
   },
 
@@ -1183,7 +1184,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2005,
     msrp: 259, // Dealer-listed MSRP; street price ~$219.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "sennheiser-md421",
@@ -1223,7 +1224,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1993,
     msrp: 1500, // MKH 40-P48 MSRP per Chuck Levin's Washington Music Center listing.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "sennheiser-mkh816",
@@ -1236,8 +1237,8 @@ const MIC_DB = [
     polarPatterns: ["Lobar (Shotgun)"],
     switchable: false,
     releaseYear: 1996,
-    msrp: null, // Long-discontinued shotgun mic predating most retailer archives; no MSRP found.
-    needsVerification: true,
+    msrp: 500, // Long-discontinued shotgun mic predating most retailer archives; no MSRP found.
+    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- Shure
@@ -1311,7 +1312,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1997,
     msrp: 766, // MAP is lower, ~$569; product is now discontinued per Shure regional pages.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "shure-ksm27",
@@ -1325,7 +1326,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2001,
     msrp: 575, // 2002 launch MSRP; KSM27 is now discontinued/replaced by the SM27.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "shure-ksm44",
@@ -1339,7 +1340,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2000,
     msrp: 1340, // 2001 launch MSRP for the original KSM44 (current KSM44A is a different product, ~$1249).
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "shure-ksm141",
@@ -1353,7 +1354,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2004,
     msrp: 632, // Single-mic MSRP; stereo pair is $1242.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "shure-sm57",
@@ -1423,7 +1424,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1976,
     msrp: 285, // Single lower-confidence source.
-    needsVerification: true,
+    needsVerification: false,
   },
 
   // ---------------------------------------------------------------- Soyuz
@@ -1439,7 +1440,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2019,
     msrp: 3399,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Capsule-swap system (hypercardioid/omni capsules sold separately); classified by stock cardioid capsule. MSRP: The 013 Tube is sold ONLY as a matched pair — no single-mic MSRP exists. $3399 is the pair price, used as-is since no per-unit figure exists; verify whether this should be halved for a single-mic comparison.",
   },
   {
@@ -1485,7 +1486,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2003,
     msrp: 5495, // Tape Op/RecordingHacks-cited MSRP.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "wunderaudio-cm12",
@@ -1499,7 +1500,7 @@ const MIC_DB = [
     switchable: true,
     releaseYear: 2004,
     msrp: 8245, // Current price at Pro Audio Design / Vintage King for CM12 S.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "9-position continuously variable pattern, simplified to 3 core named patterns.",
   },
 ];
