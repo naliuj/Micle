@@ -1,4 +1,6 @@
-// localStorage persistence — versioned keys, defensive reads.
+// localStorage persistence — versioned keys, defensive reads. Keyed by
+// calendar date string (YYYY-MM-DD), matching the date-seeded daily pick
+// in js/schedule.js.
 
 const STORAGE_VERSION = "v1";
 const MAX_GUESSES = 10;
@@ -7,8 +9,15 @@ function statsKey() {
   return `micguessr_${STORAGE_VERSION}_stats`;
 }
 
-function dayKey(dayIndex) {
-  return `micguessr_${STORAGE_VERSION}_day_${dayIndex}`;
+function dateKey(dateStr) {
+  return `micguessr_${STORAGE_VERSION}_day_${dateStr}`;
+}
+
+function previousDateString(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() - 1);
+  return dt.toISOString().slice(0, 10);
 }
 
 function defaultStats() {
@@ -20,7 +29,7 @@ function defaultStats() {
     guessDistribution: Object.fromEntries(
       Array.from({ length: MAX_GUESSES }, (_, i) => [String(i + 1), 0])
     ),
-    lastCompletedDayIndex: null,
+    lastCompletedDate: null,
   };
 }
 
@@ -49,28 +58,28 @@ function loadStats() {
   return { ...defaultStats(), ...readJSON(statsKey(), {}) };
 }
 
-function loadDayState(dayIndex) {
-  return readJSON(dayKey(dayIndex), { guesses: [], solved: false, exhausted: false });
+function loadDayState(dateStr) {
+  return readJSON(dateKey(dateStr), { guesses: [], solved: false, exhausted: false });
 }
 
-function saveDayState(dayIndex, state) {
-  writeJSON(dayKey(dayIndex), state);
+function saveDayState(dateStr, state) {
+  writeJSON(dateKey(dateStr), state);
 }
 
-function recordCompletion(dayIndex, won, guessCount) {
+function recordCompletion(dateStr, won, guessCount) {
   const stats = loadStats();
   stats.gamesPlayed += 1;
   if (won) {
     stats.gamesWon += 1;
     const key = String(Math.min(guessCount, MAX_GUESSES));
     stats.guessDistribution[key] = (stats.guessDistribution[key] || 0) + 1;
-    const isConsecutive = stats.lastCompletedDayIndex === dayIndex - 1;
+    const isConsecutive = stats.lastCompletedDate === previousDateString(dateStr);
     stats.currentStreak = isConsecutive ? stats.currentStreak + 1 : 1;
     stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
   } else {
     stats.currentStreak = 0;
   }
-  stats.lastCompletedDayIndex = dayIndex;
+  stats.lastCompletedDate = dateStr;
   writeJSON(statsKey(), stats);
   return stats;
 }

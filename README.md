@@ -15,24 +15,28 @@ js/                   app logic (vanilla JS, no framework)
   app.js               orchestration / rendering
   compare.js            pure guess-comparison functions
   autocomplete.js        typeahead search component
-  schedule.js             resolves "today's" target mic (also handles ?debug=1&day=N override)
-  storage.js               localStorage persistence
+  schedule.js             resolves "today's" target mic (date-seeded random pick, see below)
+  storage.js               localStorage persistence, keyed by calendar date
   devtools.js               debug console API + ?debug=1 panel (see "Debugging" below)
 data/
   mics.js               the curated mic database (hand-edited)
-  schedule.js             precomputed daily answer order (generated — don't hand-edit `order`)
 scripts/
   parse_inventory.py    xlsx -> raw candidate mic names (maintainer tool, rerun if source spreadsheet changes)
-  build-schedule.mjs      generates/extends data/schedule.js (maintainer tool)
   raw_candidates.json      staging output of parse_inventory.py, kept for provenance
 ```
+
+## How the daily mic is picked
+
+There's no precomputed schedule file. `js/schedule.js` seeds a small deterministic PRNG (mulberry32) with a hash of today's calendar date (`YYYY-MM-DD`, player's local date) and uses it to pick a random index into the eligible pool (`MIC_DB` filtered to `needsVerification !== true`). Same date always picks the same mic within a single session/pool state — it's not `Math.random()`.
+
+**Trade-off, accepted deliberately for simplicity:** the pick for a given date depends on the *current* contents of the eligible pool, not a frozen historical snapshot. Adding a new mic to `data/mics.js`, or flipping a mic's `needsVerification` flag, can shift which mic *any* date resolves to — in principle including a date that already happened, if it's revisited after the pool changes. There's also no anti-repeat logic: independent per-date sampling can land on the same mic on two different dates by chance. If you later want the stronger guarantee (past days never change, no repeats until every mic's been used), that needs a precomputed append-only schedule instead — ask if you want that built back in.
 
 ## Adding a new microphone
 
 1. Add an entry to `data/mics.js`:
    ```js
    {
-     id: "manufacturer-model",       // permanent — never reuse or delete once it's shipped in a schedule
+     id: "manufacturer-model",       // keep stable — a past day's saved guesses reference ids by string
      manufacturer: "...",
      model: "...",
      displayName: "...",
@@ -43,16 +47,15 @@ scripts/
      switchable: false,                   // true only if the mic itself has a pattern-select switch
      releaseYear: 0000,
      msrp: 0000,                            // whole USD; null if no credible price was found (renders as "Unknown")
-     needsVerification: false,             // true quarantines it from the daily rotation (see below)
+     needsVerification: false,             // true quarantines it from the daily pool (see below)
      verificationNote: null
    }
    ```
-2. Run `node scripts/build-schedule.mjs` — this appends the new id (if `needsVerification` is not `true`) to the end of `data/schedule.js`'s `order` array. It never touches existing entries, so every past day's answer stays the same.
-3. Commit both files together.
+2. Commit. That's it — there's no schedule file to regenerate; the mic is live and eligible to be picked for any date (including, per the trade-off above, dates already in the past) the moment it's in `data/mics.js` with `needsVerification` not `true`.
 
-**`needsVerification: true`** keeps a mic playable as an autocomplete/decoy option but excludes it from ever being *today's answer* until you flip the flag to `false` and re-run the schedule script — this protects against a shaky release year **or MSRP** silently producing a wrong hi/lo hint for every player on that day. A `null` msrp on its own is safe and does *not* require this flag — the game just shows "Unknown" and skips the hi/lo hint for that guess (see `compareMsrp` in `js/compare.js`). Flag it when you have a *number* you're not confident in (a guessed/inferred/single-source price), not just when the price is missing entirely.
+**`needsVerification: true`** keeps a mic playable as an autocomplete/decoy option but excludes it from ever being picked as *today's answer* — this protects against a shaky release year **or MSRP** silently producing a wrong hi/lo hint for players. A `null` msrp on its own is safe and does *not* require this flag — the game just shows "Unknown" and skips the hi/lo hint for that guess (see `compareMsrp` in `js/compare.js`). Flag it when you have a *number* you're not confident in (a guessed/inferred/single-source price), not just when the price is missing entirely.
 
-**Never delete or reuse an `id`** once it has appeared in `data/schedule.js`'s `order` — that breaks the historical record of past puzzles. If an entry turns out to be wrong, correct its fields in place instead.
+**Try not to rename or delete an `id`** that's already shipped — a player's saved guesses for a past date reference mics by id, and a missing id will fail to render if that day's history is ever reloaded. If an entry turns out to be wrong, correct its fields in place instead of replacing the id.
 
 ## Running locally
 
@@ -63,17 +66,17 @@ No server needed — just open `index.html` directly in a browser (double-click 
 `js/devtools.js` always exposes a console API — no URL flag needed:
 
 ```js
-MicGuessrDebug.revealAnswer()   // logs + returns today's target mic
-MicGuessrDebug.winInstantly()   // marks today solved with the correct guess, reloads
-MicGuessrDebug.loseInstantly()  // fills today with 10 wrong guesses, reloads
-MicGuessrDebug.resetToday()     // clears today's progress, reloads
-MicGuessrDebug.resetAll()       // clears all MicGuessr localStorage, reloads
-MicGuessrDebug.gotoDay(n)       // jumps to puzzle #n+1 (adds ?debug=1&day=n, reloads)
-MicGuessrDebug.getState()       // { dayIndex, target, dayState, stats }
-MicGuessrDebug.poolStats()      // { total, eligible, quarantined }
+MicGuessrDebug.revealAnswer()      // logs + returns today's target mic
+MicGuessrDebug.winInstantly()      // marks today solved with the correct guess, reloads
+MicGuessrDebug.loseInstantly()     // fills today with 10 wrong guesses, reloads
+MicGuessrDebug.resetToday()        // clears today's progress, reloads
+MicGuessrDebug.resetAll()          // clears all MicGuessr localStorage, reloads
+MicGuessrDebug.gotoDate("2026-08-15") // jumps to that date (adds ?debug=1&date=..., reloads)
+MicGuessrDebug.getState()          // { dateStr, target, dayState, stats }
+MicGuessrDebug.poolStats()         // { total, eligible, quarantined }
 ```
 
-Add `?debug=1` to the URL for a visual panel (bottom-right) with the same actions as buttons, plus a day-jump input. `?debug=1&day=N` also lets you preview any puzzle without touching your system clock — the day override in `js/schedule.js` only activates when `debug=1` is present, so it can't be triggered by accident via a stray query string.
+Add `?debug=1` to the URL for a visual panel (bottom-right) with the same actions as buttons, plus a date-jump input. `?debug=1&date=YYYY-MM-DD` also lets you preview any date's mic without touching your system clock — the date override in `js/schedule.js` only activates when `debug=1` is present, so it can't be triggered by accident via a stray query string.
 
 ## Deploying to GitHub Pages
 
