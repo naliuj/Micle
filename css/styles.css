@@ -271,7 +271,28 @@ main {
 
 .guess-form { margin: var(--space-5) 0 var(--space-3); }
 
-.autocomplete { position: relative; }
+.guess-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.autocomplete { position: relative; flex: 1; }
+
+.random-guess-btn {
+  padding: var(--space-4);
+  font-size: var(--fs-md);
+  line-height: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.random-guess-btn:hover { background: var(--bg); }
+.random-guess-btn:disabled { opacity: 0.6; cursor: default; }
 
 #guess-input {
   width: 100%;
@@ -554,6 +575,7 @@ main {
 .icon-btn:focus-visible,
 .mode-btn:focus-visible,
 .new-random-btn:focus-visible,
+.random-guess-btn:focus-visible,
 .share-btn:focus-visible,
 #guess-input:focus-visible,
 .ac-list li:focus-visible,

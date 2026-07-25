@@ -6,6 +6,8 @@
   <title>Micle — Daily Microphone Guessing Game</title>
   <meta name="description" content="Guess the studio microphone of the day. A Wordle-style game for audio nerds." />
   <link rel="stylesheet" href="css/styles.css" />
+  <!-- Umami Cloud: privacy-friendly, cookieless analytics. -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="380be635-32c4-4106-81da-ce175e192fd4"></script>
 </head>
 <body>
   <header class="site-header">
@@ -51,28 +53,31 @@
     <p id="mode-note" class="mode-note" hidden>Practice mode — unlimited replays, doesn't count toward your streak or stats.</p>
 
     <div class="guess-form">
-      <div class="autocomplete">
-        <label for="guess-input" class="visually-hidden">Guess a microphone</label>
-        <input
-          id="guess-input"
-          name="mic-guess-search"
-          type="text"
-          placeholder="Type a microphone name…"
-          role="combobox"
-          aria-expanded="false"
-          aria-autocomplete="list"
-          aria-controls="ac-list"
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="off"
-          spellcheck="false"
-          data-lpignore="true"
-          data-1p-ignore="true"
-          data-bwignore="true"
-          data-form-type="other"
-          data-protonpass-ignore="true"
-        />
-        <ul id="ac-list" class="ac-list" role="listbox" hidden></ul>
+      <div class="guess-row">
+        <div class="autocomplete">
+          <label for="guess-input" class="visually-hidden">Guess a microphone</label>
+          <input
+            id="guess-input"
+            name="mic-guess-search"
+            type="text"
+            placeholder="Type a microphone name…"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="ac-list"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            data-lpignore="true"
+            data-1p-ignore="true"
+            data-bwignore="true"
+            data-form-type="other"
+            data-protonpass-ignore="true"
+          />
+          <ul id="ac-list" class="ac-list" role="listbox" hidden></ul>
+        </div>
+        <button type="button" id="random-guess-btn" class="random-guess-btn" aria-label="Random guess">🎲</button>
       </div>
     </div>
 

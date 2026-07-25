@@ -10,6 +10,8 @@ Two modes, switchable via tabs above the guess box: **Daily Puzzle** (the shared
 
 Random Mic also has an **Infinity** checkbox that lifts the 6-guess cap for that mode entirely — toggle it anytime mid-round to keep guessing past the normal limit (or re-impose it by unchecking). It has no effect on Daily Puzzle, which always keeps the 6-guess cap.
 
+A **🎲** button next to the guess input submits a random unguessed mic from the eligible pool as your next guess — in any mode, Daily included. It's available for the whole round (not just the opening guess) and disables along with the input once the round ends.
+
 ## Project structure
 
 ```
@@ -95,6 +97,23 @@ There's no visual UI for any of this — it's console-only. `gotoDate()` works b
 4. Save — GitHub will publish at `https://<username>.github.io/<repo-name>/`.
 
 No GitHub Actions workflow is needed since there's no build step.
+
+## Analytics
+
+Micle uses [Umami Cloud](https://cloud.umami.is) for traffic analytics — it's
+cookieless (no consent banner needed) and free at this site's scale. The
+tracking script is a single `<script>` tag in `index.html`; there's no build
+step or server involved.
+
+Beyond automatic pageviews/visitors, a few custom events are tracked from
+`js/app.js`, all through a small `track(name, data)` wrapper that no-ops if the
+script is blocked or hasn't loaded yet:
+- `round_complete` — fired whenever a round ends (win or loss), tagged with
+  `mode` and the outcome, from `submitGuess()`.
+- `mode_switch` — fired on every Daily Puzzle / Random Mic switch, from
+  `switchMode()`.
+- `infinity_toggle` — fired when the Infinity checkbox is checked/unchecked,
+  from `setRandomInfinity()`.
 
 ## Regenerating the raw candidate list
 

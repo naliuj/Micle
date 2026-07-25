@@ -110,6 +110,13 @@
     }
   }
 
+  // Umami is loaded via a <script defer> tag in index.html and can be
+  // ad-blocked or slow to load, so every call site guards on its presence
+  // rather than assuming window.umami exists.
+  function track(name, data) {
+    if (window.umami) window.umami.track(name, data);
+  }
+
   function formatDateLabel(dateStr) {
     const [y, m, d] = dateStr.split("-").map(Number);
     const dt = new Date(Date.UTC(y, m - 1, d));
@@ -122,6 +129,12 @@
 
   function randomEligibleMic() {
     const pool = eligibleMics();
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function randomUnguessedMic() {
+    const s = session();
+    const pool = eligibleMics().filter((m) => !s.guessedIds.has(m.id));
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
@@ -144,6 +157,7 @@
     newRandomBtn: document.getElementById("new-random-btn"),
     infinityToggleLabel: document.getElementById("infinity-toggle-label"),
     infinityToggle: document.getElementById("infinity-toggle"),
+    randomGuessBtn: document.getElementById("random-guess-btn"),
     helpBtn: document.getElementById("help-btn"),
     instructions: document.getElementById("instructions"),
   };
@@ -193,6 +207,7 @@
     if (random && !random.state.solved) {
       random.state.exhausted = !randomInfinity && random.state.guesses.length >= MAX_GUESSES;
     }
+    track("infinity_toggle", { enabled });
     refreshView();
   }
 
@@ -293,6 +308,7 @@
   function lockInput() {
     const s = session();
     els.input.disabled = true;
+    els.randomGuessBtn.disabled = true;
     els.input.placeholder = s.state.solved
       ? "You got it!"
       : mode === "daily"
@@ -302,6 +318,7 @@
 
   function unlockInput() {
     els.input.disabled = false;
+    els.randomGuessBtn.disabled = false;
     els.input.placeholder = "Type a microphone name…";
   }
 
@@ -347,6 +364,7 @@
         `Solved in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`,
         "win"
       );
+      track("round_complete", { mode, outcome: "win", guesses: s.state.guesses.length });
       if (isDaily) openStats();
       return;
     }
@@ -360,6 +378,7 @@
       updateGuessesLeft();
       lockInput();
       showStatus(`Out of guesses. The answer was the ${target.displayName}.`, "loss");
+      track("round_complete", { mode, outcome: "loss", guesses: s.state.guesses.length });
       if (isDaily) openStats();
       return;
     }
@@ -441,6 +460,7 @@
     if (newMode === mode) return;
     mode = newMode;
     if (mode === "random" && !random) newRandomRound();
+    track("mode_switch", { mode: newMode });
     autocomplete.reset();
     refreshView();
   }
@@ -481,6 +501,11 @@
     refreshView();
   });
   els.infinityToggle.addEventListener("change", (e) => setRandomInfinity(e.target.checked));
+  els.randomGuessBtn.addEventListener("click", () => {
+    const mic = randomUnguessedMic();
+    autocomplete.reset();
+    if (mic) submitGuess(mic);
+  });
 
   const autocomplete = createAutocomplete({
     input: els.input,
