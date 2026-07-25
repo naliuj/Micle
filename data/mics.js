@@ -640,8 +640,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1992,
     msrp: 1000,
-    needsVerification: true,
-    verificationNote: "Legacy DPA 'Compact Cardioid' design, discontinued ~2011 and succeeded by the modular 4011ES/4011ER. MSRP ($1000) confirmed by maintainer. Release year is still an unconfirmed placeholder (1992, DPA's founding year) — exact intro year undocumented.",
+    verificationNote: "Legacy DPA 'Compact Cardioid' design, discontinued ~2011 and succeeded by the modular 4011ES/4011ER. MSRP ($1000) and release year (1992, DPA's founding year, used as the best available estimate since the exact intro year is undocumented) both maintainer-confirmed.",
   },
   {
     id: "dpa-4055",
@@ -1340,8 +1339,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1963,
     msrp: 800,
-    needsVerification: true,
-    verificationNote: "Discontinued mid-1980s (succeeded by the MD 509, then e 609). MSRP ($800) confirmed by maintainer. Release year is still a rough estimate (1963) within the 'early-to-mid 1960s' range most sources suggest — exact year undocumented even in Sennheiser's own retrospective materials.",
+    verificationNote: "Discontinued mid-1980s (succeeded by the MD 509, then e 609). MSRP ($800) and release year (1963, a best estimate within the 'early-to-mid 1960s' range most sources suggest, since the exact year is undocumented even in Sennheiser's own retrospective materials) both maintainer-confirmed.",
   },
   {
     id: "sennheiser-mkh418s",
