@@ -260,20 +260,24 @@ main {
 .new-random-btn:hover { background: var(--bg); }
 
 .infinity-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   font-size: var(--fs-sm);
   font-weight: 600;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--surface);
-  color: var(--text);
+  color: var(--muted);
   cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
-.infinity-toggle input { cursor: pointer; }
+.infinity-toggle:hover { background: var(--bg); }
+
+.infinity-toggle--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 
 .guess-form { margin: var(--space-5) 0 var(--space-3); }
 
@@ -606,7 +610,7 @@ main {
 .share-btn:focus-visible,
 #guess-input:focus-visible,
 .ac-list li:focus-visible,
-.infinity-toggle:focus-within,
+.infinity-toggle:focus-visible,
 .site-footer a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

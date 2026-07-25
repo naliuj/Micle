@@ -170,8 +170,7 @@
     modeRandomBtn: document.getElementById("mode-random-btn"),
     modeNote: document.getElementById("mode-note"),
     newRandomBtn: document.getElementById("new-random-btn"),
-    infinityToggleLabel: document.getElementById("infinity-toggle-label"),
-    infinityToggle: document.getElementById("infinity-toggle"),
+    infinityToggleBtn: document.getElementById("infinity-toggle-btn"),
     randomGuessBtn: document.getElementById("random-guess-btn"),
     helpBtn: document.getElementById("help-btn"),
     instructions: document.getElementById("instructions"),
@@ -436,8 +435,9 @@
     els.modeRandomBtn.setAttribute("aria-selected", String(mode === "random"));
     els.modeNote.hidden = mode !== "random";
     els.newRandomBtn.hidden = mode !== "random";
-    els.infinityToggleLabel.hidden = mode !== "random";
-    els.infinityToggle.checked = randomInfinity;
+    els.infinityToggleBtn.hidden = mode !== "random";
+    els.infinityToggleBtn.classList.toggle("infinity-toggle--active", randomInfinity);
+    els.infinityToggleBtn.setAttribute("aria-checked", String(randomInfinity));
     if (mode === "daily") {
       // The date sits in its own span so narrow screens can drop it and keep the
       // puzzle number, which is the part that identifies the puzzle.
@@ -515,7 +515,7 @@
     autocomplete.reset();
     refreshView();
   });
-  els.infinityToggle.addEventListener("change", (e) => setRandomInfinity(e.target.checked));
+  els.infinityToggleBtn.addEventListener("click", () => setRandomInfinity(!randomInfinity));
   els.randomGuessBtn.addEventListener("click", () => {
     const mic = randomUnguessedMic();
     autocomplete.reset();

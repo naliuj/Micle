@@ -8,7 +8,7 @@ The mic pool is sourced from a real recording-studio equipment inventory — eve
 
 Two modes, switchable via tabs above the guess box: **Daily Puzzle** (the shared, persistent puzzle described above — saved to localStorage, feeds your stats/streak) and **Random Mic** (unlimited practice — pulls a fresh random mic from the same eligible pool, "New Mic" starts another round anytime, and none of it touches your stats or persists across a reload). Both share the same board/comparison UI; only where the target comes from and whether progress is saved differs.
 
-Random Mic also has an **Infinity** checkbox that lifts the 6-guess cap for that mode entirely — toggle it anytime mid-round to keep guessing past the normal limit (or re-impose it by unchecking). It has no effect on Daily Puzzle, which always keeps the 6-guess cap.
+Random Mic also has an **Infinity** pill toggle that lifts the 6-guess cap for that mode entirely — toggle it anytime mid-round to keep guessing past the normal limit (or re-impose it by toggling it off). It has no effect on Daily Puzzle, which always keeps the 6-guess cap.
 
 A dice-icon button next to the guess input submits a random unguessed mic from the eligible pool as your next guess — in any mode, Daily included. It's available for the whole round (not just the opening guess) and disables along with the input once the round ends.
 
@@ -112,8 +112,8 @@ script is blocked or hasn't loaded yet:
   `mode` and the outcome, from `submitGuess()`.
 - `mode_switch` — fired on every Daily Puzzle / Random Mic switch, from
   `switchMode()`.
-- `infinity_toggle` — fired when the Infinity checkbox is checked/unchecked,
-  from `setRandomInfinity()`.
+- `infinity_toggle` — fired when the Infinity pill is toggled on/off, from
+  `setRandomInfinity()`.
 
 ## Regenerating the raw candidate list
 
