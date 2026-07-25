@@ -14,7 +14,10 @@
 // a wrong hi/lo hint for every player on that day.
 //
 // operatingPrinciple is one of:
-//   "Dynamic" | "Ribbon" | "Condenser (Large-Diaphragm)" | "Condenser (Small-Diaphragm)"
+//   "Dynamic" | "Ribbon" | "Tube" | "Condenser (Large-Diaphragm)" | "Condenser (Small-Diaphragm)"
+// "Tube" is for tube/valve condensers regardless of diaphragm size (a mic can
+// only carry one operatingPrinciple value, so being a tube design takes
+// priority over the large/small-diaphragm split) — see README.md.
 // polarPatterns is always an array, even for a single fixed pattern.
 // Multi-pattern mics with more than 3-4 switch positions are simplified to
 // their core named patterns (see individual notes) rather than enumerating
@@ -36,7 +39,7 @@ const MIC_DB = [
     displayName: "ADK Custom Vienna 12-AU",
     aliases: ["Vienna 12AU", "Custom Vienna"],
     countryOfOrigin: "USA",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2005,
@@ -146,9 +149,9 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1990,
-    msrp: null,
+    msrp: 600,
     needsVerification: true,
-    verificationNote: "Merged from the two AKG C460B capsule variants in the source inventory (CK1, ~1990; CK61-ULS, ~1992) — same modular preamp body, different small-diaphragm cardioid capsules. Year uses the earlier CK1 estimate. Neither capsule combo had a findable MSRP.",
+    verificationNote: "Merged from the two AKG C460B capsule variants in the source inventory (CK1, ~1990; CK61-ULS, ~1992) — same modular preamp body, different small-diaphragm cardioid capsules. Year uses the earlier CK1 estimate (still an estimate, not confirmed). MSRP set manually to $600 by the maintainer — neither capsule combo had a findable listing.",
   },
 
   // ---------------------------------------------------------------- Aston
@@ -297,7 +300,7 @@ const MIC_DB = [
     displayName: "Audio-Technica AT4060",
     aliases: [],
     countryOfOrigin: "Japan",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1998,
@@ -565,7 +568,7 @@ const MIC_DB = [
     displayName: "Brauner VMA",
     aliases: ["VMA Tube"],
     countryOfOrigin: "Germany",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
     switchable: true,
     releaseYear: 2003,
@@ -850,7 +853,7 @@ const MIC_DB = [
     displayName: "MXL V69",
     aliases: [],
     countryOfOrigin: "USA",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2002,
@@ -920,7 +923,7 @@ const MIC_DB = [
     displayName: "Neumann M 149 Tube",
     aliases: ["M149"],
     countryOfOrigin: "Germany",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
     switchable: true,
     releaseYear: 1998,
@@ -966,7 +969,7 @@ const MIC_DB = [
     displayName: "Pearlman TM-1",
     aliases: ["TM1"],
     countryOfOrigin: "USA",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid", "Omnidirectional"],
     switchable: true,
     releaseYear: 2005,
@@ -1477,7 +1480,7 @@ const MIC_DB = [
     displayName: "Wunder Audio CM7",
     aliases: ["CM-7"],
     countryOfOrigin: "USA",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid", "Omnidirectional"],
     switchable: true,
     releaseYear: 2003,
@@ -1491,7 +1494,7 @@ const MIC_DB = [
     displayName: "Wunder Audio CM12",
     aliases: ["CM-12"],
     countryOfOrigin: "USA",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
     switchable: true,
     releaseYear: 2004,
