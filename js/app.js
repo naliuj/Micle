@@ -95,7 +95,8 @@
     statsModal: document.getElementById("stats-modal"),
     statsBody: document.getElementById("stats-body"),
     statsClose: document.getElementById("stats-close"),
-    shareBtn: document.getElementById("share-btn"),
+    shareBtnModal: document.getElementById("share-btn"),
+    shareBtnPage: document.getElementById("share-btn-page"),
     modeDailyBtn: document.getElementById("mode-daily-btn"),
     modeRandomBtn: document.getElementById("mode-random-btn"),
     modeNote: document.getElementById("mode-note"),
@@ -277,9 +278,21 @@
         <div><strong>${stats.maxStreak}</strong><span>Max streak</span></div>
       </div>
     `;
-    els.shareBtn.hidden = !(daily.state.solved || daily.state.exhausted);
-    els.shareBtn.textContent = "📋 Share Results";
+    updateShareButtons();
     els.statsModal.hidden = false;
+  }
+
+  function updateShareButtons() {
+    const dailyDone = daily.state.solved || daily.state.exhausted;
+    // The modal's stats/streak are always about the daily puzzle regardless
+    // of which mode is currently on screen, so that button just needs the
+    // daily puzzle to be done. The page-level button sits right under
+    // whichever board is currently showing, though — leaving it visible
+    // while a Random Mic round is on screen would let players click
+    // "Share Results" and copy the daily result instead of what they're
+    // looking at, so it's further gated on actually being in daily mode.
+    els.shareBtnModal.hidden = !dailyDone;
+    els.shareBtnPage.hidden = !(dailyDone && mode === "daily");
   }
 
   function updateModeUI() {
@@ -297,6 +310,7 @@
     updateModeUI();
     renderBoard();
     hideStatus();
+    updateShareButtons();
     const s = session();
     if (s.state.solved || s.state.exhausted) {
       lockInput();
@@ -327,13 +341,16 @@
     if (e.target === els.statsModal) els.statsModal.hidden = true;
   });
 
-  els.shareBtn.addEventListener("click", async () => {
+  async function handleShareClick(btn) {
     const ok = await copyShareText();
-    els.shareBtn.textContent = ok ? "✅ Copied!" : "Couldn't copy — select text manually";
+    btn.textContent = ok ? "✅ Copied!" : "Couldn't copy — select text manually";
     setTimeout(() => {
-      els.shareBtn.textContent = "📋 Share Results";
+      btn.textContent = "📋 Share Results";
     }, 2000);
-  });
+  }
+
+  els.shareBtnModal.addEventListener("click", () => handleShareClick(els.shareBtnModal));
+  els.shareBtnPage.addEventListener("click", () => handleShareClick(els.shareBtnPage));
 
   els.modeDailyBtn.addEventListener("click", () => switchMode("daily"));
   els.modeRandomBtn.addEventListener("click", () => switchMode("random"));

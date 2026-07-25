@@ -355,6 +355,12 @@ main {
 
 .share-btn:hover { opacity: 0.9; }
 
+.share-btn--page {
+  display: inline-block;
+  width: auto;
+  margin: 0 0 1rem;
+}
+
 .site-footer {
   text-align: center;
   color: var(--muted);
