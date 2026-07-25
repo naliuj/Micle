@@ -9,28 +9,42 @@
 </head>
 <body>
   <header class="site-header">
-    <h1>Micle<span class="tagline">🎙️ a daily microphone guessing game</span></h1>
+    <!-- Tagline is a sibling, not a child, of the h1: nesting it made the
+         heading's accessible name "Micle🎙️ a daily microphone guessing game". -->
+    <div class="site-title">
+      <h1>Micle</h1>
+      <span class="tagline">🎙️ a daily microphone guessing game</span>
+    </div>
     <div class="header-actions">
       <span id="day-label" class="day-label"></span>
+      <span id="guesses-left" class="guesses-left"></span>
+      <button id="help-btn" type="button" class="icon-btn" aria-label="How to play" aria-expanded="false" aria-controls="instructions">?</button>
       <button id="stats-btn" type="button" class="icon-btn" aria-label="View stats">📊</button>
     </div>
   </header>
 
   <main>
-    <p class="instructions">
-      Guess the studio microphone. Each guess compares
-      <strong>manufacturer origin</strong>, <strong>operating principle</strong>,
-      <strong>polar pattern</strong>, <strong>manufacturer</strong>,
-      <strong>release year</strong>, and <strong>price</strong> against the
-      answer. You have 10 guesses.
-    </p>
+    <div id="instructions" class="instructions" hidden>
+      <p>Guess the studio microphone in 10 tries. Each guess is compared against the answer across six categories.</p>
+      <ul class="legend">
+        <li><span class="legend-swatch legend-swatch--match" aria-hidden="true">✓</span> Exact match</li>
+        <li><span class="legend-swatch legend-swatch--partial" aria-hidden="true">◐</span> Partial — some polar patterns overlap</li>
+        <li><span class="legend-swatch legend-swatch--no-match" aria-hidden="true">✗</span> No match</li>
+        <li><span class="legend-swatch legend-swatch--hint" aria-hidden="true">↑</span> Answer is higher (year or price)</li>
+        <li><span class="legend-swatch legend-swatch--hint" aria-hidden="true">↓</span> Answer is lower</li>
+        <li><span class="legend-swatch legend-swatch--unknown" aria-hidden="true">?</span> Price unknown for this mic</li>
+      </ul>
+      <p class="instructions-note">Long values are shortened to fit: LDC and SDC are large- and small-diaphragm condensers, and Omni, Fig-8, Super, Hyper and Wide are the matching polar patterns. Hover a tile for the full text.</p>
+    </div>
 
-    <div class="mode-switcher" role="tablist">
-      <button type="button" id="mode-daily-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-mode="daily">Daily Puzzle</button>
-      <button type="button" id="mode-random-btn" class="mode-btn" role="tab" aria-selected="false" data-mode="random">Random Mic</button>
+    <div class="controls">
+      <div class="mode-switcher" role="tablist">
+        <button type="button" id="mode-daily-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-mode="daily">Daily Puzzle</button>
+        <button type="button" id="mode-random-btn" class="mode-btn" role="tab" aria-selected="false" data-mode="random">Random Mic</button>
+      </div>
+      <button type="button" id="new-random-btn" class="new-random-btn" hidden>🔀 New Mic</button>
     </div>
     <p id="mode-note" class="mode-note" hidden>Practice mode — unlimited replays, doesn't count toward your streak or stats.</p>
-    <button type="button" id="new-random-btn" class="new-random-btn" hidden>🔀 New Random Mic</button>
 
     <div class="guess-form">
       <div class="autocomplete">
@@ -57,7 +71,6 @@
       </div>
     </div>
 
-    <p id="guesses-left" class="guesses-left"></p>
     <p id="status-banner" class="status-banner" hidden></p>
     <button id="share-btn-page" type="button" class="share-btn share-btn--page" hidden>📋 Share Results</button>
 

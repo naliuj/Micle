@@ -142,6 +142,8 @@
     modeRandomBtn: document.getElementById("mode-random-btn"),
     modeNote: document.getElementById("mode-note"),
     newRandomBtn: document.getElementById("new-random-btn"),
+    helpBtn: document.getElementById("help-btn"),
+    instructions: document.getElementById("instructions"),
   };
 
   // Two independent game sessions living side by side: the persistent daily
@@ -241,7 +243,9 @@
 
   function renderBoard() {
     els.board.innerHTML = "";
-    renderHeaderRow();
+    // No column labels over an empty board — they read as a stray row before
+    // the first guess exists.
+    if (session().state.guesses.length > 0) renderHeaderRow();
     for (const id of session().state.guesses) {
       renderGuessRow(micById(id), false);
     }
@@ -296,6 +300,9 @@
 
     s.guessedIds.add(mic.id);
     s.state.guesses.push(mic.id);
+    // This appends rather than rebuilding, so the first guess has to bring the
+    // column header with it — renderBoard() withholds it while the board is empty.
+    if (!els.board.querySelector(".board-row--header")) renderHeaderRow();
     renderGuessRow(mic, true);
     updateGuessesLeft();
 
@@ -367,8 +374,17 @@
     els.modeRandomBtn.setAttribute("aria-selected", String(mode === "random"));
     els.modeNote.hidden = mode !== "random";
     els.newRandomBtn.hidden = mode !== "random";
-    els.dayLabel.textContent =
-      mode === "daily" ? `Puzzle #${daily.dayIndex + 1} · ${formatDateLabel(daily.dateStr)}` : "Random Mode";
+    if (mode === "daily") {
+      // The date sits in its own span so narrow screens can drop it and keep the
+      // puzzle number, which is the part that identifies the puzzle.
+      els.dayLabel.textContent = `Puzzle #${daily.dayIndex + 1}`;
+      const date = document.createElement("span");
+      date.className = "day-label__date";
+      date.textContent = ` · ${formatDateLabel(daily.dateStr)}`;
+      els.dayLabel.appendChild(date);
+    } else {
+      els.dayLabel.textContent = "Random Mode";
+    }
   }
 
   function refreshView() {
@@ -398,6 +414,15 @@
     autocomplete.reset();
     refreshView();
   }
+
+  // A plain inline disclosure rather than a second modal: #stats-modal is
+  // single-purpose and generalising openStats for another consumer is more risk
+  // than this is worth.
+  els.helpBtn.addEventListener("click", () => {
+    const open = els.instructions.hidden;
+    els.instructions.hidden = !open;
+    els.helpBtn.setAttribute("aria-expanded", String(open));
+  });
 
   els.statsBtn.addEventListener("click", openStats);
   els.statsClose.addEventListener("click", () => {
