@@ -40,7 +40,6 @@
     board: document.getElementById("board"),
     guessesLeft: document.getElementById("guesses-left"),
     status: document.getElementById("status-banner"),
-    form: document.getElementById("guess-form"),
     dayLabel: document.getElementById("day-label"),
     statsBtn: document.getElementById("stats-btn"),
     statsModal: document.getElementById("stats-modal"),
@@ -274,8 +273,6 @@
   els.statsModal.addEventListener("click", (e) => {
     if (e.target === els.statsModal) els.statsModal.hidden = true;
   });
-
-  els.form.addEventListener("submit", (e) => e.preventDefault());
 
   els.modeDailyBtn.addEventListener("click", () => switchMode("daily"));
   els.modeRandomBtn.addEventListener("click", () => switchMode("random"));

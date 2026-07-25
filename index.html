@@ -32,21 +32,30 @@
     <p id="mode-note" class="mode-note" hidden>Practice mode — unlimited replays, doesn't count toward your streak or stats.</p>
     <button type="button" id="new-random-btn" class="new-random-btn" hidden>🔀 New Random Mic</button>
 
-    <form id="guess-form" class="guess-form" autocomplete="off">
+    <div class="guess-form">
       <div class="autocomplete">
         <label for="guess-input" class="visually-hidden">Guess a microphone</label>
         <input
           id="guess-input"
+          name="mic-guess-search"
           type="text"
           placeholder="Type a microphone name…"
           role="combobox"
           aria-expanded="false"
           aria-autocomplete="list"
           aria-controls="ac-list"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          data-bwignore="true"
+          data-form-type="other"
         />
         <ul id="ac-list" class="ac-list" role="listbox" hidden></ul>
       </div>
-    </form>
+    </div>
 
     <p id="guesses-left" class="guesses-left"></p>
     <p id="status-banner" class="status-banner" hidden></p>
