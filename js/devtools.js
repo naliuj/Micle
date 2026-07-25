@@ -1,17 +1,17 @@
 // Debug helpers for MicGuessr.
 //
 // Console API (always available, no URL flag needed):
-//   MicGuessrDebug.getState()      -> { dateStr, target, dayState, stats }
+//   MicGuessrDebug.getState()      -> { dayIndex, dateStr, target, dayState, stats }
 //   MicGuessrDebug.revealAnswer()  -> logs + returns today's target mic
 //   MicGuessrDebug.winInstantly()  -> marks today solved with the correct guess, reloads
 //   MicGuessrDebug.loseInstantly() -> fills today with 10 wrong guesses, reloads
 //   MicGuessrDebug.resetToday()    -> clears today's progress, reloads
 //   MicGuessrDebug.resetAll()      -> clears all MicGuessr localStorage, reloads
-//   MicGuessrDebug.gotoDate(str)   -> navigates to that calendar date (requires ?debug=1, reloads)
-//   MicGuessrDebug.poolStats()     -> { total, eligible, quarantined }
+//   MicGuessrDebug.gotoDate(str)   -> jumps to that calendar date (requires ?debug=1, reloads)
+//   MicGuessrDebug.poolStats()     -> { total, eligible, quarantined, scheduleLength }
 //
 // Visual panel: add ?debug=1 to the URL (also unlocks ?date=YYYY-MM-DD to
-// preview any date's mic without touching your system clock).
+// preview any date's puzzle without touching your system clock).
 
 (function () {
   function currentTarget() {
@@ -20,32 +20,32 @@
 
   function poolStats() {
     const total = MIC_DB.length;
-    const eligible = eligibleMics().length;
-    return { total, eligible, quarantined: total - eligible };
+    const eligible = MIC_DB.filter((m) => m.needsVerification !== true).length;
+    return { total, eligible, quarantined: total - eligible, scheduleLength: SCHEDULE.order.length };
   }
 
   function winInstantly() {
-    const { dateStr, mic } = currentTarget();
+    const { dayIndex, mic } = currentTarget();
     const state = { guesses: [mic.id], solved: true, exhausted: false };
-    saveDayState(dateStr, state);
-    recordCompletion(dateStr, true, 1);
+    saveDayState(dayIndex, state);
+    recordCompletion(dayIndex, true, 1);
     location.reload();
   }
 
   function loseInstantly() {
-    const { dateStr, mic } = currentTarget();
+    const { dayIndex, mic } = currentTarget();
     const wrongGuesses = MIC_DB.filter((m) => m.id !== mic.id)
       .slice(0, MAX_GUESSES)
       .map((m) => m.id);
     const state = { guesses: wrongGuesses, solved: false, exhausted: true };
-    saveDayState(dateStr, state);
-    recordCompletion(dateStr, false, wrongGuesses.length);
+    saveDayState(dayIndex, state);
+    recordCompletion(dayIndex, false, wrongGuesses.length);
     location.reload();
   }
 
   function resetToday() {
-    const { dateStr } = currentTarget();
-    localStorage.removeItem(dateKey(dateStr));
+    const { dayIndex } = currentTarget();
+    localStorage.removeItem(dayKey(dayIndex));
     location.reload();
   }
 
@@ -64,13 +64,13 @@
   }
 
   function getState() {
-    const { dateStr, mic } = currentTarget();
-    return { dateStr, target: mic, dayState: loadDayState(dateStr), stats: loadStats() };
+    const { dayIndex, dateStr, mic } = currentTarget();
+    return { dayIndex, dateStr, target: mic, dayState: loadDayState(dayIndex), stats: loadStats() };
   }
 
   function revealAnswer() {
-    const { mic, dateStr } = currentTarget();
-    console.log(`[MicGuessr] ${dateStr} answer:`, mic.displayName, mic);
+    const { mic, dayIndex, dateStr } = currentTarget();
+    console.log(`[MicGuessr] Puzzle #${dayIndex + 1} (${dateStr}) answer:`, mic.displayName, mic);
     return mic;
   }
 
@@ -89,15 +89,16 @@
   if (params.get("debug") !== "1") return;
 
   function buildPanel() {
-    const { dateStr, mic } = currentTarget();
+    const { dayIndex, dateStr, mic } = currentTarget();
     const stats = poolStats();
 
     const panel = document.createElement("div");
     panel.id = "mg-debug-panel";
     panel.innerHTML = `
       <strong>MicGuessr Debug</strong>
-      <div>Date: ${dateStr}</div>
+      <div>Puzzle #${dayIndex + 1} — ${dateStr}</div>
       <div>Pool: ${stats.eligible} eligible / ${stats.total} total (${stats.quarantined} quarantined)</div>
+      <div>Schedule covers ${stats.scheduleLength} days${dayIndex >= stats.scheduleLength ? " ⚠️ past buffer, re-run build-schedule.mjs" : ""}</div>
       <div class="mg-debug-answer" hidden>Answer: <strong></strong></div>
       <div class="mg-debug-row">
         <button data-action="reveal">Reveal</button>

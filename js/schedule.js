@@ -1,68 +1,49 @@
-// Resolves "today's" target mic by seeding a deterministic PRNG with
-// today's calendar date and picking a random mic from the eligible pool
-// (needsVerification !== true) — no precomputed schedule file.
-//
-// Trade-off, accepted deliberately for simplicity: the pick for a given
-// date depends on the CURRENT contents of the eligible pool, not a frozen
-// snapshot. Adding a new mic to data/mics.js (or flipping a mic's
-// needsVerification flag) can therefore change which mic a given date
-// resolves to — including, in principle, a date that already happened, if
-// revisited after the pool changes. There's also no anti-repeat logic:
-// independent per-date sampling can land on the same mic on two different
-// dates by chance. See README.md.
+// Resolves "today's" target mic from the precomputed SCHEDULE.order (see
+// data/schedule.js and scripts/build-schedule.mjs — never hand-edit
+// `order` directly, and never seed anything here off pool size/contents,
+// that's what made past days unstable before).
 
-// mulberry32 — small deterministic PRNG.
-function mulberry32(seed) {
-  let a = seed;
-  return function () {
-    a |= 0;
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+function dayIndexFor(launchDateStr, now = new Date()) {
+  const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const [y, m, d] = launchDateStr.split("-").map(Number);
+  const launchUTC = Date.UTC(y, m - 1, d);
+  return Math.round((todayUTC - launchUTC) / 86400000);
 }
 
-// FNV-1a — small deterministic string hash, used to turn a date string into
-// a PRNG seed.
-function hashStringToSeed(str) {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function localDateString(now = new Date()) {
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function debugDateOverride() {
+function debugDayIndexOverride() {
   const params = new URLSearchParams(location.search);
   if (params.get("debug") !== "1") return null;
-  return params.get("date") || null;
+  const dateStr = params.get("date");
+  if (!dateStr) return null;
+  return dayIndexFor(SCHEDULE.launchDate, new Date(dateStr + "T00:00:00Z"));
 }
 
-function todayDateString(now = new Date()) {
-  return debugDateOverride() || localDateString(now);
+function todayDayIndex(now = new Date()) {
+  const override = debugDayIndexOverride();
+  return override !== null ? override : dayIndexFor(SCHEDULE.launchDate, now);
 }
 
-function eligibleMics() {
-  return MIC_DB.filter((m) => m.needsVerification !== true);
+// SCHEDULE.order should always comfortably cover "today" (build-schedule.mjs
+// keeps ~2 years of runway) — the modulo below is a last-resort safety net
+// only, in case the schedule genuinely wasn't topped up in time. It's the
+// one place staleness could reintroduce a detectable repeating pattern; see
+// build-schedule.mjs's top comment for the real fix (re-run it).
+function targetIdForDayIndex(dayIndex) {
+  const order = SCHEDULE.order;
+  if (dayIndex < 0 || order.length === 0) return order[0];
+  if (dayIndex < order.length) return order[dayIndex];
+  return order[((dayIndex % order.length) + order.length) % order.length];
 }
 
-function targetForDate(dateStr) {
-  const pool = eligibleMics();
-  const rng = mulberry32(hashStringToSeed(dateStr));
-  const index = Math.floor(rng() * pool.length);
-  return pool[index];
+function dateStringForDayIndex(dayIndex) {
+  const [y, m, d] = SCHEDULE.launchDate.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  dt.setUTCDate(dt.getUTCDate() + dayIndex);
+  return dt.toISOString().slice(0, 10);
 }
 
 function todayTargetMic(now = new Date()) {
-  const dateStr = todayDateString(now);
-  return { dateStr, mic: targetForDate(dateStr) };
+  const dayIndex = todayDayIndex(now);
+  const id = targetIdForDayIndex(dayIndex);
+  return { dayIndex, dateStr: dateStringForDayIndex(dayIndex), mic: MIC_DB.find((m) => m.id === id) };
 }

@@ -39,11 +39,11 @@
     statsClose: document.getElementById("stats-close"),
   };
 
-  const { dateStr, mic: target } = todayTargetMic();
-  let dayState = loadDayState(dateStr);
+  const { dayIndex, dateStr, mic: target } = todayTargetMic();
+  let dayState = loadDayState(dayIndex);
   const guessedIds = new Set(dayState.guesses);
 
-  els.dayLabel.textContent = formatDateLabel(dateStr);
+  els.dayLabel.textContent = `Puzzle #${dayIndex + 1} · ${formatDateLabel(dateStr)}`;
 
   function micById(id) {
     return MIC_DB.find((m) => m.id === id);
@@ -135,8 +135,8 @@
     const won = isWinningGuess(mic, target);
     if (won) {
       dayState.solved = true;
-      saveDayState(dateStr, dayState);
-      recordCompletion(dateStr, true, dayState.guesses.length);
+      saveDayState(dayIndex, dayState);
+      recordCompletion(dayIndex, true, dayState.guesses.length);
       updateGuessesLeft();
       lockInput();
       showStatus(`Solved in ${dayState.guesses.length} guess${dayState.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`);
@@ -146,8 +146,8 @@
 
     if (dayState.guesses.length >= MAX_GUESSES) {
       dayState.exhausted = true;
-      saveDayState(dateStr, dayState);
-      recordCompletion(dateStr, false, dayState.guesses.length);
+      saveDayState(dayIndex, dayState);
+      recordCompletion(dayIndex, false, dayState.guesses.length);
       updateGuessesLeft();
       lockInput();
       showStatus(`Out of guesses. The answer was the ${target.displayName}.`);
@@ -155,7 +155,7 @@
       return;
     }
 
-    saveDayState(dateStr, dayState);
+    saveDayState(dayIndex, dayState);
   }
 
   function openStats() {
