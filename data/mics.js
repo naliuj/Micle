@@ -225,21 +225,6 @@ const MIC_DB = [
     needsVerification: false,
   },
   {
-    id: "at-ae2500",
-    manufacturer: "Audio-Technica",
-    model: "AE2500",
-    displayName: "Audio-Technica AE2500",
-    aliases: [],
-    countryOfOrigin: "Japan",
-    operatingPrinciple: "Dynamic",
-    polarPatterns: ["Cardioid"],
-    switchable: false,
-    releaseYear: 2002,
-    msrp: 699,
-    needsVerification: true,
-    verificationNote: "Genuinely a dual-element mic (separate dynamic + condenser capsules, mixed independently); classified here as Dynamic since that's its primary/dominant element for kick-drum use — doesn't cleanly fit the game's 4-category scheme.",
-  },
-  {
     id: "at-at4040",
     manufacturer: "Audio-Technica",
     model: "AT4040",
@@ -251,7 +236,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2002,
     msrp: 495, // Current street price is lower, ~$329-349.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "at-at4050",
@@ -291,7 +276,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2000,
     msrp: 405, // Current street price ~$329.
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "at-at4060",
@@ -740,7 +725,7 @@ const MIC_DB = [
     releaseYear: 1967,
     msrp: 400,
     verificationNote: "MSRP: 1967 list price per a forum citing period documentation — an informal source for a specific historical figure.",
-    needsVerification: true,
+    needsVerification: false,
   },
   {
     id: "ev-re16",
@@ -1268,7 +1253,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1992,
     msrp: 219,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Merged from the original Beta 52 (year uncertain, ~1992 estimate; discontinued/replaced by the 52A in Oct 2002) and Beta 52A (2002, confirmed, $219). Year uses the original's uncertain estimate; MSRP falls back to the 52A's confirmed price since the original had none.",
   },
   {
@@ -1297,7 +1282,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1994,
     msrp: 391,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "Merged from the original Beta 91 (year estimate ~mid-1990s, $437 confirmed; discontinued when the 91A released in 2010) and Beta 91A (2010, confirmed, $345). Year uses the original's uncertain estimate; MSRP averages both confirmed prices.",
   },
   {
@@ -1394,7 +1379,7 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2001,
     msrp: 592, // Official MSRP; street price is commonly ~$399.
-    needsVerification: true,
+    needsVerification: false,
     verificationNote: "SM7 family: SM7 (1973) -> SM7A (~1990s) -> SM7B (~2001); confirm the exact SM7B year.",
   },
   {
