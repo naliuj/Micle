@@ -95,9 +95,9 @@ body {
 .icon-btn:hover { background: var(--bg); }
 
 main {
-  max-width: 720px;
+  max-width: 920px;
   margin: 0 auto;
-  padding: 1.25rem;
+  padding: 1.25rem 1rem;
 }
 
 .instructions {
@@ -182,18 +182,18 @@ main {
 
 .board-row {
   display: grid;
-  grid-template-columns: 1.4fr repeat(6, 1fr);
-  gap: 0.4rem;
-  min-width: 740px;
+  grid-template-columns: 1.3fr repeat(6, minmax(0, 1fr));
+  gap: 0.3rem;
+  min-width: 640px;
 }
 
 .board-row--header {
-  min-width: 740px;
+  min-width: 640px;
 }
 
 .cell {
   border-radius: 8px;
-  padding: 0.55rem 0.5rem;
+  padding: 0.45rem 0.35rem;
   font-size: 0.8rem;
   display: flex;
   flex-direction: column;
