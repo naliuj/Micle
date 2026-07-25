@@ -9,8 +9,18 @@ function dayIndexFor(launchDateStr, now = new Date()) {
   return Math.round((todayUTC - launchUTC) / 86400000);
 }
 
+function debugDayOverride() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("debug") !== "1") return null;
+  const raw = params.get("day");
+  if (raw === null) return null;
+  const n = parseInt(raw, 10);
+  return Number.isNaN(n) ? null : n;
+}
+
 function todayDayIndex(now = new Date()) {
-  return dayIndexFor(SCHEDULE.launchDate, now);
+  const override = debugDayOverride();
+  return override !== null ? override : dayIndexFor(SCHEDULE.launchDate, now);
 }
 
 function targetIdForDayIndex(dayIndex) {

@@ -1,15 +1,22 @@
 (function () {
+  const HI_LO_KEYS = new Set(["year", "price"]);
+
   const CATEGORIES = [
     { key: "country", label: "Origin", getValue: (m) => m.countryOfOrigin },
     { key: "principle", label: "Principle", getValue: (m) => m.operatingPrinciple },
     { key: "pattern", label: "Polar Pattern", getValue: patternLabel },
     { key: "manufacturer", label: "Manufacturer", getValue: (m) => m.manufacturer },
     { key: "year", label: "Year", getValue: (m) => String(m.releaseYear) },
+    { key: "price", label: "MSRP", getValue: msrpLabel },
   ];
 
   function patternLabel(mic) {
     const base = mic.polarPatterns.join(" / ");
     return mic.switchable ? `${base} (Switchable)` : base;
+  }
+
+  function msrpLabel(mic) {
+    return mic.msrp == null ? "Unknown" : `$${mic.msrp.toLocaleString("en-US")}`;
   }
 
   const els = {
@@ -65,13 +72,15 @@
 
     for (const cat of CATEGORIES) {
       const cell = document.createElement("div");
-      const state = won ? "match" : result[cat.key].state || result[cat.key];
+      const isHiLo = HI_LO_KEYS.has(cat.key);
+      const state = won ? "match" : isHiLo ? result[cat.key].state : result[cat.key];
       cell.className = `cell cell--${state}`;
       let text = cat.getValue(guessMic);
       let icon = state === "match" ? "✓" : state === "partial" ? "◐" : "✗";
-      if (cat.key === "year" && !won) {
-        if (result.year.state === "higher") icon = "↑";
-        else if (result.year.state === "lower") icon = "↓";
+      if (isHiLo && !won) {
+        if (state === "higher") icon = "↑";
+        else if (state === "lower") icon = "↓";
+        else if (state === "unknown") icon = "?";
         else icon = "✓";
       }
       cell.innerHTML = `<span class="cell-icon" aria-hidden="true">${icon}</span><span class="cell-text">${text}</span>`;
