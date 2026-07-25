@@ -1,17 +1,13 @@
-// Debug helpers for Micle.
+// Debug helpers for Micle — console-only, no visual UI.
 //
-// Console API (always available, no URL flag needed):
 //   MicleDebug.getState()      -> { dayIndex, dateStr, target, dayState, stats }
 //   MicleDebug.revealAnswer()  -> logs + returns today's target mic
 //   MicleDebug.winInstantly()  -> marks today solved with the correct guess, reloads
 //   MicleDebug.loseInstantly() -> fills today with 10 wrong guesses, reloads
 //   MicleDebug.resetToday()    -> clears today's progress, reloads
 //   MicleDebug.resetAll()      -> clears all Micle localStorage, reloads
-//   MicleDebug.gotoDate(str)   -> jumps to that calendar date (requires ?debug=1, reloads)
+//   MicleDebug.gotoDate(str)   -> jumps to that calendar date (adds ?debug=1&date=..., reloads)
 //   MicleDebug.poolStats()     -> { total, eligible, quarantined, scheduleLength }
-//
-// Visual panel: add ?debug=1 to the URL (also unlocks ?date=YYYY-MM-DD to
-// preview any date's puzzle without touching your system clock).
 
 (function () {
   function currentTarget() {
@@ -84,57 +80,4 @@
     gotoDate,
     poolStats,
   };
-
-  const params = new URLSearchParams(location.search);
-  if (params.get("debug") !== "1") return;
-
-  function buildPanel() {
-    const { dayIndex, dateStr, mic } = currentTarget();
-    const stats = poolStats();
-
-    const panel = document.createElement("div");
-    panel.id = "mg-debug-panel";
-    panel.innerHTML = `
-      <strong>Micle Debug</strong>
-      <div>Puzzle #${dayIndex + 1} — ${dateStr}</div>
-      <div>Pool: ${stats.eligible} eligible / ${stats.total} total (${stats.quarantined} quarantined)</div>
-      <div>Schedule covers ${stats.scheduleLength} days${dayIndex >= stats.scheduleLength ? " ⚠️ past buffer, re-run build-schedule.mjs" : ""}</div>
-      <div class="mg-debug-answer" hidden>Answer: <strong></strong></div>
-      <div class="mg-debug-row">
-        <button data-action="reveal">Reveal</button>
-        <button data-action="win">Win instantly</button>
-        <button data-action="lose">Lose instantly</button>
-      </div>
-      <div class="mg-debug-row">
-        <button data-action="reset-today">Reset today</button>
-        <button data-action="reset-all">Reset all</button>
-      </div>
-      <div class="mg-debug-row">
-        <input type="date" class="mg-debug-date-input" value="${dateStr}" />
-        <button data-action="goto">Go to date</button>
-      </div>
-    `;
-    document.body.appendChild(panel);
-
-    panel.querySelector('[data-action="reveal"]').addEventListener("click", () => {
-      const answerEl = panel.querySelector(".mg-debug-answer");
-      answerEl.hidden = false;
-      answerEl.querySelector("strong").textContent = mic.displayName;
-      revealAnswer();
-    });
-    panel.querySelector('[data-action="win"]').addEventListener("click", winInstantly);
-    panel.querySelector('[data-action="lose"]').addEventListener("click", loseInstantly);
-    panel.querySelector('[data-action="reset-today"]').addEventListener("click", resetToday);
-    panel.querySelector('[data-action="reset-all"]').addEventListener("click", resetAll);
-    panel.querySelector('[data-action="goto"]').addEventListener("click", () => {
-      const val = panel.querySelector(".mg-debug-date-input").value;
-      if (val) gotoDate(val);
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", buildPanel);
-  } else {
-    buildPanel();
-  }
 })();

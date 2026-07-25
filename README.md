@@ -17,7 +17,7 @@ js/                   app logic (vanilla JS, no framework)
   autocomplete.js        typeahead search component
   schedule.js             resolves "today's" target mic from SCHEDULE.order (see below)
   storage.js               localStorage persistence, keyed by day index
-  devtools.js               debug console API + ?debug=1 panel (see "Debugging" below)
+  devtools.js               debug console API, no UI (see "Debugging" below)
 data/
   mics.js               the curated mic database (hand-edited)
   schedule.js             precomputed daily answer order (generated — don't hand-edit `order`)
@@ -81,7 +81,7 @@ MicleDebug.getState()          // { dayIndex, dateStr, target, dayState, stats }
 MicleDebug.poolStats()         // { total, eligible, quarantined, scheduleLength }
 ```
 
-Add `?debug=1` to the URL for a visual panel (bottom-right) with the same actions as buttons, plus a date-jump input. `?debug=1&date=YYYY-MM-DD` also lets you preview any date's mic without touching your system clock — the date override in `js/schedule.js` only activates when `debug=1` is present, so it can't be triggered by accident via a stray query string.
+There's no visual UI for any of this — it's console-only. `gotoDate()` works by adding `?debug=1&date=YYYY-MM-DD` to the URL and reloading; the date override in `js/schedule.js` only activates when `debug=1` is present, so it can't be triggered by accident via a stray query string.
 
 ## Deploying to GitHub Pages
 
