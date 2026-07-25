@@ -19,6 +19,56 @@
     return mic.msrp == null ? "Unknown" : `$${mic.msrp.toLocaleString("en-US")}`;
   }
 
+  const SHARE_EMOJI = {
+    match: "🟩",
+    partial: "🟨",
+    "no-match": "⬛",
+    unknown: "⬜",
+    higher: "⬆️",
+    lower: "⬇️",
+  };
+
+  function buildShareText() {
+    const { dayIndex, target, state } = daily;
+    const scoreLabel = state.solved ? String(state.guesses.length) : "X";
+    const header = `Micle ${(dayIndex + 1).toLocaleString("en-US")} ${scoreLabel}/${MAX_GUESSES}`;
+    const rows = state.guesses.map((id) => {
+      const guessMic = micById(id);
+      const won = isWinningGuess(guessMic, target);
+      const result = compareGuess(guessMic, target);
+      return CATEGORIES.map((cat) => {
+        if (won) return SHARE_EMOJI.match;
+        const isHiLo = HI_LO_KEYS.has(cat.key);
+        const cellState = isHiLo ? result[cat.key].state : result[cat.key];
+        return SHARE_EMOJI[cellState] || SHARE_EMOJI["no-match"];
+      }).join("");
+    });
+    return [header, "", ...rows].join("\n");
+  }
+
+  async function copyShareText() {
+    const text = buildShareText();
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+      // Fallback for browsers/contexts without the async Clipboard API.
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e2) {
+        return false;
+      }
+    }
+  }
+
   function formatDateLabel(dateStr) {
     const [y, m, d] = dateStr.split("-").map(Number);
     const dt = new Date(Date.UTC(y, m - 1, d));
@@ -45,6 +95,7 @@
     statsModal: document.getElementById("stats-modal"),
     statsBody: document.getElementById("stats-body"),
     statsClose: document.getElementById("stats-close"),
+    shareBtn: document.getElementById("share-btn"),
     modeDailyBtn: document.getElementById("mode-daily-btn"),
     modeRandomBtn: document.getElementById("mode-random-btn"),
     modeNote: document.getElementById("mode-note"),
@@ -226,6 +277,8 @@
         <div><strong>${stats.maxStreak}</strong><span>Max streak</span></div>
       </div>
     `;
+    els.shareBtn.hidden = !(daily.state.solved || daily.state.exhausted);
+    els.shareBtn.textContent = "📋 Share Results";
     els.statsModal.hidden = false;
   }
 
@@ -272,6 +325,14 @@
   });
   els.statsModal.addEventListener("click", (e) => {
     if (e.target === els.statsModal) els.statsModal.hidden = true;
+  });
+
+  els.shareBtn.addEventListener("click", async () => {
+    const ok = await copyShareText();
+    els.shareBtn.textContent = ok ? "✅ Copied!" : "Couldn't copy — select text manually";
+    setTimeout(() => {
+      els.shareBtn.textContent = "📋 Share Results";
+    }, 2000);
   });
 
   els.modeDailyBtn.addEventListener("click", () => switchMode("daily"));

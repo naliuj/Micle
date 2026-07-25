@@ -339,6 +339,22 @@ main {
 .stats-grid strong { font-size: 1.4rem; }
 .stats-grid span { font-size: 0.7rem; color: var(--muted); }
 
+.share-btn {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  background: var(--match);
+  color: #fff;
+  cursor: pointer;
+}
+
+.share-btn:hover { opacity: 0.9; }
+
 .site-footer {
   text-align: center;
   color: var(--muted);
