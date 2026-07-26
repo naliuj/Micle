@@ -142,15 +142,37 @@
     return MIC_DB.filter((m) => m.needsVerification !== true);
   }
 
+  // crypto.getRandomValues draws fresh OS entropy on every call, rather than
+  // relying on a single engine-seeded state the way Math.random() does — so
+  // there's no way for two devices' picks to correlate, even if they load the
+  // page in the same instant. Falls back to Math.random() only if the Web
+  // Crypto API is unavailable (very old browsers).
+  function randomInt(n) {
+    if (n <= 0) return 0;
+    if (window.crypto && window.crypto.getRandomValues) {
+      // Rejection sampling: without it, `raw % n` is biased toward the low end
+      // whenever n doesn't evenly divide 2^32.
+      const range = Math.floor(0x100000000 / n) * n;
+      const buf = new Uint32Array(1);
+      let raw;
+      do {
+        window.crypto.getRandomValues(buf);
+        raw = buf[0];
+      } while (raw >= range);
+      return raw % n;
+    }
+    return Math.floor(Math.random() * n);
+  }
+
   function randomEligibleMic() {
     const pool = eligibleMics();
-    return pool[Math.floor(Math.random() * pool.length)];
+    return pool[randomInt(pool.length)];
   }
 
   function randomUnguessedMic() {
     const s = session();
     const pool = eligibleMics().filter((m) => !s.guessedIds.has(m.id));
-    return pool[Math.floor(Math.random() * pool.length)];
+    return pool[randomInt(pool.length)];
   }
 
   const els = {
