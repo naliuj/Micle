@@ -5,9 +5,40 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Micle — Daily Microphone Guessing Game</title>
   <meta name="description" content="Guess the studio microphone of the day. A Wordle-style game for audio nerds." />
+  <link rel="canonical" href="https://micle.julianro.se/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Micle — Daily Microphone Guessing Game" />
+  <meta property="og:description" content="Guess the studio microphone of the day. A Wordle-style game for audio nerds." />
+  <meta property="og:url" content="https://micle.julianro.se/" />
+  <meta property="og:image" content="https://micle.julianro.se/social-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Micle — Daily Microphone Guessing Game" />
+  <meta name="twitter:description" content="Guess the studio microphone of the day. A Wordle-style game for audio nerds." />
+  <meta name="twitter:image" content="https://micle.julianro.se/social-card.png" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <!-- Keep in sync with --bg in css/styles.css's :root and its dark-mode override. -->
+  <meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#17171b" media="(prefers-color-scheme: dark)" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="css/styles.css" />
   <!-- Umami Cloud: privacy-friendly, cookieless analytics. -->
   <script defer src="https://cloud.umami.is/script.js" data-website-id="380be635-32c4-4106-81da-ce175e192fd4"></script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Micle",
+    "description": "Guess the studio microphone of the day. A Wordle-style game for audio nerds.",
+    "url": "https://micle.julianro.se/",
+    "applicationCategory": "GameApplication",
+    "operatingSystem": "Any",
+    "isAccessibleForFree": true,
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
 </head>
 <body>
   <header class="site-header">
@@ -85,7 +116,7 @@
       </div>
     </div>
 
-    <p id="status-banner" class="status-banner" hidden></p>
+    <p id="status-banner" class="status-banner" role="alert" hidden></p>
     <button id="share-btn-page" type="button" class="share-btn share-btn--page" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg>
       Share Results
@@ -94,8 +125,8 @@
     <div id="board" class="board" role="table" aria-label="Guess history"></div>
   </main>
 
-  <div id="stats-modal" class="modal" hidden>
-    <div class="modal-content" role="dialog" aria-labelledby="stats-title">
+  <dialog id="stats-modal" class="modal" aria-labelledby="stats-title">
+    <div class="modal-content">
       <div class="modal-header">
         <h2 id="stats-title">Statistics</h2>
         <button id="stats-close" type="button" class="icon-btn" aria-label="Close">✕</button>
@@ -106,7 +137,7 @@
         Share Results
       </button>
     </div>
-  </div>
+  </dialog>
 
   <footer class="site-footer">
     <p>Mic pool sourced from the Berklee College of Music microphone inventory. Price data is sourced from MSRP, the <a href="https://reverb.com/price-guide/">Reverb Price Guide</a>, and in some cases with rare mics, educated guesstimations.</p>
@@ -120,5 +151,6 @@
   <script src="js/schedule.js"></script>
   <script src="js/devtools.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/pwa.js"></script>
 </body>
 </html>

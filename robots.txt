@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://micle.julianro.se/sitemap.xml

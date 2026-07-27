@@ -1,4 +1,9 @@
 (function () {
+  // Hardcoded rather than location.href — js/devtools.js's gotoDate() adds
+  // ?debug=1&date=... to the URL, so sharing the live location could leak a
+  // debug link to whoever the player shares with.
+  const CANONICAL_URL = "https://micle.julianro.se/";
+
   const HI_LO_KEYS = new Set(["year", "price"]);
 
   // Inline Lucide icons (https://lucide.dev, ISC license) for the states this
@@ -273,18 +278,26 @@
   // `animate` is only true for a freshly submitted guess. renderBoard() must
   // leave it false: it rebuilds the whole board from state.guesses, so passing
   // true there would replay the reveal on every page load and mode switch.
-  function renderGuessRow(guessMic, animate) {
+  //
+  // `isAnswer` renders the target mic itself as a final row on a loss, so
+  // players see every category instead of just the name in the status
+  // message. It reuses the normal win styling (isWinningGuess(mic, mic) is
+  // already true for a mic compared against itself) — the only difference is
+  // the "Answer:" label and a distinct row class so it doesn't read as a
+  // guess the player actually made.
+  function renderGuessRow(guessMic, animate, isAnswer) {
     const target = session().target;
     const result = compareGuess(guessMic, target);
-    const won = isWinningGuess(guessMic, target);
+    const won = isAnswer || isWinningGuess(guessMic, target);
     const row = document.createElement("div");
     row.className = animate ? "board-row board-row--reveal" : "board-row";
+    if (isAnswer) row.classList.add("board-row--answer");
     row.setAttribute("role", "row");
 
     const nameCell = document.createElement("div");
     nameCell.className = "cell cell--guess";
     nameCell.setAttribute("role", "rowheader");
-    nameCell.textContent = guessMic.displayName;
+    nameCell.textContent = isAnswer ? `Answer: ${guessMic.displayName}` : guessMic.displayName;
     row.appendChild(nameCell);
 
     for (const cat of CATEGORIES) {
@@ -323,6 +336,7 @@
     for (const id of session().state.guesses) {
       renderGuessRow(micById(id), false);
     }
+    if (session().state.exhausted) renderGuessRow(session().target, false, true);
     updateGuessesLeft();
   }
 
@@ -360,10 +374,12 @@
 
   // `state` is "win" or "loss" — the banner has no colour of its own, so
   // omitting it would render a loss in the same green as a win.
+  // Un-hiding before mutating the text (rather than after) is what reliably
+  // triggers the role="alert" announcement across browser/AT combinations.
   function showStatus(message, state) {
-    els.status.textContent = message;
-    els.status.className = `status-banner status-banner--${state}`;
     els.status.hidden = false;
+    els.status.className = `status-banner status-banner--${state}`;
+    els.status.textContent = message;
   }
 
   function hideStatus() {
@@ -411,6 +427,7 @@
         saveDayState(daily.dayIndex, daily.state);
         recordCompletion(daily.dayIndex, false, s.state.guesses.length);
       }
+      renderGuessRow(target, true, true);
       updateGuessesLeft();
       lockInput();
       showStatus(`Out of guesses. The answer was the ${target.displayName}.`, "loss");
@@ -434,7 +451,7 @@
       </div>
     `;
     updateShareButtons();
-    els.statsModal.hidden = false;
+    els.statsModal.showModal();
   }
 
   function updateShareButtons() {
@@ -499,7 +516,15 @@
     if (mode === "random" && !random) newRandomRound();
     track("mode_switch", { mode: newMode });
     autocomplete.reset();
-    refreshView();
+    // Not used for individual guess submission — that already has its own
+    // .board-row--reveal keyframe animation, and layering a view-transition
+    // snapshot on top of a freshly-inserted row risks a double-animation.
+    // Mode-switching is the one interaction with no motion story otherwise.
+    if (document.startViewTransition) {
+      document.startViewTransition(() => refreshView());
+    } else {
+      refreshView();
+    }
   }
 
   // A plain inline disclosure rather than a second modal: #stats-modal is
@@ -513,13 +538,28 @@
 
   els.statsBtn.addEventListener("click", openStats);
   els.statsClose.addEventListener("click", () => {
-    els.statsModal.hidden = true;
+    els.statsModal.close();
   });
+  // Native <dialog> doesn't backdrop-light-dismiss on its own — clicking the
+  // dialog element's own (now-padding-free) box outside .modal-content still
+  // matches e.target === els.statsModal, same as the old div-based check.
   els.statsModal.addEventListener("click", (e) => {
-    if (e.target === els.statsModal) els.statsModal.hidden = true;
+    if (e.target === els.statsModal) els.statsModal.close();
   });
 
   async function handleShareClick(btn) {
+    const text = buildShareText();
+    // Native share sheet where available (mainly mobile) — falls through to
+    // the clipboard path below only if the browser lacks navigator.share or
+    // the share itself fails for a reason other than the user cancelling.
+    if (navigator.share) {
+      try {
+        await navigator.share({ text, title: "Micle", url: CANONICAL_URL });
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+    }
     const ok = await copyShareText();
     btn.innerHTML = ok ? `${ICONS.check} Copied!` : "Couldn't copy — select text manually";
     setTimeout(() => {

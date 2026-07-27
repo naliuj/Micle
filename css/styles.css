@@ -1,4 +1,6 @@
 :root {
+  /* --bg is duplicated as the light theme-color meta tag in index.html's
+     <head> — keep them in sync if this changes. */
   --bg: #f7f7f8;
   --surface: #ffffff;
   --text: #1a1a1e;
@@ -49,6 +51,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Duplicated as the dark theme-color meta tag in index.html — keep in sync. */
     --bg: #17171b;
     --surface: #212126;
     --text: #eceef0;
@@ -522,15 +525,21 @@ main {
   overflow: hidden;
 }
 
+/* Native <dialog> centers itself via the UA stylesheet (fixed + inset +
+   margin: auto) — this just resets its own border/background/padding
+   (previously carried by the outer flex-centering div) and caps its width,
+   leaving .modal-content to supply the visible card's background/padding. */
 .modal {
-  position: fixed;
-  inset: 0;
+  margin: auto;
+  border: none;
+  background: transparent;
+  padding: 0;
+  max-width: min(360px, calc(100vw - 2 * var(--space-5)));
+  width: 100%;
+}
+
+.modal::backdrop {
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-5);
-  z-index: 100;
 }
 
 .modal-content {
@@ -641,6 +650,21 @@ main {
 .board-row--reveal > .cell:nth-child(6) { animation-delay: 300ms; }
 .board-row--reveal > .cell:nth-child(7) { animation-delay: 360ms; }
 
+/* The answer-reveal row (shown on a loss) reuses the win's all-green cell
+   styling, since every category trivially "matches" the mic compared to
+   itself — this divider + tinted name cell is what keeps it from reading
+   as a guess the player actually made. */
+.board-row--answer {
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--border);
+}
+
+.board-row--answer > .cell--guess {
+  background: var(--loss-bg);
+  color: var(--loss);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -649,6 +673,14 @@ main {
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  /* View Transitions' UA-generated pseudo-elements are a separate namespace
+     the plain `*` selector above doesn't reach. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 

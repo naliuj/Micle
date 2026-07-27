@@ -1,0 +1,11 @@
+# Micle
+
+> Micle is a free, daily Wordle-style guessing game where players identify a studio microphone by comparing six attributes — manufacturer, country of origin, operating principle, polar pattern, release year, and price — against the correct answer in six guesses or fewer. A "Random Mic" practice mode offers unlimited unscored rounds from the same real recording-studio equipment inventory.
+
+## Details
+- One shared daily puzzle (like Wordle), plus unlimited practice mode.
+- Mic pool sourced from a real professional recording studio's microphone inventory (Berklee College of Music).
+- No account, no login, no ads; game state (stats/streak) lives only in the player's browser via localStorage.
+
+## Site
+- [Play Micle](https://micle.julianro.se/): the game itself, always shows today's puzzle.
