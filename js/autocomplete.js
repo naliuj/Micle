@@ -62,7 +62,18 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed }) {
   // scrolls rather than overflowing.
   const MAX_RESULTS = 50;
 
+  // Offers the full pool alphabetically instead of an empty dropdown when
+  // there's no query to rank against, letting players browse rather than
+  // only search. Unlike a ranked search this isn't capped at MAX_RESULTS:
+  // the whole point is every mic being reachable by scrolling. Currently
+  // unused — disabled below in search() — but kept in case it's wanted back.
+  function browseAll() {
+    return [...MIC_DB].sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true }));
+  }
+
   function search(query) {
+    // Browse-all-on-empty-query is disabled for now — see browseAll() above.
+    // Swap this line for `if (!query.trim()) return browseAll();` to re-enable.
     if (!query.trim()) return [];
     return MIC_DB.map((mic) => ({ mic, s: score(query, mic) }))
       .filter((r) => r.s < Infinity)
@@ -133,6 +144,16 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed }) {
   }
 
   input.addEventListener("input", () => render(search(input.value)));
+
+  // Browse-all-on-click is disabled for now (pairs with browseAll() above —
+  // search("") returns [] currently, so this would be a no-op anyway, but
+  // it's commented out too so re-enabling is just uncommenting both spots).
+  // A click (not focus) is what opens the list — the input never blurs on
+  // selection, so a "focus" listener wouldn't refire on a second guess; a
+  // click always does, giving the user an explicit, repeatable way to
+  // reopen the browse-all list between guesses without it popping open on
+  // its own.
+  // input.addEventListener("click", () => render(search(input.value)));
 
   input.addEventListener("keydown", (e) => {
     if (listEl.hidden) return;
