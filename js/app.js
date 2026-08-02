@@ -591,5 +591,20 @@
     onSelect: submitGuess,
   });
 
+  // Bridge for js/devtools.js, which loads before this file and so can't
+  // close over `mode`/`session`/etc. directly — its functions read this at
+  // call time instead, by which point app.js has already run. Random-mode
+  // sessions live only in memory (never localStorage), so devtools mutates
+  // session().state directly and calls refreshView() to reflect it, rather
+  // than the write-then-reload approach that works for the daily puzzle.
+  window.MicleApp = {
+    getMode: () => mode,
+    getSession: session,
+    eligibleMics,
+    micById,
+    newRandomRound,
+    refreshView,
+  };
+
   refreshView();
 })();

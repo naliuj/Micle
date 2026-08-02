@@ -74,20 +74,31 @@ No server needed — just open `index.html` directly in a browser (double-click 
 
 ## Debugging
 
-`js/devtools.js` always exposes a console API — no URL flag needed:
+`js/devtools.js` always exposes a console API — no URL flag needed. Every
+command acts on whichever mode (Daily Puzzle / Random Mic) is currently on
+screen:
 
 ```js
-MicleDebug.revealAnswer()      // logs + returns today's target mic
-MicleDebug.winInstantly()      // marks today solved with the correct guess, reloads
-MicleDebug.loseInstantly()     // fills today with 6 wrong guesses, reloads
-MicleDebug.resetToday()        // clears today's progress, reloads
-MicleDebug.resetAll()          // clears all Micle localStorage, reloads
-MicleDebug.gotoDate("2026-08-15") // jumps to that date (adds ?debug=1&date=..., reloads)
-MicleDebug.getState()          // { dayIndex, dateStr, target, dayState, stats }
-MicleDebug.poolStats()         // { total, eligible, quarantined, scheduleLength }
+MicleDebug.revealAnswer()        // logs + returns the current target mic
+MicleDebug.setTarget("query")    // Random Mic only: sets the target to a matching mic, starts a fresh round
+MicleDebug.winInstantly()        // marks the round solved with the correct guess
+MicleDebug.loseInstantly()       // fills the round with 6 wrong guesses
+MicleDebug.resetToday()          // Daily: clears today's progress, reloads. Random: fresh round in place.
+MicleDebug.resetAll()            // clears all Micle localStorage, reloads
+MicleDebug.gotoDate("2026-08-15") // jumps Daily to that date (adds ?debug=1&date=..., reloads)
+MicleDebug.getState()            // { mode, target, state, [dayIndex, dateStr, stats if Daily] }
+MicleDebug.poolStats()           // { total, eligible, quarantined, scheduleLength }
+MicleDebug.showPossibleGuesses() // logs + returns every eligible mic still consistent with all guesses so far (matches, no-matches, and hi/lo hints)
 ```
 
 There's no visual UI for any of this — it's console-only. `gotoDate()` works by adding `?debug=1&date=YYYY-MM-DD` to the URL and reloading; the date override in `js/schedule.js` only activates when `debug=1` is present, so it can't be triggered by accident via a stray query string.
+
+Daily commands persist to localStorage and reload the page, same as before.
+Random Mic sessions are never persisted (by design — see above), so those
+commands instead mutate the in-memory session directly and re-render in
+place; no reload, since that would also wipe the random round. `js/app.js`
+exposes a small `window.MicleApp` bridge for this — see its comment there if
+you're extending devtools.js further.
 
 ## Deploying to GitHub Pages
 
