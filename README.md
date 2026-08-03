@@ -12,6 +12,24 @@ Random Mic also has an **Infinity** pill toggle that lifts the 6-guess cap for t
 
 A dice-icon button next to the guess input submits a random unguessed mic from the eligible pool as your next guess — in any mode, Daily included. It's available for the whole round (not just the opening guess) and disables along with the input once the round ends.
 
+## Keyboard shortcuts
+
+`/`, `?`, and `Esc` always work. The rest only fire while the guess input isn't focused, so they never interfere with typing a mic name:
+
+| Key | Action |
+|---|---|
+| `/` | Focus the guess input |
+| `?` | Toggle the instructions panel |
+| `Esc` | Close the instructions panel |
+| `S` | Open stats |
+| `D` | Switch to Daily Puzzle |
+| `M` | Switch to Random Mic |
+| `N` | New Mic (Random Mic only) |
+| `R` | Random guess |
+| `I` | Toggle Infinity (Random Mic only) |
+
+All of them are suppressed while the stats dialog is open, so they never fight with its native focus-trap/Escape-close behavior.
+
 ## Project structure
 
 ```

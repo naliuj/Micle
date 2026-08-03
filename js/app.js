@@ -584,6 +584,70 @@
     if (mic) submitGuess(mic);
   });
 
+  // Keyboard shortcuts. Extended (letter-key) shortcuts only fire when the
+  // guess input isn't focused — typing a mic name must never be hijacked —
+  // and everything is suppressed while the stats dialog is open, so its own
+  // native focus-trap/Escape-close behavior is never second-guessed here.
+  // Each extended shortcut just clicks the real button behind its own
+  // visibility/disabled guard, so it always runs the exact same code path
+  // (analytics tracking included) a real click would.
+  document.addEventListener("keydown", (e) => {
+    if (els.statsModal.open) return;
+
+    if (e.key === "/") {
+      e.preventDefault(); // Firefox binds "/" to quick-find otherwise.
+      if (document.activeElement !== els.input) els.input.focus();
+      return;
+    }
+    if (e.key === "?") {
+      e.preventDefault();
+      els.helpBtn.click();
+      return;
+    }
+    if (e.key === "Escape") {
+      if (!els.instructions.hidden) {
+        els.instructions.hidden = true;
+        els.helpBtn.setAttribute("aria-expanded", "false");
+      }
+      return;
+    }
+
+    if (document.activeElement === els.input) return;
+
+    switch (e.key.toLowerCase()) {
+      case "s":
+        e.preventDefault();
+        els.statsBtn.click();
+        break;
+      case "d":
+        e.preventDefault();
+        els.modeDailyBtn.click();
+        break;
+      case "m":
+        e.preventDefault();
+        els.modeRandomBtn.click();
+        break;
+      case "n":
+        if (!els.newRandomBtn.hidden) {
+          e.preventDefault();
+          els.newRandomBtn.click();
+        }
+        break;
+      case "r":
+        if (!els.randomGuessBtn.disabled) {
+          e.preventDefault();
+          els.randomGuessBtn.click();
+        }
+        break;
+      case "i":
+        if (!els.infinityToggleBtn.hidden) {
+          e.preventDefault();
+          els.infinityToggleBtn.click();
+        }
+        break;
+    }
+  });
+
   const autocomplete = createAutocomplete({
     input: els.input,
     listEl: els.list,

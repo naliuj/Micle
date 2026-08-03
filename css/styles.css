@@ -171,6 +171,38 @@ main {
 .instructions p { margin: 0 0 var(--space-4); }
 .instructions-note { font-size: var(--fs-sm); margin: var(--space-4) 0 0 !important; }
 
+.shortcuts {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.shortcuts li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.shortcuts kbd {
+  flex: none;
+  min-width: 1.5rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5rem;
+}
+
+.shortcuts-scope { color: var(--muted); }
+
 .legend {
   list-style: none;
   margin: 0;
