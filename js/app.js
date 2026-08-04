@@ -130,11 +130,34 @@
     }
   }
 
-  // Umami is loaded via a <script defer> tag in index.html and can be
-  // ad-blocked or slow to load, so every call site guards on its presence
-  // rather than assuming window.umami exists.
+  // Both Umami and GoatCounter are loaded via <script> tags in index.html and
+  // can be ad-blocked or slow to load, so every call site guards on presence
+  // rather than assuming window.umami/window.goatcounter exist. Umami fires
+  // alongside GoatCounter temporarily so counts can be cross-validated before
+  // Umami's script tag (index.html) and the window.umami line below are removed.
   function track(name, data) {
     if (window.umami) window.umami.track(name, data);
+    if (window.goatcounter) window.goatcounter.count(toGoatCounterEvent(name, data));
+  }
+
+  // GoatCounter's event API takes a path/title pair, not an arbitrary data
+  // object, so mode/outcome are folded into the path (queryable as distinct
+  // events in the dashboard) and guesses rides along as a non-queryable label.
+  function toGoatCounterEvent(name, data) {
+    switch (name) {
+      case "infinity_toggle":
+        return { path: `infinity_toggle:${data.enabled ? "on" : "off"}`, event: true };
+      case "mode_switch":
+        return { path: `mode_switch:${data.mode}`, event: true };
+      case "round_complete":
+        return {
+          path: `round_complete:${data.mode}:${data.outcome}`,
+          title: `${data.guesses} guess${data.guesses === 1 ? "" : "es"}`,
+          event: true,
+        };
+      default:
+        return { path: name, event: true };
+    }
   }
 
   function formatDateLabel(dateStr) {

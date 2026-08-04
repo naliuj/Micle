@@ -166,20 +166,27 @@ version until the version bump ships.
 
 ## Analytics
 
-Micle uses [Umami Cloud](https://cloud.umami.is) for traffic analytics — it's
-cookieless (no consent banner needed) and free at this site's scale. The
-tracking script is a single `<script>` tag in `index.html`; there's no build
-step or server involved.
+Micle uses [GoatCounter](https://www.goatcounter.com) for traffic analytics —
+it's cookieless (no consent banner needed), free for a personal/non-commercial
+site at this scale, and its script domain is less commonly adblocked than
+Umami Cloud's (the previous analytics provider, being phased out — its script
+tag is still present in `index.html` temporarily so counts can be
+cross-validated before it's removed). The tracking script is a single
+`<script>` tag in `index.html`; there's no build step or server involved.
 
 Beyond automatic pageviews/visitors, a few custom events are tracked from
 `js/app.js`, all through a small `track(name, data)` wrapper that no-ops if the
-script is blocked or hasn't loaded yet:
-- `round_complete` — fired whenever a round ends (win or loss), tagged with
-  `mode` and the outcome, from `submitGuess()`.
+script is blocked or hasn't loaded yet. GoatCounter's event API takes a
+`path`/`title` pair rather than an arbitrary data object, so `track()`
+translates each call into a `name:variant` event path (queryable as a
+distinct event in the GoatCounter dashboard) via `toGoatCounterEvent()`:
+- `round_complete` — fired whenever a round ends (win or loss), from
+  `submitGuess()`. Becomes `round_complete:<mode>:<outcome>` (e.g.
+  `round_complete:daily:win`), with the guess count as the event's title.
 - `mode_switch` — fired on every Daily Puzzle / Random Mic switch, from
-  `switchMode()`.
+  `switchMode()`. Becomes `mode_switch:<mode>`.
 - `infinity_toggle` — fired when the Infinity pill is toggled on/off, from
-  `setRandomInfinity()`.
+  `setRandomInfinity()`. Becomes `infinity_toggle:on` or `infinity_toggle:off`.
 
 ## Regenerating the raw candidate list
 
