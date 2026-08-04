@@ -303,7 +303,7 @@ const MIC_DB = [
     polarPatterns: ["Hemi-Cardioid"],
     switchable: false,
     releaseYear: 1993,
-    msrp: null, // No credible official MSRP found despite extensive search; only used/street prices $75-200.
+    msrp: 120,
     needsVerification: false,
     verificationNote: "A boundary/PZM-style condenser, not a handheld mic as its name might suggest.",
   },
