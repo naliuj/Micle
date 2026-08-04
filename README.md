@@ -34,11 +34,15 @@ All of them are suppressed while the stats dialog is open, so they never fight w
 
 ```
 index.html          entry point
+training/index.html  Study Mode page (see "Study Mode" below) — mirrors index.html's structure
 css/styles.css       all styling
+css/training.css      Study Mode-specific layout, built on styles.css's tokens
 js/                   app logic (vanilla JS, no framework)
   app.js               orchestration / rendering
   compare.js            pure guess-comparison functions
   autocomplete.js        typeahead search component
+  quiz.js                 pure quiz-question builders (mirrors compare.js's design)
+  training.js               Study Mode page orchestration
   schedule.js             resolves "today's" target mic from SCHEDULE.order (see below)
   storage.js               localStorage persistence, keyed by day index
   devtools.js               debug console API, no UI (see "Debugging" below)
@@ -156,7 +160,10 @@ asset (`index.html`, `css/styles.css`, all `js/*.js`, `data/*.js`) and serves
 **network-first with cache fallback** — deliberately not cache-first, since
 this is a no-build-step site with no hashed filenames, so a cache-first
 strategy could serve a stale `data/schedule.js` (and thus the wrong "today's
-puzzle") indefinitely to a returning visitor.
+puzzle") indefinitely to a returning visitor. `/training/*` is precached the
+same way and shares the same `CACHE_VERSION` — `js/pwa.js` registers the
+service worker with a root-absolute `/sw.js` path specifically so it
+resolves correctly from `/training/` too, not just `/`.
 
 **Maintenance gotcha:** `sw.js`'s `CACHE_VERSION` constant must be bumped by
 hand whenever any precached file changes — nothing does this automatically.
@@ -187,6 +194,42 @@ distinct event in the GoatCounter dashboard) via `toGoatCounterEvent()`:
   `switchMode()`. Becomes `mode_switch:<mode>`.
 - `infinity_toggle` — fired when the Infinity pill is toggled on/off, from
   `setRandomInfinity()`. Becomes `infinity_toggle:on` or `infinity_toggle:off`.
+
+## Study Mode
+
+`/training/` is a standalone page (own `index.html`, `js/quiz.js` +
+`js/training.js`, `css/training.css`) for studying the mic pool instead of
+just playing against it. It reuses the main game's data, comparison logic,
+storage conventions, and design tokens rather than inventing parallel ones —
+it doesn't load `js/app.js`/`js/schedule.js`/`js/devtools.js`, since it has
+no "today's puzzle" concept.
+
+Two tabs:
+- **Quiz** — pick which categories to be quizzed on (Manufacturer, Country,
+  Operating Principle, Polar Pattern, Release Year, Price), then answer a
+  10-question round. Every category is the same multiple-choice shape — one
+  mic shown, 4 options — including Year and Price, which ask about a
+  *bracket* rather than comparing two mics ("What decade was the ... released
+  in?", "What price bracket is the ... in?"). The bucket edges
+  (`YEAR_BUCKET_EDGES`/`PRICE_BUCKET_EDGES` in `js/quiz.js`) were chosen
+  against the real pool, not guessed — decade buckets split 3/14/7/9/25/34/
+  13/6 across the 111 mics, price buckets split 19/37/32/13/10 — so no single
+  bucket makes the question trivial. Distractors for every category are
+  drawn from the pool's distinct values for that category, not from other
+  mics — so a category with a low-population value (e.g. only one
+  Russian-made mic in the pool) never runs short of *distractors*, since the
+  question only needs enough *distinct values* to exist somewhere in the
+  pool. After a round, wrong answers can be retried via "Retry Missed"
+  (replays those exact questions, not a fresh draw), and per-category
+  accuracy persists across visits in `localStorage` under
+  `` `micle_${STORAGE_VERSION}_quiz_stats` `` — same versioned-key,
+  default-shape convention as the main game's `micle_v1_stats`, added
+  alongside it in `js/storage.js`.
+- **Reference** — search or browse the full pool and see a mic's complete
+  details. This repurposes `js/autocomplete.js`'s `browseAll()` (dormant on
+  the main game's guess input, opt-in elsewhere) via a `browseAllOnEmpty`
+  option, so typing nothing shows every mic alphabetically instead of an
+  empty dropdown.
 
 ## Regenerating the raw candidate list
 

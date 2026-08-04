@@ -1,6 +1,9 @@
 // Lightweight vanilla-JS typeahead over MIC_DB. No framework, no dependency.
 
-function createAutocomplete({ input, listEl, onSelect, isGuessed }) {
+// browseAllOnEmpty: opt-in, defaults false so the main game's guess input is
+// unaffected. The training page's reference view passes true to let players
+// browse the full pool instead of only searching it.
+function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmpty = false }) {
   let activeIndex = -1;
   let currentResults = [];
 
@@ -65,16 +68,15 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed }) {
   // Offers the full pool alphabetically instead of an empty dropdown when
   // there's no query to rank against, letting players browse rather than
   // only search. Unlike a ranked search this isn't capped at MAX_RESULTS:
-  // the whole point is every mic being reachable by scrolling. Currently
-  // unused — disabled below in search() — but kept in case it's wanted back.
+  // the whole point is every mic being reachable by scrolling. Only reached
+  // when browseAllOnEmpty is true (see search() below) — the main game's
+  // guess input leaves it off, so this stays inert there.
   function browseAll() {
     return [...MIC_DB].sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true }));
   }
 
   function search(query) {
-    // Browse-all-on-empty-query is disabled for now — see browseAll() above.
-    // Swap this line for `if (!query.trim()) return browseAll();` to re-enable.
-    if (!query.trim()) return [];
+    if (!query.trim()) return browseAllOnEmpty ? browseAll() : [];
     return MIC_DB.map((mic) => ({ mic, s: score(query, mic) }))
       .filter((r) => r.s < Infinity)
       // numeric so model numbers read naturally: KM 84 before KM 184.
@@ -145,15 +147,14 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed }) {
 
   input.addEventListener("input", () => render(search(input.value)));
 
-  // Browse-all-on-click is disabled for now (pairs with browseAll() above —
-  // search("") returns [] currently, so this would be a no-op anyway, but
-  // it's commented out too so re-enabling is just uncommenting both spots).
-  // A click (not focus) is what opens the list — the input never blurs on
-  // selection, so a "focus" listener wouldn't refire on a second guess; a
-  // click always does, giving the user an explicit, repeatable way to
-  // reopen the browse-all list between guesses without it popping open on
-  // its own.
-  // input.addEventListener("click", () => render(search(input.value)));
+  if (browseAllOnEmpty) {
+    // A click (not focus) is what opens the list — the input never blurs on
+    // selection, so a "focus" listener wouldn't refire on a second pick; a
+    // click always does, giving the user an explicit, repeatable way to
+    // reopen the browse-all list between picks without it popping open on
+    // its own.
+    input.addEventListener("click", () => render(search(input.value)));
+  }
 
   input.addEventListener("keydown", (e) => {
     if (listEl.hidden) return;

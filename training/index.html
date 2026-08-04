@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Micle Study Mode</title>
+  <meta name="description" content="Quiz yourself on the Micle microphone pool by category, or browse the full reference list. Study up to get better at the daily game." />
+  <link rel="canonical" href="https://micle.julianro.se/training/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Micle Study Mode" />
+  <meta property="og:description" content="Quiz yourself on the Micle microphone pool by category, or browse the full reference list." />
+  <meta property="og:url" content="https://micle.julianro.se/training/" />
+  <meta property="og:image" content="https://micle.julianro.se/social-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Micle Study Mode" />
+  <meta name="twitter:description" content="Quiz yourself on the Micle microphone pool by category, or browse the full reference list." />
+  <meta name="twitter:image" content="https://micle.julianro.se/social-card.png" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <!-- Keep in sync with --bg in css/styles.css's :root and its dark-mode override. -->
+  <meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#17171b" media="(prefers-color-scheme: dark)" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/training.css" />
+  <!-- Umami Cloud: privacy-friendly, cookieless analytics. TEMPORARY: remove once GoatCounter numbers are validated, see js/app.js track(). -->
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="380be635-32c4-4106-81da-ce175e192fd4"></script>
+  <!-- GoatCounter: privacy-friendly, cookieless analytics, less commonly adblocked than Umami Cloud. -->
+  <script data-goatcounter="https://julianrose.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-title">
+      <h1>Micle</h1>
+      <span class="tagline">🎓 study mode</span>
+    </div>
+    <div class="header-actions">
+      <a href="/" class="icon-btn icon-btn--back" aria-label="Back to Micle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        Micle
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <div class="mode-switcher" role="tablist">
+      <button type="button" id="tab-quiz-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-tab="quiz">Quiz</button>
+      <button type="button" id="tab-reference-btn" class="mode-btn" role="tab" aria-selected="false" data-tab="reference">Reference</button>
+    </div>
+
+    <section id="quiz-tab">
+      <div id="quiz-picker" class="quiz-picker">
+        <p class="mode-note">Pick which categories to be quizzed on, then start a 10-question round.</p>
+        <div id="category-list" class="category-list"></div>
+        <button type="button" id="start-quiz-btn" class="share-btn share-btn--page">Start Quiz</button>
+      </div>
+
+      <div id="quiz-active" class="quiz-active" hidden>
+        <p id="quiz-progress" class="quiz-progress"></p>
+        <div class="quiz-question">
+          <p id="quiz-prompt" class="quiz-prompt"></p>
+          <div id="quiz-options" class="quiz-options" role="group" aria-label="Answer choices"></div>
+        </div>
+        <p id="quiz-feedback" class="status-banner" role="status" hidden></p>
+        <button type="button" id="quiz-next-btn" class="share-btn share-btn--page" hidden>Next</button>
+      </div>
+
+      <div id="quiz-summary" class="quiz-summary" hidden>
+        <h2 id="quiz-summary-score"></h2>
+        <div id="quiz-summary-breakdown" class="quiz-summary-breakdown"></div>
+        <div class="quiz-summary-actions">
+          <button type="button" id="retry-missed-btn" class="share-btn share-btn--page share-btn--secondary" hidden>Retry Missed</button>
+          <button type="button" id="new-round-btn" class="share-btn share-btn--page">New Round</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="reference-tab" hidden>
+      <p class="mode-note">Search or browse the full pool to study up before you play.</p>
+      <div class="guess-form">
+        <div class="guess-row">
+          <div class="autocomplete">
+            <label for="reference-input" class="visually-hidden">Search or browse microphones</label>
+            <input
+              id="reference-input"
+              name="reference-search"
+              type="text"
+              placeholder="Search or browse microphones…"
+              role="combobox"
+              aria-expanded="false"
+              aria-autocomplete="list"
+              aria-controls="reference-list"
+              autocomplete="off"
+              data-lpignore="true"
+              data-1p-ignore
+              data-bwignore
+              data-form-type="other"
+              data-protonpass-ignore="true"
+            />
+            <ul id="reference-list" class="ac-list" role="listbox" hidden></ul>
+          </div>
+        </div>
+      </div>
+      <div id="reference-detail">
+        <p id="reference-detail-empty">Search or click into the list above to see a mic's full details.</p>
+        <div id="reference-board" class="board" hidden></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Study Mode quizzes you on the same mic pool as the daily game. <a href="/">Back to Micle</a>.</p>
+  </footer>
+
+  <script src="/data/mics.js"></script>
+  <script src="/js/storage.js"></script>
+  <script src="/js/compare.js"></script>
+  <script src="/js/autocomplete.js"></script>
+  <script src="/js/quiz.js"></script>
+  <script src="/js/training.js"></script>
+  <script src="/js/pwa.js"></script>
+</body>
+</html>

@@ -76,3 +76,42 @@ function recordCompletion(dayIndex, won, guessCount) {
   writeJSON(statsKey(), stats);
   return stats;
 }
+
+function quizStatsKey() {
+  return `micle_${STORAGE_VERSION}_quiz_stats`;
+}
+
+// QUIZ_CATEGORIES comes from js/quiz.js, loaded after this file on the
+// training page — safe because this only runs when a caller invokes it
+// (training.js), never at parse time, by which point quiz.js has loaded.
+function defaultQuizStats() {
+  return {
+    totalAnswered: 0,
+    totalCorrect: 0,
+    byCategory: Object.fromEntries(QUIZ_CATEGORIES.map((c) => [c.key, { answered: 0, correct: 0 }])),
+  };
+}
+
+function loadQuizStats() {
+  const stored = readJSON(quizStatsKey(), {});
+  const defaults = defaultQuizStats();
+  return {
+    ...defaults,
+    ...stored,
+    // Merged per-key rather than replaced wholesale, so a stats blob saved
+    // before a category existed still gets that category's zeroed entry.
+    byCategory: { ...defaults.byCategory, ...(stored.byCategory || {}) },
+  };
+}
+
+function recordQuizAnswer(categoryKey, correct) {
+  const stats = loadQuizStats();
+  stats.totalAnswered += 1;
+  if (correct) stats.totalCorrect += 1;
+  const forCategory = stats.byCategory[categoryKey] || { answered: 0, correct: 0 };
+  forCategory.answered += 1;
+  if (correct) forCategory.correct += 1;
+  stats.byCategory[categoryKey] = forCategory;
+  writeJSON(quizStatsKey(), stats);
+  return stats;
+}

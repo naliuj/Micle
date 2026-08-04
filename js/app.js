@@ -584,7 +584,7 @@
       }
     }
     const ok = await copyShareText();
-    btn.innerHTML = ok ? `${ICONS.check} Copied!` : "Couldn't copy — select text manually";
+    btn.innerHTML = ok ? `${ICONS.check} Copied!` : "Couldn't copy, select text manually";
     setTimeout(() => {
       btn.innerHTML = `${ICONS.clipboardCopy} Share Results`;
     }, 2000);

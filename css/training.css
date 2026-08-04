@@ -1,0 +1,196 @@
+/* Study Mode — quiz-specific layout only. Builds on css/styles.css's design
+   tokens and shared components (.site-header, .mode-switcher, .status-banner,
+   .board/.cell, .share-btn); doesn't redefine any :root variable. */
+
+.quiz-feedback-facts {
+  display: block;
+  margin-top: var(--space-2);
+  font-size: var(--fs-sm);
+  opacity: 0.85;
+}
+
+.quiz-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.category-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.category-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.category-pill:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--hint-bg);
+}
+
+/* Custom-styled rather than left as a native checkbox — nothing else in the
+   app uses OS-default form-control chrome, so a bare native checkbox was the
+   one element that didn't look like it belonged. The checkmark glyph matches
+   the app's own check icon (js/app.js's ICONS.check / the legend's match
+   swatch in index.html), so a checked category reads as the same "match"
+   affordance used everywhere else. */
+.category-pill input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 70%;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.category-pill input[type="checkbox"]:checked {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+}
+
+.category-pill input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.category-pill-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.category-pill-name { font-weight: 600; font-size: var(--fs-base); }
+.category-pill-accuracy { font-size: var(--fs-xs); color: var(--muted); }
+
+.quiz-active {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.quiz-progress {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin: 0;
+}
+
+.quiz-question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.quiz-prompt {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  margin: 0;
+}
+
+.quiz-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+}
+
+.quiz-option {
+  padding: var(--space-4);
+  font-size: var(--fs-base);
+  font-family: inherit;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.quiz-option:hover:not(:disabled) { background: var(--bg); }
+.quiz-option:disabled { cursor: default; }
+
+.quiz-option--correct {
+  background: var(--match-bg);
+  border-color: var(--match);
+  color: var(--match);
+}
+
+.quiz-option--incorrect {
+  background: var(--loss-bg);
+  border-color: var(--loss);
+  color: var(--loss);
+}
+
+.quiz-summary {
+  margin-top: var(--space-5);
+}
+
+.quiz-summary h2 { margin: 0 0 var(--space-2); }
+
+.quiz-summary-breakdown {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+
+.quiz-summary-row {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+}
+
+.quiz-summary-row strong { display: block; font-size: var(--fs-base); }
+
+.quiz-summary-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.quiz-summary-actions .share-btn--page { margin: 0; }
+
+.quiz-summary-actions .share-btn--secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.quiz-summary-actions .share-btn--secondary:hover { background: var(--bg); }
+
+#reference-detail-empty {
+  color: var(--muted);
+  font-size: var(--fs-base);
+}
+
+.icon-btn--back {
+  gap: var(--space-2);
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .quiz-options { grid-template-columns: 1fr; }
+}

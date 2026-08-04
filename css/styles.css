@@ -342,7 +342,11 @@ main {
 .random-guess-btn:hover { background: var(--bg); }
 .random-guess-btn:disabled { opacity: 0.6; cursor: default; }
 
-#guess-input {
+/* #reference-input (training/index.html's Reference-tab search field) shares
+   this rule rather than duplicating it in css/training.css, so the two text
+   fields can't drift out of sync. */
+#guess-input,
+#reference-input {
   width: 100%;
   padding: var(--space-4) var(--space-4);
   /* Must stay >= 16px: anything smaller makes iOS Safari zoom on focus. */
@@ -650,6 +654,7 @@ main {
 .random-guess-btn:focus-visible,
 .share-btn:focus-visible,
 #guess-input:focus-visible,
+#reference-input:focus-visible,
 .ac-list li:focus-visible,
 .infinity-toggle:focus-visible,
 .site-footer a:focus-visible {
@@ -658,7 +663,8 @@ main {
 }
 
 /* The input's border is its main affordance, so tint it too. */
-#guess-input:focus-visible {
+#guess-input:focus-visible,
+#reference-input:focus-visible {
   border-color: var(--accent);
 }
 
