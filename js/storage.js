@@ -5,12 +5,21 @@
 const STORAGE_VERSION = "v1";
 const MAX_GUESSES = 6;
 
+// How many past Random Mic targets a repeat is disallowed against. Persisted
+// rather than kept in memory so reloading the page can't be used to reset the
+// no-repeat memory.
+const RANDOM_HISTORY_LIMIT = 30;
+
 function statsKey() {
   return `micle_${STORAGE_VERSION}_stats`;
 }
 
 function dayKey(dayIndex) {
   return `micle_${STORAGE_VERSION}_day_${dayIndex}`;
+}
+
+function randomHistoryKey() {
+  return `micle_${STORAGE_VERSION}_random_history`;
 }
 
 function defaultStats() {
@@ -57,6 +66,19 @@ function loadDayState(dayIndex) {
 
 function saveDayState(dayIndex, state) {
   writeJSON(dayKey(dayIndex), state);
+}
+
+function loadRandomHistory() {
+  const ids = readJSON(randomHistoryKey(), []);
+  return Array.isArray(ids) ? ids : [];
+}
+
+// Appends the newest target and drops anything past RANDOM_HISTORY_LIMIT, so
+// the exclusion list itself never grows unbounded in localStorage.
+function recordRandomTarget(id) {
+  const history = loadRandomHistory();
+  history.push(id);
+  writeJSON(randomHistoryKey(), history.slice(-RANDOM_HISTORY_LIMIT));
 }
 
 function recordCompletion(dayIndex, won, guessCount) {

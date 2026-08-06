@@ -192,8 +192,17 @@
     return Math.floor(Math.random() * n);
   }
 
+  // Excludes today's daily answer (so Random Mic can't hand out a free look at
+  // it) and the last RANDOM_HISTORY_LIMIT random targets (so back-to-back
+  // rounds don't repeat). Falls back in stages if the eligible pool is ever
+  // small enough for those exclusions to exhaust it — at the current pool
+  // size (110+) neither fallback should trigger, but a shrunk pool should
+  // degrade gracefully rather than return undefined.
   function randomEligibleMic() {
-    const pool = eligibleMics();
+    const excludeIds = new Set([daily.target.id, ...loadRandomHistory()]);
+    let pool = eligibleMics().filter((m) => !excludeIds.has(m.id));
+    if (pool.length === 0) pool = eligibleMics().filter((m) => m.id !== daily.target.id);
+    if (pool.length === 0) pool = eligibleMics();
     return pool[randomInt(pool.length)];
   }
 
@@ -243,11 +252,13 @@
   let randomInfinity = false;
 
   function newRandomRound() {
+    const target = randomEligibleMic();
     random = {
-      target: randomEligibleMic(),
+      target,
       state: { guesses: [], solved: false, exhausted: false },
       guessedIds: new Set(),
     };
+    recordRandomTarget(target.id);
   }
 
   let mode = "daily";
