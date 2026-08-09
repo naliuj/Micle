@@ -1495,7 +1495,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1965,
-    msrp: 158, // Official MSRP; street price is commonly ~$99-109.
+    msrp: 109, // Street price; official MSRP list price is higher but $109 is what it actually sells for.
   },
   {
     id: "shure-sm58",
@@ -1508,7 +1508,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1966,
-    msrp: 204, // Official MSRP; street price is commonly ~$99-109.
+    msrp: 109, // Street price; official MSRP list price is higher but $109 is what it actually sells for.
   },
   {
     id: "shure-sm7b",
