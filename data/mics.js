@@ -1235,7 +1235,7 @@ const MIC_DB = [
     operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Omnidirectional"],
     switchable: false,
-    releaseYear: 2019,
+    releaseYear: 2004,
     msrp: 2500, // RSPE Audio Solutions listed price, corroborated by Gearspace discussion.
     needsVerification: false,
   },
