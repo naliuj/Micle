@@ -1054,7 +1054,7 @@ const MIC_DB = [
     displayName: "Neumann KU 100",
     aliases: ["KU100"],
     countryOfOrigin: "Germany",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Omnidirectional"],
     switchable: false,
     releaseYear: 1992,
