@@ -519,6 +519,37 @@ const MIC_DB = [
     msrp: 600, // Official beyerdynamic.com US store price.
   },
 
+  // ------------------------------------------------------------------- Blue
+  {
+    id: "blue-blueberry",
+    manufacturer: "Blue Microphones",
+    model: "Blueberry",
+    displayName: "Blue Blueberry",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 1997,
+    msrp: 1000, // RecordingHacks MSRP.
+    needsVerification: false,
+  },
+  {
+    id: "blue-cactus",
+    manufacturer: "Blue Microphones",
+    model: "Cactus",
+    displayName: "Blue Cactus",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Tube",
+    polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
+    switchable: true,
+    releaseYear: 1998,
+    msrp: 3000, // RecordingHacks MSRP; discontinued.
+    needsVerification: false,
+    verificationNote: "9-position continuously variable pattern, simplified to 3 core named patterns — same convention as the Wunder Audio CM12.",
+  },
+
   // ---------------------------------------------------------------- Brauner
   {
     id: "brauner-vma",
@@ -871,13 +902,13 @@ const MIC_DB = [
     aliases: ["Mid Kick", "MidKick"],
     countryOfOrigin: "USA",
     operatingPrinciple: "Dynamic",
-    polarPatterns: ["Cardioid"],
+    polarPatterns: ["Figure-8"],
     switchable: false,
     releaseYear: 2024,
     msrp: 50,
-    needsVerification: true,
+    needsVerification: false,
     verificationNote:
-      "Manually entered per maintainer, not yet corroborated by an independent public source (no manufacturer page, retailer listing, or review found in a web search) — held out of the daily/random rotation until verified. Polar pattern confirmed as Cardioid by maintainer.",
+      "Manually entered per maintainer; no independent public source found (no manufacturer page, retailer listing, or review turned up in a web search). Manufacturer, origin, principle, price, and year are maintainer-supplied; polar pattern confirmed as Figure-8 by maintainer.",
   },
 
   // -------------------------------------------------------------- Neumann
@@ -1662,6 +1693,25 @@ const MIC_DB = [
     msrp: 8245, // Current price at Pro Audio Design / Vintage King for CM12 S.
     needsVerification: false,
     verificationNote: "9-position continuously variable pattern, simplified to 3 core named patterns.",
+  },
+
+  // -------------------------------------------------------------- Yamaha
+  {
+    id: "yamaha-skrm100",
+    manufacturer: "Yamaha",
+    model: "SKRM-100",
+    displayName: "Yamaha Subkick",
+    aliases: ["SKRM-100", "SKRM100", "Sub Kick", "Sub-Kick", "SubKick"],
+    countryOfOrigin: "Japan",
+    operatingPrinciple: "Dynamic",
+    polarPatterns: ["Figure-8"],
+    switchable: false,
+    releaseYear: 2004,
+    msrp: 499, // Tape Op (Jul/Aug 2004 review, contemporaneous with release) cites $499 MSRP,
+    // $299 street. RecordingHacks separately lists $670, likely a later/updated figure.
+    needsVerification: false,
+    verificationNote:
+      "Originally excluded from the inventory pass as an 'ambiguous/non-standard item' — see the file header comment — on the assumption it was an empty resonator shell. Confirmed via RecordingHacks and Tape Op it's a genuine self-contained dynamic mic: a shock-mounted 6.5in/16cm speaker driver reverse-wired as a diaphragm inside a 10x5in birch/mahogany shell, bidirectional (Figure-8) pattern.",
   },
 ];
 
