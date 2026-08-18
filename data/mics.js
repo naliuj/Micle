@@ -862,6 +862,24 @@ const MIC_DB = [
     msrp: 399, // Review-era US MSRP, ~2002-2003, base V69 (not Mogami edition).
   },
 
+  // ------------------------------------------------------------ Manchester Audio
+  {
+    id: "manchesteraudio-midkick",
+    manufacturer: "Manchester Audio",
+    model: "Mid-Kick",
+    displayName: "Manchester Audio Mid-Kick",
+    aliases: ["Mid Kick", "MidKick"],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Dynamic",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 2024,
+    msrp: 50,
+    needsVerification: true,
+    verificationNote:
+      "Manually entered per maintainer, not yet corroborated by an independent public source (no manufacturer page, retailer listing, or review found in a web search) — held out of the daily/random rotation until verified. Polar pattern confirmed as Cardioid by maintainer.",
+  },
+
   // -------------------------------------------------------------- Neumann
   {
     id: "neumann-u87ai",
