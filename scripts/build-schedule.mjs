@@ -17,7 +17,19 @@
 // cover the future without ever touching already-written days, so past
 // answers never change no matter when new mics get added or verified.
 //
-// Usage: node scripts/build-schedule.mjs [--launch-date=YYYY-MM-DD] [--buffer-days=N]
+// A newly-added or newly-verified mic only ever enters the *next* top-up's
+// generations, which — with the default 2-year buffer — could be years
+// away. --rebase-from-today exists for when a mic needs to enter rotation
+// soon rather than at the tail: it keeps days [0, today] exactly as
+// committed (today included, since that's the live answer), discards
+// everything after today, and rebuilds from there with the current
+// eligible pool. This is safe under the same rule as top-up mode — nothing
+// a real player has already been shown ever changes — because a day only
+// becomes an actual shown answer once its calendar date arrives; nothing
+// past today has been surfaced to anyone yet, peeking via MicleDebug
+// notwithstanding.
+//
+// Usage: node scripts/build-schedule.mjs [--launch-date=YYYY-MM-DD] [--buffer-days=N] [--rebase-from-today]
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -130,6 +142,34 @@ function main() {
 
   // Top up until we've got `bufferDays` of runway past today.
   const todayIndex = Math.floor((Date.now() - Date.parse(launchDate + "T00:00:00Z")) / 86400000);
+
+  if (args["rebase-from-today"]) {
+    if (!existing) {
+      console.error("--rebase-from-today has nothing to rebase — no existing schedule found.");
+      process.exit(1);
+    }
+    if (todayIndex >= order.length) {
+      console.error(
+        `--rebase-from-today: today (day ${todayIndex}) is past the end of the current schedule ` +
+          `(${order.length} days) — nothing to discard. Run without the flag to top up instead.`
+      );
+      process.exit(1);
+    }
+    const kept = todayIndex + 1;
+    const discarded = order.length - kept;
+    order = order.slice(0, kept);
+    // `generation` is left as-is rather than reset: it's only ever used to
+    // derive a per-generation seed and to detect "nothing new was added", and
+    // every index below it was already consumed by the generations this just
+    // discarded — reusing them would risk (however unlikely) reproducing a
+    // discarded shuffle. Leaving it alone means the next generation appended
+    // below gets a seed index that has never been used before.
+    console.log(
+      `Rebasing: kept days 0-${todayIndex} (${kept} days, through today), discarded ${discarded} ` +
+        `not-yet-live day(s). Rebuilding from day ${kept} with the current ${eligibleIds.length}-mic pool.`
+    );
+  }
+
   const targetLength = Math.max(order.length, todayIndex + bufferDays);
 
   const startingGeneration = generation;
