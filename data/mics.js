@@ -519,6 +519,37 @@ const MIC_DB = [
     msrp: 600, // Official beyerdynamic.com US store price.
   },
 
+  // ------------------------------------------------------------------- Blue
+  {
+    id: "blue-blueberry",
+    manufacturer: "Blue Microphones",
+    model: "Blueberry",
+    displayName: "Blue Blueberry",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 1997,
+    msrp: 1000, // RecordingHacks MSRP.
+    needsVerification: false,
+  },
+  {
+    id: "blue-cactus",
+    manufacturer: "Blue Microphones",
+    model: "Cactus",
+    displayName: "Blue Cactus",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Tube",
+    polarPatterns: ["Cardioid", "Omnidirectional", "Figure-8"],
+    switchable: true,
+    releaseYear: 1998,
+    msrp: 3000, // RecordingHacks MSRP; discontinued.
+    needsVerification: false,
+    verificationNote: "9-position continuously variable pattern, simplified to 3 core named patterns — same convention as the Wunder Audio CM12.",
+  },
+
   // ---------------------------------------------------------------- Brauner
   {
     id: "brauner-vma",
