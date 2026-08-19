@@ -82,7 +82,14 @@
 
   const SHARE_EMOJI = {
     match: "🟩",
-    partial: "🟨",
+    // Collapsed to the same black square as no-match, in the shared text only.
+    // partial is currently only ever produced by the pattern category, and a
+    // distinct color there leaks that the target has more patterns than a
+    // single-pattern guess did (i.e. is switchable/multi-pattern) — real
+    // signal a copy-pasted result shouldn't give away. The live board tile
+    // stays yellow (.cell--partial in styles.css); this only affects
+    // buildShareText() below.
+    partial: "⬛",
     "no-match": "⬛",
     unknown: "⬜",
     higher: "⬆️",
