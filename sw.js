@@ -5,9 +5,10 @@
 // indefinitely to a returning visitor. Network-first sacrifices some offline
 // capability for correctness, which is the right trade for a daily puzzle.
 //
-// Bump CACHE_VERSION whenever any cached file below changes — nothing else
-// invalidates the cache automatically (see README's "PWA" section).
-const CACHE_VERSION = "v7";
+// CACHE_VERSION is stamped by scripts/stamp-cache-version.mjs — it's a hash
+// of every file listed below, so it changes exactly when they do. Don't edit
+// it by hand; run the script (see README's "PWA" section).
+const CACHE_VERSION = "813a7e1ae604";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -30,6 +31,11 @@ const PRECACHE_URLS = [
   "/js/order.js",
   "/js/match.js",
   "/js/training.js",
+  "/manifest.webmanifest",
+  "/favicon.svg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/apple-touch-icon.png",
 ];
 
 self.addEventListener("install", (event) => {

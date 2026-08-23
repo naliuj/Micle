@@ -54,6 +54,7 @@ data/
 scripts/
   parse_inventory.py    xlsx -> raw candidate mic names (maintainer tool, rerun if source spreadsheet changes)
   build-schedule.mjs      generates/extends data/schedule.js (maintainer tool)
+  stamp-cache-version.mjs stamps sw.js's CACHE_VERSION from a content hash
   raw_candidates.json      staging output of parse_inventory.py, kept for provenance
 ```
 
@@ -167,11 +168,25 @@ same way and shares the same `CACHE_VERSION` — `js/pwa.js` registers the
 service worker with a root-absolute `/sw.js` path specifically so it
 resolves correctly from `/training/` too, not just `/`.
 
-**Maintenance gotcha:** `sw.js`'s `CACHE_VERSION` constant must be bumped by
-hand whenever any precached file changes — nothing does this automatically.
-Forgetting isn't catastrophic (network-first means fresh content still wins
-on every online load), but the *offline* copy would keep serving the old
-version until the version bump ships.
+`CACHE_VERSION` is a hash of every precached file, stamped by
+`scripts/stamp-cache-version.mjs` — don't edit it by hand:
+
+```
+node scripts/stamp-cache-version.mjs
+```
+
+Run it before committing any change to a precached file. It's idempotent
+(same content in, same version out, no diff), so running it when nothing
+changed is free. It also asserts every `PRECACHE_URLS` entry resolves to a
+real file — `install()` uses `cache.addAll()`, which is all-or-nothing, so
+one bad path rejects the install and leaves the site with *no* offline
+support, silently, since `js/pwa.js` swallows registration failures by design.
+
+This used to be a hand-bumped constant, and it went un-bumped across two
+deploys before anyone noticed — which is the argument for deriving it. The
+failure it guards is narrow but real: network-first means fresh content still
+wins on every *online* load regardless of the version, so only the offline
+copy goes stale, and only until the next successful fetch rewrites it.
 
 ## Analytics
 
