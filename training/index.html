@@ -65,13 +65,16 @@
         </button>
       </div>
       <div id="round-setup-panel" class="round-setup-panel" hidden>
-        <label class="pool-filter">
-          <span>Manufacturer</span>
-          <select id="filter-manufacturer"><option value="">Any</option></select>
-        </label>
+        <!-- Country leads and Manufacturer cascades off it: the Manufacturer
+             list only offers makers that build in the selected country, so
+             the two can never be put into conflict. -->
         <label class="pool-filter">
           <span>Country</span>
           <select id="filter-country"><option value="">Any</option></select>
+        </label>
+        <label class="pool-filter">
+          <span>Manufacturer</span>
+          <select id="filter-manufacturer"><option value="">Any</option></select>
         </label>
         <div class="pool-filter">
           <span id="round-length-label">Questions</span>
@@ -165,16 +168,34 @@
         <button type="button" id="start-match-btn" class="share-btn share-btn--page">Start Round</button>
       </div>
 
+      <!-- One mic at a time rather than a grid of eight: the verdict can then
+           land the moment you answer, which is where the learning is. The run
+           bar is decoration over the same state the count states in words. -->
       <div id="match-active" class="match-active" hidden>
+        <div id="match-run-bar" class="match-run-bar" aria-hidden="true"></div>
+        <p id="match-run-count" class="match-run-count"></p>
         <p id="match-prompt" class="quiz-prompt"></p>
-        <div id="match-grid" class="match-grid" role="group" aria-label="Select every matching mic"></div>
-        <button type="button" id="submit-match-btn" class="share-btn share-btn--page">Submit Selection</button>
+        <div class="match-card-face">
+          <p id="match-mic-name" class="match-mic-name"></p>
+          <p id="match-mic-meta" class="match-mic-meta"></p>
+        </div>
+        <div id="match-choices" class="match-choices">
+          <button type="button" id="match-yes-btn" class="match-choice">Yes</button>
+          <button type="button" id="match-no-btn" class="match-choice">No</button>
+        </div>
+        <!-- Below the buttons, not above: answering then only appends, so
+             nothing you were looking at moves out from under you. -->
+        <div id="match-verdict" class="match-verdict" hidden></div>
+        <p id="match-feedback" class="visually-hidden" role="status"></p>
+        <button type="button" id="match-next-btn" class="share-btn share-btn--page" hidden>Next</button>
       </div>
 
       <div id="match-summary" class="order-summary" hidden>
         <h2 id="match-summary-score"></h2>
-        <div id="match-summary-grid" class="match-grid"></div>
+        <p id="match-summary-tally" class="match-summary-tally"></p>
+        <div id="match-summary-grid" class="match-ledger"></div>
         <div class="quiz-summary-actions">
+          <button type="button" id="match-exit-btn" class="share-btn share-btn--page share-btn--secondary" hidden>Back to Menu</button>
           <button type="button" id="new-match-round-btn" class="share-btn share-btn--page">New Round</button>
         </div>
       </div>

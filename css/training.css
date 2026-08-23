@@ -141,24 +141,26 @@
   outline-offset: 2px;
 }
 
-/* A zero-match filter locks out every category/dimension at once, so the
-   summary line turns into an unmissable warning — and the bar force-expands
+/* A filter that matches nothing — or too few mics for the active mode —
+   locks out every category/dimension at once, so the summary line turns
+   into an unmissable warning — and the bar force-expands
    and refuses to collapse, since a blocking state must never be hidden
    behind a collapsed control. */
-.round-setup--empty .round-setup-summary {
+.round-setup--blocked .round-setup-summary {
   color: var(--loss);
   background: var(--loss-bg);
   border-color: var(--loss);
 }
 
-.round-setup--empty .round-setup-text {
+.round-setup--blocked .round-setup-text {
   font-weight: 600;
   color: var(--loss);
 }
 
 /* Replaces the whole category/dimension list (not just a per-item note)
-   when the filter matches nothing — same reasoning as above. */
-.pool-empty-notice {
+   when the filter matches nothing, or matches too few mics to build a round
+   — same reasoning as above. */
+.pool-blocked-notice {
   padding: var(--space-5);
   border: 1px solid var(--loss);
   border-radius: var(--radius-lg);
@@ -207,10 +209,8 @@
    one element that didn't look like it belonged. The checkmark glyph matches
    the app's own check icon (js/app.js's ICONS.check / the legend's match
    swatch in index.html), so a checked category reads as the same "match"
-   affordance used everywhere else. Shared with .match-card (Match mode's
-   mic-selection toggles), same affordance applied to a different label. */
-.category-pill input[type="checkbox"],
-.match-card input[type="checkbox"] {
+   affordance used everywhere else. */
+.category-pill input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   flex: none;
@@ -227,15 +227,13 @@
   transition: background-color 120ms ease, border-color 120ms ease;
 }
 
-.category-pill input[type="checkbox"]:checked,
-.match-card input[type="checkbox"]:checked {
+.category-pill input[type="checkbox"]:checked {
   background-color: var(--accent);
   border-color: var(--accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
 }
 
-.category-pill input[type="checkbox"]:focus-visible,
-.match-card input[type="checkbox"]:focus-visible {
+.category-pill input[type="checkbox"]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -328,6 +326,13 @@
 }
 
 .weak-spots-btn:hover { background: var(--bg); }
+
+.weak-spots-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.weak-spots-btn:disabled:hover { background: var(--surface); }
 .weak-spots-btn:disabled { opacity: 0.5; cursor: default; }
 
 .weak-spots-btn:focus-visible {
@@ -603,13 +608,24 @@
 .quiz-missed-right { color: var(--match); }
 .quiz-missed-answers span strong { font-weight: 600; }
 
+/* margin-top rather than padding so it collapses against a preceding block's
+   own bottom margin — the quiz's "Mics you missed" already ends with one, so
+   this only adds room where there wasn't any (Match's ledger, Order's list). */
 .quiz-summary-actions {
   display: flex;
   gap: var(--space-3);
   flex-wrap: wrap;
+  margin-top: var(--space-7);
 }
 
-.quiz-summary-actions .share-btn--page { margin: 0; }
+/* Fill the row rather than shrink-wrapping the label, so the action row
+   lines up with the ledger/list above it. Two buttons split it evenly; with
+   flex-wrap they each go full width if the labels stop fitting. */
+.quiz-summary-actions .share-btn--page {
+  margin: 0;
+  flex: 1 1 0;
+  min-width: 8rem;
+}
 
 .quiz-summary-actions .share-btn--secondary {
   background: var(--surface);
@@ -847,17 +863,132 @@
   gap: var(--space-4);
 }
 
-.match-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+/* One segment per mic in the round, filled in as you answer. Decoration over
+   .match-run-count, which states the same progress in words. */
+.match-run-bar {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.match-run-seg {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background-color 160ms ease;
+}
+
+.match-run-seg--correct { background: var(--match); }
+.match-run-seg--incorrect { background: var(--loss); }
+
+.match-run-count {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.match-target { color: var(--accent); font-weight: 600; }
+
+.match-card-face {
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: center;
+}
+
+.match-mic-name {
+  margin: 0 0 var(--space-2);
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.match-mic-meta {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+.match-choices {
+  display: flex;
+  gap: var(--space-4);
+}
+
+/* Deliberately equal weight — "no" is the right answer three times out of
+   four in a typical round, so styling it as the secondary option would push
+   against the truth of the task. Yes leads, matching the question's phrasing. */
+.match-choice {
+  flex: 1;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.match-choice:hover:not(:disabled) { background: var(--bg); border-color: var(--accent); }
+.match-choice:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Answered: both lock, and the one you pressed stays marked so the verdict
+   below reads against your actual answer rather than in the abstract. */
+.match-choice:disabled { cursor: default; color: var(--muted); }
+
+.match-choice--chosen {
+  border-color: var(--accent);
+  background: var(--hint-bg);
+  color: var(--text);
+}
+
+.match-verdict {
+  display: flex;
+  align-items: flex-start;
   gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* Label stays --text and the tint/border/glyph carry the state — same reason
+   as .quiz-option--correct: --match on --match-bg is only 3.5:1. */
+.match-verdict--correct { border-color: var(--match); background: var(--match-bg); }
+.match-verdict--incorrect { border-color: var(--loss); background: var(--loss-bg); }
+
+.match-verdict-icon { flex: none; display: flex; width: 1.25rem; height: 1.25rem; }
+.match-verdict-icon svg { width: 100%; height: 100%; }
+.match-verdict--correct .match-verdict-icon { color: var(--match); }
+.match-verdict--incorrect .match-verdict-icon { color: var(--loss); }
+
+.match-verdict-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+.match-verdict-detail { font-size: var(--fs-sm); color: var(--muted); }
+
+.match-summary-tally {
+  margin: 0 0 var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+/* Rows, not cards: the ledger is read top-to-bottom with mistakes first, so a
+   wrapping grid would scramble the one ordering that matters. */
+.match-ledger {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   margin-top: var(--space-4);
 }
 
-/* Reuses .category-pill's checkbox visual language (custom-styled checkbox +
-   label), since this is the same "toggle a choice on/off" affordance, just
-   applied to a mic instead of a category. */
-.match-card {
+.match-ledger-row {
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -865,26 +996,38 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  cursor: pointer;
-  font-size: var(--fs-base);
-  transition: border-color 120ms ease, background-color 120ms ease;
 }
 
-.match-card:has(input:checked) {
-  border-color: var(--accent);
-  background: var(--hint-bg);
-}
+.match-ledger-row--correct { border-color: var(--match); background: var(--match-bg); }
+.match-ledger-row--incorrect { border-color: var(--loss); background: var(--loss-bg); }
 
-.match-card--correct {
-  border-color: var(--match);
-  background: var(--match-bg);
+.match-ledger-icon { flex: none; display: flex; width: 1.1rem; height: 1.1rem; }
+.match-ledger-icon svg { width: 100%; height: 100%; }
+.match-ledger-row--correct .match-ledger-icon { color: var(--match); }
+.match-ledger-row--incorrect .match-ledger-icon { color: var(--loss); }
+
+.match-ledger-body { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
+.match-ledger-name { font-size: var(--fs-base); color: var(--text); }
+.match-ledger-note { font-size: var(--fs-xs); color: var(--muted); }
+
+/* Only on a clean sweep — every other round is a score, not a failure. */
+.match-sweep {
+  display: inline-flex;
+  width: 0.9em;
+  height: 0.9em;
+  margin-left: var(--space-2);
+  vertical-align: -0.05em;
   color: var(--match);
 }
 
-.match-card--incorrect {
-  border-color: var(--loss);
-  background: var(--loss-bg);
-  color: var(--loss);
+.match-sweep svg { width: 100%; height: 100%; }
+
+.match-ledger-value {
+  flex: none;
+  max-width: 45%;
+  text-align: right;
+  font-size: var(--fs-xs);
+  color: var(--muted);
 }
 
 @media (max-width: 480px) {

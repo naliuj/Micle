@@ -77,12 +77,21 @@
     matchDimensionList: document.getElementById("match-dimension-list"),
     startMatchBtn: document.getElementById("start-match-btn"),
     matchActive: document.getElementById("match-active"),
+    matchRunBar: document.getElementById("match-run-bar"),
+    matchRunCount: document.getElementById("match-run-count"),
     matchPrompt: document.getElementById("match-prompt"),
-    matchGrid: document.getElementById("match-grid"),
-    submitMatchBtn: document.getElementById("submit-match-btn"),
+    matchMicName: document.getElementById("match-mic-name"),
+    matchMicMeta: document.getElementById("match-mic-meta"),
+    matchVerdict: document.getElementById("match-verdict"),
+    matchNoBtn: document.getElementById("match-no-btn"),
+    matchYesBtn: document.getElementById("match-yes-btn"),
+    matchFeedback: document.getElementById("match-feedback"),
+    matchNextBtn: document.getElementById("match-next-btn"),
     matchSummary: document.getElementById("match-summary"),
     matchSummaryScore: document.getElementById("match-summary-score"),
+    matchSummaryTally: document.getElementById("match-summary-tally"),
     matchSummaryGrid: document.getElementById("match-summary-grid"),
+    matchExitBtn: document.getElementById("match-exit-btn"),
     newMatchRoundBtn: document.getElementById("new-match-round-btn"),
 
     referenceInput: document.getElementById("reference-input"),
@@ -136,44 +145,116 @@
     );
   }
 
-  // Counts and availability are recomputed against the *other* active filter
-  // rather than the whole pool. Without this, selecting Germany still
-  // advertised "Shure (12)" — picking it dropped you into the blocking
-  // empty state. Zero-yield values are disabled rather than removed, so the
-  // list doesn't shuffle under the cursor.
-  function populateFilterSelect(selectEl, getValue, otherPredicate) {
-    const previous = selectEl.value;
-    const pool = eligibleMics();
-    const totals = new Map();
-    const available = new Map();
+  // The pool a given pair of selections *would* produce, cascade included —
+  // picking a country drops an incompatible manufacturer, so the result is
+  // that country's whole set, not an empty one. Used to test an option
+  // before the user commits to it.
+  function projectedPool(country, manufacturer) {
+    const pool = eligibleMics().filter((m) => !country || m.countryOfOrigin === country);
+    const keepsManufacturer = manufacturer && pool.some((m) => m.manufacturer === manufacturer);
+    return keepsManufacturer ? pool.filter((m) => m.manufacturer === manufacturer) : pool;
+  }
+
+  // A filter can leave mics in the pool and still make a mode unplayable:
+  // Soyuz has exactly one mic, so every quiz category collapses to a single
+  // answer and every Order/Match dimension goes unavailable — a picker full
+  // of greyed-out pills and a dead Start button, with the cause two controls
+  // away. Each mode's test below delegates to the very predicate its picker
+  // uses, so the setup bar can never disagree with the tab underneath it.
+  const MODE_REQUIREMENTS = {
+    quiz: {
+      label: "Quiz",
+      article: "a quiz",
+      isViable: (pool) => QUIZ_CATEGORIES.some((cat) => !isCategoryTrivial(cat, pool)),
+      needs: "A quiz needs at least two mics that differ in some category.",
+    },
+    order: {
+      label: "Order",
+      article: "an Order round",
+      isViable: (pool) => ORDER_DIMENSIONS.some((dim) => pool.filter((m) => dim.getValue(m) != null).length >= 2),
+      needs: "Order needs at least two mics to put in sequence.",
+    },
+    match: {
+      label: "Match",
+      article: "a Match round",
+      isViable: (pool) => MATCH_DIMENSIONS.some((dim) => isMatchDimensionAvailable(dim, pool)),
+      needs: "Match needs at least four mics — two that share a trait and two that don't.",
+    },
+  };
+
+  function isModeViable(mode, pool) {
+    const req = MODE_REQUIREMENTS[mode];
+    return !req || (pool.length > 0 && req.isViable(pool));
+  }
+
+  function activePool() {
+    return applyFilters(eligibleMics());
+  }
+
+  // The two selects cascade rather than constrain each other symmetrically:
+  // Country is the primary filter and the Manufacturer list is rebuilt from
+  // whatever the chosen country contains. A conflicting pair is therefore
+  // unselectable — no "Shure (0)" sitting greyed out under a Germany filter,
+  // and no route into the blocking empty state from these two controls.
+  function countValues(pool, getValue) {
+    const counts = new Map();
     pool.forEach((m) => {
       const v = getValue(m);
-      totals.set(v, (totals.get(v) || 0) + 1);
-      if (otherPredicate(m)) available.set(v, (available.get(v) || 0) + 1);
+      if (v == null) return;
+      counts.set(v, (counts.get(v) || 0) + 1);
     });
-    const opts = [...totals.keys()].sort((a, b) => a.localeCompare(b));
+    return [...counts.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([value, count]) => ({ value, count }));
+  }
+
+  // Options that can't sustain the mode you're about to play are labelled
+  // rather than disabled. Disabling would have to be recomputed per tab, and
+  // a value that's legal under Quiz but not Match would vanish from a shared
+  // control mid-session; the label warns before the click and survives the
+  // switch. The mode it's judged against is the active tab, so the marks
+  // move when you do.
+  function populateFilterSelect(selectEl, options, selected, poolFor) {
     selectEl.innerHTML = '<option value="">Any</option>';
-    opts.forEach((v) => {
-      const n = available.get(v) || 0;
+    options.forEach(({ value, count }) => {
       const opt = document.createElement("option");
-      opt.value = v;
-      opt.textContent = `${v} (${n})`;
-      opt.disabled = n === 0;
+      opt.value = value;
+      const playable = isModeViable(activeTab, poolFor(value));
+      opt.textContent = playable ? `${value} (${count})` : `${value} (${count}) — too few`;
       selectEl.appendChild(opt);
     });
-    selectEl.value = previous;
+    selectEl.value = selected;
   }
 
   function refreshFilterSelects() {
-    populateFilterSelect(
-      els.filterManufacturerSelect,
-      (m) => m.manufacturer,
-      (m) => !countryFilter || m.countryOfOrigin === countryFilter
-    );
+    const pool = eligibleMics();
+    // Each option is judged against the pool its own count describes —
+    // country by the country alone, manufacturer by the manufacturer within
+    // the selected country. Projecting a pinned manufacturer onto the
+    // country list instead produced "Germany (30) — too few", a mark that
+    // argues with the number beside it; the narrow manufacturer is the one
+    // that deserves the flag, and it gets it.
     populateFilterSelect(
       els.filterCountrySelect,
-      (m) => m.countryOfOrigin,
-      (m) => !manufacturerFilter || m.manufacturer === manufacturerFilter
+      countValues(pool, (m) => m.countryOfOrigin),
+      countryFilter,
+      (value) => projectedPool(value, "")
+    );
+
+    const inCountry = countryFilter
+      ? pool.filter((m) => m.countryOfOrigin === countryFilter)
+      : pool;
+    const manufacturers = countValues(inCountry, (m) => m.manufacturer);
+
+    // Switching country can strand a manufacturer that the new list doesn't
+    // offer. Clear the filter itself, not just the select — leaving the
+    // variable set would keep filtering the pool by an option the user can
+    // no longer see or undo.
+    if (manufacturerFilter && !manufacturers.some((o) => o.value === manufacturerFilter)) {
+      manufacturerFilter = "";
+    }
+    populateFilterSelect(els.filterManufacturerSelect, manufacturers, manufacturerFilter, (value) =>
+      projectedPool(countryFilter, value)
     );
   }
 
@@ -198,30 +279,43 @@
     });
   }
 
-  function renderSetupSummary() {
-    const n = applyFilters(eligibleMics()).length;
-    const empty = n === 0;
+  // Describes the filter itself — "Germany, Neumann · 17 mics" — reused by
+  // both the healthy summary and the blocked warning so the numbers you're
+  // being warned about are the same ones you were just reading.
+  function poolDescription(n) {
+    const active = [countryFilter, manufacturerFilter].filter(Boolean);
+    const micWord = n === 1 ? "mic" : "mics";
+    return active.length === 0 ? `All ${n} ${micWord}` : `${active.join(", ")} · ${n} ${micWord}`;
+  }
 
-    let filterPart;
-    if (empty) {
-      filterPart = "No mics match this filter — change Manufacturer or Country to continue.";
+  function renderSetupSummary() {
+    const pool = activePool();
+    const n = pool.length;
+    const viable = isModeViable(activeTab, pool);
+    const req = MODE_REQUIREMENTS[activeTab];
+
+    let text;
+    if (n === 0) {
+      text = "No mics match this filter — change Country or Manufacturer to continue.";
+    } else if (!viable) {
+      // Name the count, the mode it falls short of, and the bar it has to
+      // clear. "Not enough mics" alone leaves you guessing how much more is
+      // enough, and the pickers below can only say it one greyed pill at a
+      // time.
+      text = `${poolDescription(n)} — too few for ${req.label}. ${req.needs}`;
     } else {
-      const active = [countryFilter, manufacturerFilter].filter(Boolean);
-      const micWord = n === 1 ? "mic" : "mics";
-      filterPart = active.length === 0 ? `All ${n} ${micWord}` : `${active.join(", ")} · ${n} ${micWord}`;
+      const len = lengthByMode[activeTab];
+      const noun = LENGTH_NOUN[activeTab] || "round";
+      text = `${poolDescription(n)} · ${len} ${noun}${len === 1 ? "" : "s"}`;
     }
 
-    const len = lengthByMode[activeTab];
-    const noun = LENGTH_NOUN[activeTab] || "round";
-    const lengthPart = `${len} ${noun}${len === 1 ? "" : "s"}`;
-
-    els.roundSetupText.textContent = empty ? filterPart : `${filterPart} · ${lengthPart}`;
-    els.roundSetup.classList.toggle("round-setup--empty", empty);
+    els.roundSetupText.textContent = text;
+    els.roundSetup.classList.toggle("round-setup--blocked", !viable);
 
     // A blocking state must never hide behind a collapsed control: force the
     // panel open and refuse to close it until the filter is fixed.
-    if (empty && !setupExpanded) setSetupExpanded(true);
-    els.roundSetupToggle.disabled = empty;
+    if (!viable && !setupExpanded) setSetupExpanded(true);
+    els.roundSetupToggle.disabled = !viable;
   }
 
   function setSetupExpanded(expanded) {
@@ -238,14 +332,23 @@
     renderMatchDimensionPicker();
   }
 
-  // Shared "filter matches nothing" empty state for all three pickers below
-  // — replaces the whole list (not just a per-item note) so it's impossible
-  // to miss, and disables the corresponding Start button.
-  function renderEmptyPoolNotice(listEl, startBtn) {
+  // Shared blocked state for all three pickers below — replaces the whole
+  // list (not just a per-item note) so it's impossible to miss, and disables
+  // the corresponding Start button. Covers both "nothing matches" and "some
+  // mics match, but too few to build a round": in the second case every pill
+  // would otherwise render disabled with its own quiet footnote, which reads
+  // as six separate problems instead of one filter to widen.
+  function renderBlockedPoolNotice(listEl, startBtn, mode, poolSize) {
     listEl.innerHTML = "";
     const notice = document.createElement("p");
-    notice.className = "pool-empty-notice";
-    notice.textContent = "No mics match the current filter. Change Manufacturer/Country above to continue.";
+    notice.className = "pool-blocked-notice";
+    // The setup bar directly above already spells out what the mode needs;
+    // repeating it here just doubled the same red paragraph on screen. This
+    // one carries the count and the way out.
+    notice.textContent =
+      poolSize === 0
+        ? "No mics match the current filter. Change Country or Manufacturer above to continue."
+        : `Only ${poolSize} mic${poolSize === 1 ? " matches" : "s match"} the current filter — widen Country or Manufacturer above to start ${MODE_REQUIREMENTS[mode].article}.`;
     listEl.appendChild(notice);
     startBtn.disabled = true;
   }
@@ -286,6 +389,7 @@
     els.roundSetup.hidden = tab === "reference";
     if (tab !== "reference") {
       activeTab = tab;
+      refreshFilterSelects();
       renderLengthPills();
       renderSetupSummary();
     }
@@ -294,10 +398,14 @@
   function renderCategoryPicker() {
     const stats = loadQuizStats();
     const targetPool = applyFilters(eligibleMics());
-    if (targetPool.length === 0) {
-      renderEmptyPoolNotice(els.categoryList, els.startQuizBtn);
+    if (!isModeViable("quiz", targetPool)) {
+      renderBlockedPoolNotice(els.categoryList, els.startQuizBtn, "quiz", targetPool.length);
+      // Every category is trivial here, so selectWeakSpots() would rank
+      // nothing and silently return — a live button that does nothing.
+      els.weakSpotsBtn.disabled = true;
       return;
     }
+    els.weakSpotsBtn.disabled = false;
     els.categoryList.innerHTML = "";
     QUIZ_CATEGORIES.forEach((cat) => {
       const id = `cat-${cat.key}`;
@@ -642,8 +750,8 @@
   function renderOrderDimensionPicker() {
     const stats = loadOrderStats();
     const pool = applyFilters(eligibleMics());
-    if (pool.length === 0) {
-      renderEmptyPoolNotice(els.orderDimensionList, els.startOrderBtn);
+    if (!isModeViable("order", pool)) {
+      renderBlockedPoolNotice(els.orderDimensionList, els.startOrderBtn, "order", pool.length);
       return;
     }
     const availability = ORDER_DIMENSIONS.map((dim) => ({
@@ -1012,6 +1120,9 @@
   let currentMatchDimension = null;
   let matchRoundsTotal = 5;
   let matchRoundIndex = 0;
+  let matchCardIndex = 0; // which mic within the current round
+  let matchOutcomes = []; // per-card correctness, drives the run bar
+  let answeredMatchCard = false;
   let matchSessionResults = []; // [{fullyCorrect, correctCount, roundSize}]
   let matchShowingSessionSummary = false;
 
@@ -1025,8 +1136,8 @@
   function renderMatchDimensionPicker() {
     const stats = loadMatchStats();
     const pool = applyFilters(eligibleMics());
-    if (pool.length === 0) {
-      renderEmptyPoolNotice(els.matchDimensionList, els.startMatchBtn);
+    if (!isModeViable("match", pool)) {
+      renderBlockedPoolNotice(els.matchDimensionList, els.startMatchBtn, "match", pool.length);
       return;
     }
     const availability = MATCH_DIMENSIONS.map((dim) => ({ dim, available: isMatchDimensionAvailable(dim, pool) }));
@@ -1103,66 +1214,206 @@
     }
     matchRound = round;
     selectedMatchIds = new Set();
+    matchCardIndex = 0;
+    matchOutcomes = [];
+    answeredMatchCard = false;
     showMatchScreen("active");
-    renderMatchGrid();
+    renderMatchRunBar();
+    renderMatchCard();
   }
 
-  function renderMatchGrid() {
-    const prompt =
-      matchRound.dimensionKey === "pattern"
-        ? `select every mic below with a ${matchRound.target} polar pattern.`
-        : `select every mic below that's a ${matchRound.target} microphone.`;
-    els.matchPrompt.textContent = `Round ${matchRoundIndex + 1} of ${matchRoundsTotal} — ${prompt}`;
-    els.matchGrid.innerHTML = "";
-    matchRound.items.forEach((item) => {
-      const id = `match-item-${item.mic.id}`;
-      const label = document.createElement("label");
-      label.className = "match-card";
-      label.htmlFor = id;
-
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      input.id = id;
-      input.checked = selectedMatchIds.has(item.mic.id);
-      input.addEventListener("change", () => {
-        if (input.checked) selectedMatchIds.add(item.mic.id);
-        else selectedMatchIds.delete(item.mic.id);
-      });
-
-      const name = document.createElement("span");
-      name.textContent = item.mic.displayName;
-
-      label.appendChild(input);
-      label.appendChild(name);
-      els.matchGrid.appendChild(label);
+  // One segment per mic, filled in as you answer. Purely a picture of
+  // matchOutcomes — the run count below it says the same thing in words, which
+  // is why the bar itself is aria-hidden.
+  function renderMatchRunBar() {
+    els.matchRunBar.innerHTML = "";
+    matchRound.items.forEach((_, i) => {
+      const seg = document.createElement("span");
+      seg.className = "match-run-seg";
+      const outcome = matchOutcomes[i];
+      if (outcome === true) seg.classList.add("match-run-seg--correct");
+      else if (outcome === false) seg.classList.add("match-run-seg--incorrect");
+      els.matchRunBar.appendChild(seg);
     });
+    // Always the same shape, and short enough to hold one line at 375px.
+    // Growing it from "Mic 1 of 8" to "…· 0 right so far" wrapped a second
+    // line at the instant you answered and shoved the card 75px down the page.
+    const right = matchOutcomes.filter(Boolean).length;
+    const position = Math.min(matchCardIndex + 1, matchRound.items.length);
+    els.matchRunCount.textContent = `Mic ${position} of ${matchRound.items.length} · ${right} right`;
   }
 
-  function submitMatch() {
+  // The meta line deliberately shows the dimension you're *not* being asked
+  // about — pattern questions get the principle and vice versa — so it gives
+  // you something to reason from without answering the question itself.
+  function matchMetaFor(mic) {
+    const other = matchRound.dimensionKey === "pattern" ? mic.operatingPrinciple : formatPatterns(mic);
+    return `${mic.manufacturer} · ${mic.releaseYear} · ${other}`;
+  }
+
+  function renderMatchCard() {
+    const item = matchRound.items[matchCardIndex];
+    answeredMatchCard = false;
+
+    els.matchPrompt.innerHTML = "";
+    const lead = document.createElement("span");
+    lead.textContent =
+      matchRound.dimensionKey === "pattern" ? "Does this mic have a " : "Is this mic a ";
+    const target = document.createElement("strong");
+    target.className = "match-target";
+    target.textContent = matchRound.target;
+    const tail = document.createElement("span");
+    tail.textContent = matchRound.dimensionKey === "pattern" ? " polar pattern?" : " microphone?";
+    els.matchPrompt.append(lead, target, tail);
+
+    els.matchMicName.textContent = item.mic.displayName;
+    els.matchMicMeta.textContent = matchMetaFor(item.mic);
+
+    els.matchVerdict.hidden = true;
+    els.matchVerdict.className = "match-verdict";
+    els.matchVerdict.innerHTML = "";
+    [els.matchNoBtn, els.matchYesBtn].forEach((btn) => {
+      btn.disabled = false;
+      btn.classList.remove("match-choice--chosen");
+    });
+    els.matchNextBtn.hidden = true;
+    els.matchFeedback.textContent = "";
+  }
+
+  function answerMatchCard(saidYes) {
+    if (answeredMatchCard) return;
+    answeredMatchCard = true;
+
+    const item = matchRound.items[matchCardIndex];
+    const dim = MATCH_DIMENSIONS.find((d) => d.key === matchRound.dimensionKey);
+    const correct = saidYes === item.isMatch;
+    if (saidYes) selectedMatchIds.add(item.mic.id);
+    matchOutcomes[matchCardIndex] = correct;
+
+    // The buttons stay put, disabled, with the one you pressed still marked.
+    // Swapping them for the verdict collapsed ~50px and shunted everything
+    // below it upward at the exact moment you're trying to read the answer —
+    // and the verdict alone doesn't tell you what you said.
+    els.matchNoBtn.disabled = true;
+    els.matchYesBtn.disabled = true;
+    (saidYes ? els.matchYesBtn : els.matchNoBtn).classList.add("match-choice--chosen");
+
+    const truth = dim.describe(item.mic, matchRound.target);
+    els.matchVerdict.className = `match-verdict match-verdict--${correct ? "correct" : "incorrect"}`;
+    els.matchVerdict.innerHTML = "";
+    const icon = document.createElement("span");
+    icon.className = "match-verdict-icon";
+    // Correct/incorrect always carries a glyph, never colour alone.
+    icon.innerHTML = correct ? ICONS.check : ICONS.x;
+    const text = document.createElement("span");
+    text.className = "match-verdict-text";
+    const headline = document.createElement("strong");
+    headline.textContent = correct ? "Correct" : item.isMatch ? "Missed it" : "Wrongly picked";
+    const detail = document.createElement("span");
+    detail.className = "match-verdict-detail";
+    detail.textContent = `${item.mic.displayName} — ${truth}`;
+    text.append(headline, detail);
+    els.matchVerdict.append(icon, text);
+
+    // Content before reveal, so the live region actually announces it.
+    els.matchFeedback.textContent = `${correct ? "Correct." : "Incorrect."} ${item.mic.displayName} — ${truth}.`;
+    els.matchVerdict.hidden = false;
+
+    renderMatchRunBar();
+    els.matchNextBtn.hidden = false;
+    els.matchNextBtn.textContent =
+      matchCardIndex + 1 >= matchRound.items.length ? "See Round Result" : "Next";
+    els.matchNextBtn.focus();
+  }
+
+  function nextMatchCard() {
+    if (!answeredMatchCard) return;
+    if (matchCardIndex + 1 >= matchRound.items.length) {
+      finishMatchRound();
+      return;
+    }
+    matchCardIndex += 1;
+    renderMatchRunBar();
+    renderMatchCard();
+  }
+
+  function finishMatchRound() {
     const scored = scoreMatchRound(matchRound, selectedMatchIds);
     const fullyCorrect = isMatchRoundFullyCorrect(scored);
     const correctCount = scored.filter((s) => s.correct).length;
     recordMatchAnswer(matchRound.dimensionKey, fullyCorrect);
     matchSessionResults.push({ fullyCorrect, correctCount, roundSize: scored.length });
-    showMatchRoundResult(scored, fullyCorrect, correctCount);
+    showMatchRoundResult(scored, correctCount);
   }
 
   // Same two-purpose "summary" screen pattern as Order mode — see the
   // comment above showOrderRoundResult().
-  function showMatchRoundResult(scored, fullyCorrect, correctCount) {
+  //
+  // The ledger leads with what you got wrong and names *which kind* of wrong
+  // it was. scoreMatchRound() has always returned `selected` alongside
+  // `isMatch`; the old grid showed only the truth, so a missed mic and a
+  // wrongly picked one were the same red card.
+  function showMatchRoundResult(scored, correctCount) {
     matchShowingSessionSummary = false;
     showMatchScreen("summary");
-    els.matchSummaryScore.textContent = `Round ${matchRoundIndex + 1} of ${matchRoundsTotal}: ${
-      fullyCorrect ? "Correct!" : `${correctCount} / ${scored.length} correctly identified`
-    }`;
+    const dim = MATCH_DIMENSIONS.find((d) => d.key === matchRound.dimensionKey);
+
+    els.matchSummaryScore.textContent = `${correctCount} of ${scored.length} correct`;
+    const missed = scored.filter((s) => !s.correct && s.isMatch).length;
+    const wrong = scored.filter((s) => !s.correct && !s.isMatch).length;
+    // Names the target again: after eight cards it's easy to lose track of
+    // which trait you were sorting for, and the ledger's right-hand column is
+    // unreadable without it.
+    const where = `Round ${matchRoundIndex + 1} of ${matchRoundsTotal} · ${matchRound.target}`;
+    els.matchSummaryTally.textContent =
+      missed + wrong === 0
+        ? `${where} — a clean sweep`
+        : `${where} — ${missed} missed · ${wrong} wrongly picked`;
+
+    const rank = (s) => (s.correct ? 1 : 0); // mistakes first, order otherwise preserved
+    const ordered = [...scored].sort((a, b) => rank(a) - rank(b));
+
+    // Shared node with the session summary, which swaps in its own layout.
+    els.matchSummaryGrid.className = "match-ledger";
     els.matchSummaryGrid.innerHTML = "";
-    scored.forEach((item) => {
-      const card = document.createElement("div");
-      card.className = `match-card ${item.correct ? "match-card--correct" : "match-card--incorrect"}`;
-      card.textContent = `${item.mic.displayName} — ${item.isMatch ? "matches" : "doesn't match"}`;
-      els.matchSummaryGrid.appendChild(card);
+    ordered.forEach((s) => {
+      const row = document.createElement("div");
+      row.className = `match-ledger-row match-ledger-row--${s.correct ? "correct" : "incorrect"}`;
+
+      const icon = document.createElement("span");
+      icon.className = "match-ledger-icon";
+      icon.innerHTML = s.correct ? ICONS.check : ICONS.x;
+
+      const body = document.createElement("span");
+      body.className = "match-ledger-body";
+      const name = document.createElement("span");
+      name.className = "match-ledger-name";
+      name.textContent = s.mic.displayName;
+      const note = document.createElement("span");
+      note.className = "match-ledger-note";
+      note.textContent = s.correct
+        ? s.isMatch
+          ? "You said yes"
+          : "You said no"
+        : s.isMatch
+          ? "Missed — you said no"
+          : "Wrongly picked — you said yes";
+      body.append(name, note);
+
+      const value = document.createElement("span");
+      value.className = "match-ledger-value";
+      value.textContent = dim.describe(s.mic, matchRound.target);
+
+      row.append(icon, body, value);
+      els.matchSummaryGrid.appendChild(row);
     });
+
     els.newMatchRoundBtn.textContent = matchRoundIndex + 1 >= matchRoundsTotal ? "See Session Results" : "Next Round";
+    // A way out mid-session. Every round played is already banked by
+    // recordMatchAnswer(), so leaving early costs you nothing but the rounds
+    // you skip. Not offered on the session summary, where the primary button
+    // is already "Back to Menu".
+    els.matchExitBtn.hidden = false;
   }
 
   function showMatchSessionSummary() {
@@ -1170,14 +1421,52 @@
     showMatchScreen("summary");
     const fullyCorrectCount = matchSessionResults.filter((r) => r.fullyCorrect).length;
     els.matchSummaryScore.textContent = `Session complete: ${fullyCorrectCount} / ${matchSessionResults.length} rounds fully correct`;
+    els.matchSummaryTally.textContent = "";
+
+    // A round is a score out of eight, not a right-or-wrong answer — the same
+    // kind of object as the quiz's per-category breakdown, so it borrows that
+    // row wholesale. Scoring rounds with the ledger's red ✗ branded 7/8 as a
+    // failure and made it indistinguishable from 1/8; the bar tells them
+    // apart, and the check is kept for the rounds that actually earned it.
+    els.matchSummaryGrid.className = "quiz-summary-breakdown";
     els.matchSummaryGrid.innerHTML = "";
     matchSessionResults.forEach((r, i) => {
-      const card = document.createElement("div");
-      card.className = `match-card ${r.fullyCorrect ? "match-card--correct" : "match-card--incorrect"}`;
-      card.textContent = `Round ${i + 1}: ${r.correctCount} / ${r.roundSize} correctly identified`;
-      els.matchSummaryGrid.appendChild(card);
+      const row = document.createElement("div");
+      row.className = "quiz-summary-row";
+
+      const head = document.createElement("div");
+      head.className = "quiz-summary-row-head";
+      const label = document.createElement("strong");
+      label.textContent = `Round ${i + 1}`;
+      if (r.fullyCorrect) {
+        const sweep = document.createElement("span");
+        sweep.className = "match-sweep";
+        sweep.innerHTML = ICONS.check;
+        sweep.title = "Clean sweep";
+        label.appendChild(sweep);
+      }
+      const scoreEl = document.createElement("span");
+      scoreEl.className = "quiz-summary-row-score";
+      scoreEl.textContent = `${r.correctCount} / ${r.roundSize}`;
+      head.append(label, scoreEl);
+
+      const track = document.createElement("div");
+      track.className = "quiz-summary-bar";
+      const fill = document.createElement("div");
+      fill.className = "quiz-summary-bar-fill";
+      fill.style.width = `${(r.correctCount / r.roundSize) * 100}%`;
+      track.appendChild(fill);
+
+      row.append(head, track);
+      els.matchSummaryGrid.appendChild(row);
     });
     els.newMatchRoundBtn.textContent = "Back to Menu";
+    els.matchExitBtn.hidden = true;
+  }
+
+  function exitMatchSession() {
+    showMatchScreen("picker");
+    renderMatchDimensionPicker();
   }
 
   function handleMatchContinue() {
@@ -1307,8 +1596,42 @@
   els.newOrderRoundBtn.addEventListener("click", handleOrderContinue);
 
   els.startMatchBtn.addEventListener("click", startMatchSession);
-  els.submitMatchBtn.addEventListener("click", submitMatch);
+  els.matchYesBtn.addEventListener("click", () => answerMatchCard(true));
+  els.matchNoBtn.addEventListener("click", () => answerMatchCard(false));
+  els.matchNextBtn.addEventListener("click", nextMatchCard);
   els.newMatchRoundBtn.addEventListener("click", handleMatchContinue);
+  els.matchExitBtn.addEventListener("click", exitMatchSession);
+
+  // Y/N to answer, Enter to advance — the same "keys do what the buttons do"
+  // contract the quiz handler above provides, with the same bail-out when a
+  // form control has focus so it never hijacks the Reference search.
+  document.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (els.matchTab.hidden || els.matchActive.hidden) return;
+    const tag = document.activeElement ? document.activeElement.tagName : "";
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+
+    if (e.key === "Enter") {
+      if (answeredMatchCard) {
+        e.preventDefault();
+        nextMatchCard();
+      }
+      return;
+    }
+    if (answeredMatchCard) return;
+
+    // Numbers follow the buttons left-to-right (1 = Yes, 2 = No), the same
+    // positional contract 1–4 has over the quiz's A–D options; y/n are the
+    // mnemonic pair.
+    const key = e.key.toLowerCase();
+    if (key === "y" || key === "1") {
+      e.preventDefault();
+      answerMatchCard(true);
+    } else if (key === "n" || key === "2") {
+      e.preventDefault();
+      answerMatchCard(false);
+    }
+  });
 
   refreshFilterSelects();
   renderLengthPills();

@@ -14,12 +14,23 @@ const MATCH_DIMENSIONS = [
     // "has a given pattern" means the target appears anywhere in it, the
     // same set-membership semantics comparePatterns() uses in js/compare.js.
     matches: (mic, target) => mic.polarPatterns.includes(target),
+    // What the results screen tells you about this mic afterwards. A mic with
+    // one pattern just names it; a switchable one that matched leads with the
+    // target so you can see it matched *via* that pattern rather than being
+    // one — the AKG C414's six patterns would otherwise fill the row and bury
+    // the point.
+    describe: (mic, target) => {
+      if (mic.polarPatterns.length === 1) return mic.polarPatterns[0];
+      if (mic.polarPatterns.includes(target)) return `${target} + ${mic.polarPatterns.length - 1} more`;
+      return mic.polarPatterns.join(" / ");
+    },
   },
   {
     key: "principle",
     label: "Operating Principle",
     values: (pool) => [...new Set(pool.map((m) => m.operatingPrinciple))],
     matches: (mic, target) => mic.operatingPrinciple === target,
+    describe: (mic) => mic.operatingPrinciple,
   },
 ];
 
