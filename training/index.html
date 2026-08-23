@@ -139,7 +139,7 @@
 
       <div id="order-active" class="order-active" hidden>
         <p id="order-prompt" class="quiz-progress"></p>
-        <p class="order-instructions">Arrange lowest to highest. Drag the grip, or focus an item and use arrow keys / the move buttons.</p>
+        <p class="order-instructions">Arrange lowest to highest. Drag a row, or focus one and use the arrow keys / move buttons.</p>
         <ul id="order-list" class="order-list" aria-label="Mics to arrange"></ul>
         <p id="order-live" class="visually-hidden" aria-live="polite"></p>
         <button type="button" id="submit-order-btn" class="share-btn share-btn--page">Submit Order</button>
@@ -147,7 +147,12 @@
 
       <div id="order-summary" class="order-summary" hidden>
         <h2 id="order-summary-score"></h2>
+        <p id="order-summary-label" class="order-summary-label" hidden>Your order</p>
         <ul id="order-summary-list" class="order-summary-list"></ul>
+        <div id="order-answer" class="order-answer" hidden>
+          <h3 class="order-answer-title">The right order</h3>
+          <ol id="order-answer-list" class="order-answer-list"></ol>
+        </div>
         <div class="quiz-summary-actions">
           <button type="button" id="new-order-round-btn" class="share-btn share-btn--page">New Round</button>
         </div>

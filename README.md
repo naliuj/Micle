@@ -264,17 +264,34 @@ Four tabs:
 - **Order** — pick Price or Release Year and how many rounds to play (1/3/5/
   10, defaulting to 5), then drag 5 mics into ascending order per round.
   Dragging uses Pointer Events (unifies mouse/touch/pen in one code path,
-  unlike native HTML5 drag-and-drop's inconsistent touch support), and every
-  item is also reorderable via focus + arrow keys or visible move buttons,
-  with an `aria-live` region announcing each move — full keyboard parity,
-  not a drag-only interaction. Correctness tolerates exact ties (two mics
-  really do share an MSRP in the current pool): an arrangement is correct
-  whenever it's non-decreasing by value, and per-item "in place" feedback
-  compares *values* at each position against a sorted reference, not mic
-  identity, so tied mics can't be marked wrong just for swapping places.
-  Rounds chain together — each one's result is shown before moving to the
-  next, with a final session recap before returning to the picker — and
-  round-level pass/fail persists under `micle_v1_order_stats`.
+  unlike native HTML5 drag-and-drop's inconsistent touch support). **The
+  whole row is the drag target**, not just the grip dots — grabbing the mic
+  name was the obvious thing to try and used to do nothing but select the
+  text, so `.order-item` carries `user-select: none` (done in CSS rather
+  than with `preventDefault()` in `pointerdown`, which would also suppress
+  the focus the row needs for its keyboard path). The pointerdown handler
+  bails on `.order-move-btn` so the ↑/↓ buttons still click instead of
+  starting a drag. Every item is also reorderable via focus + arrow keys or
+  those buttons, with an `aria-live` region announcing each move — full
+  keyboard parity, not a drag-only interaction.
+
+  Correctness tolerates exact ties, which are common rather than an edge
+  case — 21 distinct MSRP values are shared by two or more mics, and year
+  ties are likelier still. An arrangement is correct whenever it's
+  non-decreasing by value, and per-item "in place" feedback compares
+  *values* at each position against a sorted reference, not mic identity,
+  so tied mics can't be marked wrong just for swapping places.
+
+  The round result shows your submitted order with each misplaced row
+  badged with the position it belonged in and an arrow for the direction it
+  needed to move, followed by **"The right order"** — the answer itself, so
+  you don't have to re-sort five values in your head to work out what you
+  should have done. Its rank numbers use competition ranking
+  (`orderRanks()` in `js/training.js`), so mics of equal value share a rank
+  (`1, 1, 3`) rather than reading as a sequence — numbering them
+  consecutively would contradict the tie-tolerant scoring above. Rounds
+  chain together, with a final session recap before returning to the
+  picker, and round-level pass/fail persists under `micle_v1_order_stats`.
 - **Match** — pick Polar Pattern or Operating Principle and how many rounds
   to play (same 1/3/5/10 picker as Order), then select every mic (out of a
   set of ~8, always a mix of matches and non-matches) that has a given value

@@ -8,6 +8,8 @@
   const ICONS = {
     check: `<svg ${SVG_ATTRS}><path d="M20 6 9 17l-5-5"/></svg>`,
     x: `<svg ${SVG_ATTRS}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+    arrowUp: `<svg ${SVG_ATTRS}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>`,
+    arrowDown: `<svg ${SVG_ATTRS}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`,
   };
 
   const OPTION_KEYS = ["a", "b", "c", "d"];
@@ -53,6 +55,9 @@
     retryMissedBtn: document.getElementById("retry-missed-btn"),
     newRoundBtn: document.getElementById("new-round-btn"),
 
+    orderSummaryLabel: document.getElementById("order-summary-label"),
+    orderAnswer: document.getElementById("order-answer"),
+    orderAnswerList: document.getElementById("order-answer-list"),
     orderPicker: document.getElementById("order-picker"),
     orderDimensionList: document.getElementById("order-dimension-list"),
     orderRoundsSelect: document.getElementById("order-rounds-select"),
@@ -654,12 +659,15 @@
       li.dataset.index = String(i);
       li.setAttribute("aria-label", `Position ${i + 1} of ${orderItems.length}: ${item.mic.displayName}.`);
       li.addEventListener("keydown", onOrderItemKeydown);
+      // The whole row is the drag target, not just the grip — grabbing the
+      // mic name was the obvious thing to try and did nothing but select
+      // text. The grip stays as the visual cue.
+      li.addEventListener("pointerdown", onOrderRowPointerDown);
 
       const grip = document.createElement("span");
       grip.className = "order-item-grip";
       grip.setAttribute("aria-hidden", "true");
       grip.textContent = "⠿"; // ⠿
-      grip.addEventListener("pointerdown", onOrderGripPointerDown);
 
       const name = document.createElement("span");
       name.className = "order-item-name";
@@ -720,7 +728,10 @@
   // notoriously inconsistent touch support. This is a reorder-by-index drag
   // (commits on pointerup), not a free-pixel drop, which avoids drop-target
   // hit-testing entirely.
-  function onOrderGripPointerDown(e) {
+  function onOrderRowPointerDown(e) {
+    // The ↑/↓ buttons live inside the row, so a press on one would otherwise
+    // start a drag instead of clicking.
+    if (e.target.closest(".order-move-btn")) return;
     const li = e.currentTarget.closest(".order-item");
     const liEls = [...els.orderList.children];
     const fromIndex = Number(li.dataset.index);
@@ -790,31 +801,105 @@
   // Round"/"See Session Results" button) or the final session recap (with a
   // "Back to Menu" button) — handleOrderContinue below picks the right
   // action depending on which is currently showing.
+  // Competition ranking, so mics sharing a value share a rank: values
+  // [109, 109, 449] rank as 1, 1, 3 rather than 1, 2, 3. Ties are common in
+  // this pool (21 MSRPs are shared by 2+ mics), and scoreOrderArrangement
+  // already counts either arrangement of a tied pair as correct — numbering
+  // them consecutively here would contradict that by implying an order.
+  function orderRanks(items) {
+    const sorted = [...items].sort((a, b) => a.value - b.value);
+    const rankByValue = new Map();
+    sorted.forEach((item, i) => {
+      if (!rankByValue.has(item.value)) rankByValue.set(item.value, i + 1);
+    });
+    return { sorted, rankByValue };
+  }
+
+  const ORDINALS = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th"];
+
+  function ordinal(n) {
+    return ORDINALS[n - 1] || `${n}th`;
+  }
+
   function showOrderRoundResult(scored, fullyCorrect, inPlaceCount) {
     orderShowingSessionSummary = false;
     showOrderScreen("summary");
     const dim = ORDER_DIMENSIONS.find((d) => d.key === currentOrderDimension);
+    const { sorted, rankByValue } = orderRanks(scored);
+
     els.orderSummaryScore.textContent = `Round ${orderRoundIndex + 1} of ${orderRoundsTotal}: ${
       fullyCorrect ? "Correct order!" : `${inPlaceCount} / ${scored.length} in the right spot`
     }`;
+
+    // Part one: your attempt, with each misplaced row told where it belongs.
+    els.orderSummaryLabel.hidden = false;
     els.orderSummaryList.innerHTML = "";
-    scored.forEach((item) => {
+    scored.forEach((item, i) => {
       const li = document.createElement("li");
       li.className = `order-summary-item ${item.inPlace ? "order-summary-item--correct" : "order-summary-item--incorrect"}`;
+
       const nameSpan = document.createElement("span");
+      nameSpan.className = "order-summary-name";
       nameSpan.textContent = item.mic.displayName;
+
       const valueSpan = document.createElement("span");
+      valueSpan.className = "order-summary-value";
       valueSpan.textContent = dim.format(item.mic);
+
       li.appendChild(nameSpan);
       li.appendChild(valueSpan);
+
+      if (item.inPlace) {
+        const icon = document.createElement("span");
+        icon.className = "order-summary-icon";
+        icon.innerHTML = ICONS.check;
+        li.appendChild(icon);
+      } else {
+        const rank = rankByValue.get(item.value);
+        const badge = document.createElement("span");
+        badge.className = "order-summary-badge";
+        // Arrow points the way the row needed to move from where you put it.
+        badge.innerHTML = rank - 1 < i ? ICONS.arrowUp : ICONS.arrowDown;
+        const text = document.createElement("span");
+        text.textContent = `goes ${ordinal(rank)}`;
+        badge.appendChild(text);
+        li.appendChild(badge);
+      }
+
       els.orderSummaryList.appendChild(li);
     });
+
+    // Part two: the answer itself, so you don't have to re-sort five values
+    // in your head to work out what you should have done.
+    els.orderAnswer.hidden = false;
+    els.orderAnswerList.innerHTML = "";
+    sorted.forEach((item) => {
+      const li = document.createElement("li");
+      li.className = "order-answer-item";
+      const rankEl = document.createElement("span");
+      rankEl.className = "order-answer-rank";
+      rankEl.textContent = rankByValue.get(item.value);
+      const nameEl = document.createElement("span");
+      nameEl.textContent = item.mic.displayName;
+      const valueEl = document.createElement("span");
+      valueEl.className = "order-answer-value";
+      valueEl.textContent = dim.format(item.mic);
+      li.appendChild(rankEl);
+      li.appendChild(nameEl);
+      li.appendChild(valueEl);
+      els.orderAnswerList.appendChild(li);
+    });
+
     els.newOrderRoundBtn.textContent = orderRoundIndex + 1 >= orderRoundsTotal ? "See Session Results" : "Next Round";
   }
 
   function showOrderSessionSummary() {
     orderShowingSessionSummary = true;
     showOrderScreen("summary");
+    // The session recap lists per-round scores, not per-mic detail, so the
+    // per-round "Your order" heading and answer list don't apply here.
+    els.orderSummaryLabel.hidden = true;
+    els.orderAnswer.hidden = true;
     const fullyCorrectCount = orderSessionResults.filter((r) => r.fullyCorrect).length;
     els.orderSummaryScore.textContent = `Session complete: ${fullyCorrectCount} / ${orderSessionResults.length} rounds fully correct`;
     els.orderSummaryList.innerHTML = "";

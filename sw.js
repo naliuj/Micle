@@ -7,7 +7,7 @@
 //
 // Bump CACHE_VERSION whenever any cached file below changes — nothing else
 // invalidates the cache automatically (see README's "PWA" section).
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
