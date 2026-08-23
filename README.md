@@ -207,25 +207,44 @@ inventing parallel ones — it doesn't load
 `js/app.js`/`js/schedule.js`/`js/devtools.js`, since it has no "today's
 puzzle" concept.
 
-A shared **Manufacturer/Country filter** sits above the tabs and narrows
-whichever mode is active (set once, not configured per tab). Narrowing which
-mic gets *asked about* is kept separate from where multiple-choice
-*distractors* come from — filtering the Quiz tab to one manufacturer still
-draws wrong answers from the whole pool, or every other category would lose
-distractor variety (e.g. an all-German manufacturer would leave zero Country
-distractors). A category/dimension that collapses to one possible answer
-under the active filter (e.g. "Manufacturer" once filtered to one
-manufacturer) is automatically disabled rather than left to produce a
-trivial round. A filter combination matching **zero** mics locks out every
-category/dimension at once, so it gets a distinct, unmissable warning
-treatment (`.pool-filter-count--empty`/`.pool-empty-notice` in
-`css/training.css`, replacing the whole picker list) rather than blending
-into the same small print used for the single-category case.
+Below the tabs sits one shared **round setup bar** (`#round-setup`) holding
+the Manufacturer/Country filter and the round-length control. It is a single
+summary line by default — `All 118 mics · 10 questions` — with an Adjust
+button that expands the controls. Most rounds are "any mic", so the resting
+state is one line; the summary always names the active filter and count
+(`Germany, Neumann · 17 mics`), so collapsing hides the *controls*, never
+the state.
+
+The filter is genuinely shared: set once, it narrows whichever mode is
+active and persists across tab switches (it's hidden only on Reference).
+**Length is per-mode**, held in `lengthByMode` rather than in the DOM, so
+setting Quiz to 20 questions and switching to Order still shows Order's own
+5 rounds. The units are deliberately different — a Quiz round is N
+questions, an Order/Match session is N rounds of mics — so one shared scale
+would mislabel one of them. Length renders as a pill row matching
+`.mode-btn`'s geometry; the two filter dropdowns are the only OS form chrome
+left on the page.
+
+Narrowing which mic gets *asked about* is kept separate from where
+multiple-choice *distractors* come from — filtering the Quiz tab to one
+manufacturer still draws wrong answers from the whole pool, or every other
+category would lose distractor variety (e.g. an all-German manufacturer
+would leave zero Country distractors). A category/dimension that collapses
+to one possible answer under the active filter is automatically disabled
+rather than left to produce a trivial round.
+
+Two guards keep the collapsed bar from hiding a dead end. Each dropdown's
+counts are recomputed against the *other* active filter and zero-yield
+values are **disabled**, so picking Germany greys out Shure `(0)` instead of
+advertising `(12)` and dropping you into an empty pool. And if a zero-match
+combination is reached anyway, the bar force-expands, turns the summary into
+a warning (`.round-setup--empty`) and refuses to collapse until the filter
+is changed — a blocking state must never sit behind a collapsed control.
 
 Four tabs:
 - **Quiz** — pick which categories to be quizzed on (Manufacturer, Country,
-  Operating Principle, Polar Pattern, Release Year, Price) and how many
-  questions to answer (5/10/20, default 10), or hit **Study my weak spots**
+  Operating Principle, Polar Pattern, Release Year, Price), set the length
+  in the setup bar above (5/10/20 questions, default 10), or hit **Study my weak spots**
   to auto-select the three categories you're worst at (never-studied counts
   as weak). During a round a progress bar, a running score and a streak
   chip sit above the question; answer options are full-width rows lettered
@@ -261,8 +280,9 @@ Four tabs:
   `` `micle_${STORAGE_VERSION}_quiz_stats` `` — same versioned-key,
   default-shape convention as the main game's `micle_v1_stats`, added
   alongside it in `js/storage.js`.
-- **Order** — pick Price or Release Year and how many rounds to play (1/3/5/
-  10, defaulting to 5), then drag 5 mics into ascending order per round.
+- **Order** — pick Price or Release Year, set the number of rounds in the
+  setup bar (1/3/5/10, default 5), then drag 5 mics into ascending order per
+  round.
   Dragging uses Pointer Events (unifies mouse/touch/pen in one code path,
   unlike native HTML5 drag-and-drop's inconsistent touch support). **The
   whole row is the drag target**, not just the grip dots — grabbing the mic
@@ -292,8 +312,8 @@ Four tabs:
   consecutively would contradict the tie-tolerant scoring above. Rounds
   chain together, with a final session recap before returning to the
   picker, and round-level pass/fail persists under `micle_v1_order_stats`.
-- **Match** — pick Polar Pattern or Operating Principle and how many rounds
-  to play (same 1/3/5/10 picker as Order), then select every mic (out of a
+- **Match** — pick Polar Pattern or Operating Principle, set the number of
+  rounds in the setup bar (same 1/3/5/10 as Order), then select every mic (out of a
   set of ~8, always a mix of matches and non-matches) that has a given value
   per round. Polar Pattern matching is set-membership (a switchable mic can
   have several patterns), the same semantics `comparePatterns()` uses in

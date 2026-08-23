@@ -45,18 +45,6 @@
   </header>
 
   <main>
-    <div id="pool-filters" class="pool-filters">
-      <label class="pool-filter">
-        <span>Manufacturer</span>
-        <select id="filter-manufacturer"><option value="">Any</option></select>
-      </label>
-      <label class="pool-filter">
-        <span>Country</span>
-        <select id="filter-country"><option value="">Any</option></select>
-      </label>
-      <p id="pool-filter-count" class="pool-filter-count" aria-live="polite"></p>
-    </div>
-
     <div class="mode-switcher" role="tablist">
       <button type="button" id="tab-quiz-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-tab="quiz">Quiz</button>
       <button type="button" id="tab-order-btn" class="mode-btn" role="tab" aria-selected="false" data-tab="order">Order</button>
@@ -64,19 +52,39 @@
       <button type="button" id="tab-reference-btn" class="mode-btn" role="tab" aria-selected="false" data-tab="reference">Reference</button>
     </div>
 
+    <!-- One shared setup bar for every mode: the pool filter genuinely
+         persists across Quiz/Order/Match, and only the length row varies by
+         mode. Collapsed to a summary line by default — the summary carries
+         the live state, so collapsing hides the controls, never the facts. -->
+    <div id="round-setup" class="round-setup">
+      <div class="round-setup-summary">
+        <p id="round-setup-text" class="round-setup-text" aria-live="polite"></p>
+        <button type="button" id="round-setup-toggle" class="round-setup-toggle" aria-expanded="false" aria-controls="round-setup-panel">
+          Adjust
+          <svg class="round-setup-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div id="round-setup-panel" class="round-setup-panel" hidden>
+        <label class="pool-filter">
+          <span>Manufacturer</span>
+          <select id="filter-manufacturer"><option value="">Any</option></select>
+        </label>
+        <label class="pool-filter">
+          <span>Country</span>
+          <select id="filter-country"><option value="">Any</option></select>
+        </label>
+        <div class="pool-filter">
+          <span id="round-length-label">Questions</span>
+          <div id="round-length-pills" class="round-length-pills" role="radiogroup" aria-labelledby="round-length-label"></div>
+        </div>
+      </div>
+    </div>
+
     <section id="quiz-tab">
       <div id="quiz-picker" class="quiz-picker">
         <p class="mode-note">Pick which categories to be quizzed on, then start a round.</p>
         <div id="category-list" class="category-list"></div>
         <div class="quiz-picker-controls">
-          <label class="pool-filter">
-            <span>Questions</span>
-            <select id="quiz-count-select">
-              <option value="5">5</option>
-              <option value="10" selected>10</option>
-              <option value="20">20</option>
-            </select>
-          </label>
           <button type="button" id="weak-spots-btn" class="weak-spots-btn">Study my weak spots</button>
         </div>
         <button type="button" id="start-quiz-btn" class="share-btn share-btn--page">Start Quiz</button>
@@ -125,15 +133,6 @@
       <div id="order-picker" class="quiz-picker">
         <p class="mode-note">Pick a dimension to sort by, then arrange mics from lowest to highest.</p>
         <div id="order-dimension-list" class="category-list"></div>
-        <label class="pool-filter">
-          <span>Rounds</span>
-          <select id="order-rounds-select">
-            <option value="1">1</option>
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="10">10</option>
-          </select>
-        </label>
         <button type="button" id="start-order-btn" class="share-btn share-btn--page">Start Round</button>
       </div>
 
@@ -163,15 +162,6 @@
       <div id="match-picker" class="quiz-picker">
         <p class="mode-note">Pick a dimension, then select every mic below that matches.</p>
         <div id="match-dimension-list" class="category-list"></div>
-        <label class="pool-filter">
-          <span>Rounds</span>
-          <select id="match-rounds-select">
-            <option value="1">1</option>
-            <option value="3">3</option>
-            <option value="5" selected>5</option>
-            <option value="10">10</option>
-          </select>
-        </label>
         <button type="button" id="start-match-btn" class="share-btn share-btn--page">Start Round</button>
       </div>
 

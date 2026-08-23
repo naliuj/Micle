@@ -2,13 +2,83 @@
    tokens and shared components (.site-header, .mode-switcher, .status-banner,
    .board/.cell, .share-btn); doesn't redefine any :root variable. */
 
-.pool-filters {
+.round-setup {
+  margin: var(--space-5) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.round-setup-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.round-setup-text {
+  margin: 0;
+  font-size: var(--fs-base);
+  color: var(--text);
+}
+
+/* Same pill geometry as .mode-btn / .weak-spots-btn — the selects in the
+   panel are the only OS chrome left on the page. */
+.round-setup-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.round-setup-toggle:hover { background: var(--bg); }
+.round-setup-toggle:disabled { opacity: 0.5; cursor: default; }
+
+.round-setup-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.round-setup-chevron {
+  width: 1em;
+  height: 1em;
+  transition: transform 120ms ease;
+}
+
+.round-setup-toggle[aria-expanded="true"] {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.round-setup-toggle[aria-expanded="true"] .round-setup-chevron {
+  transform: rotate(180deg);
+}
+
+.round-setup-panel {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-6);
-  margin-top: var(--space-5);
-  margin-bottom: var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
 }
 
 .pool-filter {
@@ -17,10 +87,40 @@
   gap: 0.2rem;
   font-size: var(--fs-xs);
   color: var(--muted);
-  /* Prevents stretching full-width when used as a lone flex item inside a
-     column layout (the Order/Match Rounds picker) — harmless in the row
-     layout above (.pool-filters), where cross-axis alignment is vertical. */
   align-self: flex-start;
+}
+
+.round-length-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: 0.15rem;
+}
+
+.round-length-pill {
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.round-length-pill:hover { background: var(--bg); }
+
+.round-length-pill[aria-checked="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.round-length-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* No select styling exists elsewhere in the app (no <select> until this
@@ -41,23 +141,19 @@
   outline-offset: 2px;
 }
 
-.pool-filter-count {
-  font-size: var(--fs-xs);
-  color: var(--muted);
-  margin: 0;
-}
-
-/* A zero-match filter locks out every category/dimension at once, so it
-   needs to read as an unmissable warning rather than blend in with the
-   plain-text count it replaces. */
-.pool-filter-count--empty {
-  font-size: var(--fs-sm);
-  font-weight: 600;
+/* A zero-match filter locks out every category/dimension at once, so the
+   summary line turns into an unmissable warning — and the bar force-expands
+   and refuses to collapse, since a blocking state must never be hidden
+   behind a collapsed control. */
+.round-setup--empty .round-setup-summary {
   color: var(--loss);
   background: var(--loss-bg);
-  border: 1px solid var(--loss);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
+  border-color: var(--loss);
+}
+
+.round-setup--empty .round-setup-text {
+  font-weight: 600;
+  color: var(--loss);
 }
 
 /* Replaces the whole category/dimension list (not just a per-item note)

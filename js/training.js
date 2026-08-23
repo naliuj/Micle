@@ -1,5 +1,4 @@
 (function () {
-  const DEFAULT_QUESTION_COUNT = 10;
 
   // Inline Lucide icons, matching js/app.js's ICONS — correct/incorrect must
   // not be signalled by colour alone.
@@ -15,10 +14,14 @@
   const OPTION_KEYS = ["a", "b", "c", "d"];
 
   const els = {
-    poolFilters: document.getElementById("pool-filters"),
+    roundSetup: document.getElementById("round-setup"),
+    roundSetupText: document.getElementById("round-setup-text"),
+    roundSetupToggle: document.getElementById("round-setup-toggle"),
+    roundSetupPanel: document.getElementById("round-setup-panel"),
+    roundLengthLabel: document.getElementById("round-length-label"),
+    roundLengthPills: document.getElementById("round-length-pills"),
     filterManufacturerSelect: document.getElementById("filter-manufacturer"),
     filterCountrySelect: document.getElementById("filter-country"),
-    poolFilterCount: document.getElementById("pool-filter-count"),
 
     tabQuizBtn: document.getElementById("tab-quiz-btn"),
     tabOrderBtn: document.getElementById("tab-order-btn"),
@@ -31,7 +34,6 @@
 
     quizPicker: document.getElementById("quiz-picker"),
     categoryList: document.getElementById("category-list"),
-    quizCountSelect: document.getElementById("quiz-count-select"),
     weakSpotsBtn: document.getElementById("weak-spots-btn"),
     startQuizBtn: document.getElementById("start-quiz-btn"),
 
@@ -60,7 +62,6 @@
     orderAnswerList: document.getElementById("order-answer-list"),
     orderPicker: document.getElementById("order-picker"),
     orderDimensionList: document.getElementById("order-dimension-list"),
-    orderRoundsSelect: document.getElementById("order-rounds-select"),
     startOrderBtn: document.getElementById("start-order-btn"),
     orderActive: document.getElementById("order-active"),
     orderPrompt: document.getElementById("order-prompt"),
@@ -74,7 +75,6 @@
 
     matchPicker: document.getElementById("match-picker"),
     matchDimensionList: document.getElementById("match-dimension-list"),
-    matchRoundsSelect: document.getElementById("match-rounds-select"),
     startMatchBtn: document.getElementById("start-match-btn"),
     matchActive: document.getElementById("match-active"),
     matchPrompt: document.getElementById("match-prompt"),
@@ -110,12 +110,23 @@
     { label: "Price", getValue: formatPrice },
   ];
 
-  // ------------------------------------------------------------- Pool filter
-  // Shared across Quiz/Order/Match (set once, narrows whichever mode is
-  // active) — hidden only on Reference, where it has no meaning.
+  // -------------------------------------------------------- Round setup bar
+  // One shared control for every mode. The pool filter persists across
+  // Quiz/Order/Match; only the length row varies by mode. Collapsed to a
+  // summary line by default, since most rounds are "any mic" — the summary
+  // carries the live state, so collapsing hides the controls, not the facts.
 
   let manufacturerFilter = "";
   let countryFilter = "";
+  let setupExpanded = false;
+
+  // Length is per-mode state now that one control serves all three: a Quiz
+  // round is N questions, an Order/Match session is N rounds, so the units
+  // genuinely differ and each mode keeps its own value across tab switches.
+  const LENGTH_OPTIONS = { quiz: [5, 10, 20], order: [1, 3, 5, 10], match: [1, 3, 5, 10] };
+  const LENGTH_NOUN = { quiz: "question", order: "round", match: "round" };
+  let lengthByMode = { quiz: 10, order: 5, match: 5 };
+  let activeTab = "quiz";
 
   function applyFilters(pool) {
     return pool.filter(
@@ -125,40 +136,103 @@
     );
   }
 
-  function populateFilterSelect(selectEl, pool, getValue) {
-    const counts = new Map();
+  // Counts and availability are recomputed against the *other* active filter
+  // rather than the whole pool. Without this, selecting Germany still
+  // advertised "Shure (12)" — picking it dropped you into the blocking
+  // empty state. Zero-yield values are disabled rather than removed, so the
+  // list doesn't shuffle under the cursor.
+  function populateFilterSelect(selectEl, getValue, otherPredicate) {
+    const previous = selectEl.value;
+    const pool = eligibleMics();
+    const totals = new Map();
+    const available = new Map();
     pool.forEach((m) => {
       const v = getValue(m);
-      counts.set(v, (counts.get(v) || 0) + 1);
+      totals.set(v, (totals.get(v) || 0) + 1);
+      if (otherPredicate(m)) available.set(v, (available.get(v) || 0) + 1);
     });
-    const opts = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    const opts = [...totals.keys()].sort((a, b) => a.localeCompare(b));
     selectEl.innerHTML = '<option value="">Any</option>';
-    opts.forEach(([v, n]) => {
+    opts.forEach((v) => {
+      const n = available.get(v) || 0;
       const opt = document.createElement("option");
       opt.value = v;
       opt.textContent = `${v} (${n})`;
+      opt.disabled = n === 0;
       selectEl.appendChild(opt);
+    });
+    selectEl.value = previous;
+  }
+
+  function refreshFilterSelects() {
+    populateFilterSelect(
+      els.filterManufacturerSelect,
+      (m) => m.manufacturer,
+      (m) => !countryFilter || m.countryOfOrigin === countryFilter
+    );
+    populateFilterSelect(
+      els.filterCountrySelect,
+      (m) => m.countryOfOrigin,
+      (m) => !manufacturerFilter || m.manufacturer === manufacturerFilter
+    );
+  }
+
+  function renderLengthPills() {
+    const options = LENGTH_OPTIONS[activeTab] || [];
+    const noun = LENGTH_NOUN[activeTab] || "round";
+    els.roundLengthLabel.textContent = `${noun.charAt(0).toUpperCase()}${noun.slice(1)}s`;
+    els.roundLengthPills.innerHTML = "";
+    options.forEach((n) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "round-length-pill";
+      btn.setAttribute("role", "radio");
+      btn.setAttribute("aria-checked", String(lengthByMode[activeTab] === n));
+      btn.textContent = String(n);
+      btn.addEventListener("click", () => {
+        lengthByMode[activeTab] = n;
+        renderLengthPills();
+        renderSetupSummary();
+      });
+      els.roundLengthPills.appendChild(btn);
     });
   }
 
-  // Toggles a distinct, unmissable warning style (not just muted caption
-  // text) when the filter combination matches nothing — this is the state
-  // that locks every category/dimension out at once, so it needs to read as
-  // "fix this before you can do anything" rather than blend into the rest
-  // of the small print.
-  function updateFilterCount() {
+  function renderSetupSummary() {
     const n = applyFilters(eligibleMics()).length;
-    els.poolFilterCount.textContent =
-      n === 0
-        ? "No mics match this filter — pick a different Manufacturer/Country combination."
-        : n === 1
-        ? "1 mic matches this filter"
-        : `${n} mics match this filter`;
-    els.poolFilterCount.classList.toggle("pool-filter-count--empty", n === 0);
+    const empty = n === 0;
+
+    let filterPart;
+    if (empty) {
+      filterPart = "No mics match this filter — change Manufacturer or Country to continue.";
+    } else {
+      const active = [countryFilter, manufacturerFilter].filter(Boolean);
+      const micWord = n === 1 ? "mic" : "mics";
+      filterPart = active.length === 0 ? `All ${n} ${micWord}` : `${active.join(", ")} · ${n} ${micWord}`;
+    }
+
+    const len = lengthByMode[activeTab];
+    const noun = LENGTH_NOUN[activeTab] || "round";
+    const lengthPart = `${len} ${noun}${len === 1 ? "" : "s"}`;
+
+    els.roundSetupText.textContent = empty ? filterPart : `${filterPart} · ${lengthPart}`;
+    els.roundSetup.classList.toggle("round-setup--empty", empty);
+
+    // A blocking state must never hide behind a collapsed control: force the
+    // panel open and refuse to close it until the filter is fixed.
+    if (empty && !setupExpanded) setSetupExpanded(true);
+    els.roundSetupToggle.disabled = empty;
+  }
+
+  function setSetupExpanded(expanded) {
+    setupExpanded = expanded;
+    els.roundSetupPanel.hidden = !expanded;
+    els.roundSetupToggle.setAttribute("aria-expanded", String(expanded));
   }
 
   function onFilterChange() {
-    updateFilterCount();
+    refreshFilterSelects();
+    renderSetupSummary();
     renderCategoryPicker();
     renderOrderDimensionPicker();
     renderMatchDimensionPicker();
@@ -209,7 +283,12 @@
       buttons[t].setAttribute("aria-selected", String(isActive));
       sections[t].hidden = !isActive;
     });
-    els.poolFilters.hidden = tab === "reference";
+    els.roundSetup.hidden = tab === "reference";
+    if (tab !== "reference") {
+      activeTab = tab;
+      renderLengthPills();
+      renderSetupSummary();
+    }
   }
 
   function renderCategoryPicker() {
@@ -321,7 +400,7 @@
     if (selectedCategories.size === 0) return;
     const distractorPool = eligibleMics();
     const targetPool = applyFilters(distractorPool);
-    const count = Number(els.quizCountSelect.value) || DEFAULT_QUESTION_COUNT;
+    const count = lengthByMode.quiz;
     const questions = buildQuizSession([...selectedCategories], targetPool, distractorPool, count);
     if (questions.length === 0) {
       alert("Couldn't build a round from the selected categories. Try a different combination.");
@@ -630,7 +709,7 @@
   // session counters.
   function startOrderSession() {
     if (!currentOrderDimension) return;
-    orderRoundsTotal = Number(els.orderRoundsSelect.value) || 5;
+    orderRoundsTotal = lengthByMode.order;
     orderRoundIndex = 0;
     orderSessionResults = [];
     startOrderRound();
@@ -1009,7 +1088,7 @@
   // session counters.
   function startMatchSession() {
     if (!currentMatchDimension) return;
-    matchRoundsTotal = Number(els.matchRoundsSelect.value) || 5;
+    matchRoundsTotal = lengthByMode.match;
     matchRoundIndex = 0;
     matchSessionResults = [];
     startMatchRound();
@@ -1164,11 +1243,10 @@
 
   // ------------------------------------------------------------------- Init
 
-  function populateFilterSelects() {
-    const pool = eligibleMics();
-    populateFilterSelect(els.filterManufacturerSelect, pool, (m) => m.manufacturer);
-    populateFilterSelect(els.filterCountrySelect, pool, (m) => m.countryOfOrigin);
-  }
+  els.roundSetupToggle.addEventListener("click", () => {
+    if (els.roundSetupToggle.disabled) return;
+    setSetupExpanded(!setupExpanded);
+  });
 
   els.filterManufacturerSelect.addEventListener("change", () => {
     manufacturerFilter = els.filterManufacturerSelect.value;
@@ -1232,8 +1310,9 @@
   els.submitMatchBtn.addEventListener("click", submitMatch);
   els.newMatchRoundBtn.addEventListener("click", handleMatchContinue);
 
-  populateFilterSelects();
-  updateFilterCount();
+  refreshFilterSelects();
+  renderLengthPills();
+  renderSetupSummary();
   renderCategoryPicker();
   renderOrderDimensionPicker();
   renderMatchDimensionPicker();
