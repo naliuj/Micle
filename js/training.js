@@ -1,5 +1,16 @@
 (function () {
-  const QUESTION_COUNT = 10;
+  const DEFAULT_QUESTION_COUNT = 10;
+
+  // Inline Lucide icons, matching js/app.js's ICONS — correct/incorrect must
+  // not be signalled by colour alone.
+  const SVG_ATTRS =
+    'viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  const ICONS = {
+    check: `<svg ${SVG_ATTRS}><path d="M20 6 9 17l-5-5"/></svg>`,
+    x: `<svg ${SVG_ATTRS}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
+  };
+
+  const OPTION_KEYS = ["a", "b", "c", "d"];
 
   const els = {
     poolFilters: document.getElementById("pool-filters"),
@@ -18,18 +29,27 @@
 
     quizPicker: document.getElementById("quiz-picker"),
     categoryList: document.getElementById("category-list"),
+    quizCountSelect: document.getElementById("quiz-count-select"),
+    weakSpotsBtn: document.getElementById("weak-spots-btn"),
     startQuizBtn: document.getElementById("start-quiz-btn"),
 
     quizActive: document.getElementById("quiz-active"),
     quizProgress: document.getElementById("quiz-progress"),
+    quizScore: document.getElementById("quiz-score"),
+    quizStreak: document.getElementById("quiz-streak"),
+    quizProgressFill: document.getElementById("quiz-progress-fill"),
     quizPrompt: document.getElementById("quiz-prompt"),
     quizOptions: document.getElementById("quiz-options"),
     quizFeedback: document.getElementById("quiz-feedback"),
+    quizActionNote: document.getElementById("quiz-action-note"),
     quizNextBtn: document.getElementById("quiz-next-btn"),
 
     quizSummary: document.getElementById("quiz-summary"),
     quizSummaryScore: document.getElementById("quiz-summary-score"),
+    quizSummaryTrend: document.getElementById("quiz-summary-trend"),
     quizSummaryBreakdown: document.getElementById("quiz-summary-breakdown"),
+    quizMissed: document.getElementById("quiz-missed"),
+    quizMissedList: document.getElementById("quiz-missed-list"),
     retryMissedBtn: document.getElementById("retry-missed-btn"),
     newRoundBtn: document.getElementById("new-round-btn"),
 
@@ -157,8 +177,14 @@
   let currentIndex = 0;
   let missed = [];
   let score = 0;
+  let streak = 0; // in-memory only, resets on a wrong answer — never persisted
+  let answeredCurrent = false;
   let categoryResults = {}; // this round only: key -> {answered, correct}
   let selectedCategories = new Set(QUIZ_CATEGORIES.map((c) => c.key));
+  // Captured at round start so the summary can compare against your accuracy
+  // *before* this round: recordQuizAnswer() fires per-answer during play, so
+  // by summary time loadQuizStats() already includes the round just played.
+  let baselineStats = null;
 
   // A category collapses to one possible answer under the active filter
   // (e.g. "Manufacturer" once you've filtered to one manufacturer) — asking
@@ -218,18 +244,28 @@
       const nameEl = document.createElement("span");
       nameEl.className = "category-pill-name";
       nameEl.textContent = cat.label;
+      textWrap.appendChild(nameEl);
+
       const accEl = document.createElement("span");
       accEl.className = "category-pill-accuracy";
       if (trivial) {
         accEl.textContent = "All results match one value under the current filter";
       } else {
         const catStats = stats.byCategory[cat.key] || { answered: 0, correct: 0 };
-        accEl.textContent =
-          catStats.answered > 0
-            ? `${Math.round((catStats.correct / catStats.answered) * 100)}% accuracy (${catStats.answered} answered)`
-            : "Not studied yet";
+        if (catStats.answered > 0) {
+          const pct = Math.round((catStats.correct / catStats.answered) * 100);
+          const track = document.createElement("span");
+          track.className = "category-pill-bar";
+          const fill = document.createElement("span");
+          fill.className = "category-pill-bar-fill";
+          fill.style.width = `${pct}%`;
+          track.appendChild(fill);
+          textWrap.appendChild(track);
+          accEl.textContent = `${pct}% of ${catStats.answered}`;
+        } else {
+          accEl.textContent = "Not studied yet";
+        }
       }
-      textWrap.appendChild(nameEl);
       textWrap.appendChild(accEl);
 
       label.appendChild(input);
@@ -237,6 +273,22 @@
       els.categoryList.appendChild(label);
     });
     updateStartButton();
+  }
+
+  // Selects the three categories you're worst at, treating never-studied as
+  // weak (you can't be good at something you've never been asked).
+  function selectWeakSpots() {
+    const stats = loadQuizStats();
+    const targetPool = applyFilters(eligibleMics());
+    const ranked = QUIZ_CATEGORIES.filter((cat) => !isCategoryTrivial(cat, targetPool))
+      .map((cat) => {
+        const s = stats.byCategory[cat.key] || { answered: 0, correct: 0 };
+        return { key: cat.key, accuracy: s.answered > 0 ? s.correct / s.answered : -1 };
+      })
+      .sort((a, b) => a.accuracy - b.accuracy);
+    if (ranked.length === 0) return;
+    selectedCategories = new Set(ranked.slice(0, 3).map((r) => r.key));
+    renderCategoryPicker();
   }
 
   function updateStartButton() {
@@ -249,49 +301,85 @@
     els.quizSummary.hidden = name !== "summary";
   }
 
+  function beginRound(questions) {
+    session = questions;
+    currentIndex = 0;
+    missed = [];
+    score = 0;
+    streak = 0;
+    categoryResults = {};
+    showScreen("active");
+    renderQuestion();
+  }
+
   function startQuiz() {
     if (selectedCategories.size === 0) return;
     const distractorPool = eligibleMics();
     const targetPool = applyFilters(distractorPool);
-    session = buildQuizSession([...selectedCategories], targetPool, distractorPool, QUESTION_COUNT);
-    if (session.length === 0) {
+    const count = Number(els.quizCountSelect.value) || DEFAULT_QUESTION_COUNT;
+    const questions = buildQuizSession([...selectedCategories], targetPool, distractorPool, count);
+    if (questions.length === 0) {
       alert("Couldn't build a round from the selected categories. Try a different combination.");
       return;
     }
-    currentIndex = 0;
-    missed = [];
-    score = 0;
-    categoryResults = {};
-    showScreen("active");
-    renderQuestion();
+    // Snapshot before the first answer is recorded — see baselineStats above.
+    baselineStats = loadQuizStats();
+    beginRound(questions);
   }
 
   function retryMissed() {
     if (missed.length === 0) return;
-    session = missed;
-    missed = [];
-    currentIndex = 0;
-    score = 0;
-    categoryResults = {};
-    showScreen("active");
-    renderQuestion();
+    baselineStats = loadQuizStats();
+    beginRound(missed);
   }
 
   function renderQuestion() {
     const q = session[currentIndex];
+    answeredCurrent = false;
+
     els.quizProgress.textContent = `Question ${currentIndex + 1} of ${session.length}`;
+    els.quizProgressFill.style.width = `${(currentIndex / session.length) * 100}%`;
+    els.quizScore.textContent = `${score} correct`;
+    els.quizStreak.hidden = streak < 2;
+    els.quizStreak.textContent = `${streak} in a row`;
     els.quizPrompt.textContent = q.prompt;
-    els.quizFeedback.hidden = true;
-    els.quizNextBtn.hidden = true;
+    els.quizFeedback.textContent = "";
+    els.quizActionNote.textContent = "";
+    els.quizNextBtn.disabled = true;
+    els.quizNextBtn.textContent = currentIndex === session.length - 1 ? "See results" : "Next";
+
+    els.quizOptions.style.minHeight = "";
     els.quizOptions.innerHTML = "";
-    q.options.forEach((opt) => {
+    q.options.forEach((opt, i) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "quiz-option";
-      btn.textContent = opt.label;
+
+      const row = document.createElement("span");
+      row.className = "quiz-option-row";
+      const badge = document.createElement("span");
+      badge.className = "quiz-option-badge";
+      // aria-hidden so the accessible name stays "Ribbon", not "D Ribbon".
+      badge.setAttribute("aria-hidden", "true");
+      badge.textContent = (OPTION_KEYS[i] || "").toUpperCase();
+      const label = document.createElement("span");
+      label.className = "quiz-option-label";
+      label.textContent = opt.label;
+      const icon = document.createElement("span");
+      icon.className = "quiz-option-icon";
+      row.appendChild(badge);
+      row.appendChild(label);
+      row.appendChild(icon);
+      btn.appendChild(row);
+
       btn.addEventListener("click", () => answerQuestion(q, opt, btn));
       els.quizOptions.appendChild(btn);
     });
+
+    // Reserve room for the explanation that expands inside the chosen option
+    // once answered, so the Next button below doesn't jump between the
+    // correct case (no explanation) and the incorrect case (two lines).
+    els.quizOptions.style.minHeight = `${els.quizOptions.offsetHeight + 64}px`;
   }
 
   function labelFor(question, value) {
@@ -300,17 +388,38 @@
   }
 
   function answerQuestion(question, chosen, chosenBtn) {
+    if (answeredCurrent) return;
+    answeredCurrent = true;
     const correct = chosen.value === question.correctValue;
+    const mic = question.mic;
 
     [...els.quizOptions.children].forEach((btn, i) => {
       btn.disabled = true;
       const opt = question.options[i];
-      if (opt.value === question.correctValue) btn.classList.add("quiz-option--correct");
-      else if (btn === chosenBtn) btn.classList.add("quiz-option--incorrect");
+      const icon = btn.querySelector(".quiz-option-icon");
+      if (opt.value === question.correctValue) {
+        btn.classList.add("quiz-option--correct");
+        icon.innerHTML = ICONS.check;
+      } else if (btn === chosenBtn) {
+        btn.classList.add("quiz-option--incorrect");
+        icon.innerHTML = ICONS.x;
+      }
     });
 
-    if (correct) score += 1;
-    else missed.push(question);
+    if (correct) {
+      score += 1;
+      streak += 1;
+    } else {
+      streak = 0;
+      question.chosenValue = chosen.value; // read back by the summary's missed list
+      missed.push(question);
+      // The explanation lives inside the option you picked, so the correction
+      // is attached to the answer you actually gave.
+      const explain = document.createElement("span");
+      explain.className = "quiz-option-explain";
+      explain.textContent = `${mic.displayName} — released ${mic.releaseYear}, ${formatPrice(mic)}.`;
+      chosenBtn.appendChild(explain);
+    }
 
     const forCat = categoryResults[question.categoryKey] || { answered: 0, correct: 0 };
     forCat.answered += 1;
@@ -319,30 +428,25 @@
 
     recordQuizAnswer(question.categoryKey, correct);
 
-    els.quizFeedback.hidden = false;
-    els.quizFeedback.className = `status-banner ${correct ? "status-banner--win" : "status-banner--loss"}`;
-    els.quizFeedback.innerHTML = "";
-    if (correct) {
-      els.quizFeedback.textContent = "Correct!";
-    } else {
-      const mic = question.mic;
-      els.quizFeedback.appendChild(
-        document.createTextNode(`Incorrect. The answer was "${labelFor(question, question.correctValue)}." `)
-      );
-      // Bracket questions (Year/Price) only reveal the bracket above, not the
-      // exact number — this fills in the precise value either way, since
-      // it's useful study context regardless of which category was missed.
-      const facts = document.createElement("span");
-      facts.className = "quiz-feedback-facts";
-      facts.textContent = `${mic.displayName}: released ${mic.releaseYear}, ${formatPrice(mic)}`;
-      els.quizFeedback.appendChild(facts);
-    }
+    els.quizScore.textContent = `${score} correct`;
+    els.quizStreak.hidden = streak < 2;
+    els.quizStreak.textContent = `${streak} in a row`;
+    els.quizProgressFill.style.width = `${((currentIndex + 1) / session.length) * 100}%`;
 
-    els.quizNextBtn.hidden = false;
-    els.quizNextBtn.textContent = currentIndex === session.length - 1 ? "See results" : "Next";
+    // The visual state above is colour + glyph + position, none of which a
+    // screen reader conveys — this live region is what actually announces the
+    // result, so it carries the full correction either way.
+    els.quizFeedback.textContent = correct
+      ? "Correct."
+      : `Incorrect. The answer was ${labelFor(question, question.correctValue)}. ${mic.displayName}, released ${mic.releaseYear}, ${formatPrice(mic)}.`;
+
+    els.quizActionNote.textContent = correct ? "Correct" : `Answer: ${labelFor(question, question.correctValue)}`;
+    els.quizNextBtn.disabled = false;
+    els.quizNextBtn.focus();
   }
 
   function nextQuestion() {
+    if (!answeredCurrent) return;
     currentIndex += 1;
     if (currentIndex >= session.length) {
       showSummary();
@@ -354,20 +458,87 @@
   function showSummary() {
     showScreen("summary");
     els.quizSummaryScore.textContent = `${score} / ${session.length} correct`;
+
+    // Compare against accuracy before this round, not the all-time figure —
+    // which already contains it, since answers are recorded as they happen.
+    const priorAnswered = (baselineStats ? baselineStats.totalAnswered : 0);
+    const priorCorrect = (baselineStats ? baselineStats.totalCorrect : 0);
+    if (priorAnswered > 0) {
+      const before = Math.round((priorCorrect / priorAnswered) * 100);
+      const now = Math.round((score / session.length) * 100);
+      const verb = now > before ? "up from" : now < before ? "down from" : "level with";
+      els.quizSummaryTrend.hidden = false;
+      els.quizSummaryTrend.textContent = `${now}% this round, ${verb} ${before}% before it.`;
+    } else {
+      els.quizSummaryTrend.hidden = true;
+    }
+
     els.quizSummaryBreakdown.innerHTML = "";
     Object.keys(categoryResults).forEach((key) => {
       const cat = QUIZ_CATEGORIES.find((c) => c.key === key);
       const r = categoryResults[key];
       const row = document.createElement("div");
       row.className = "quiz-summary-row";
+
+      const head = document.createElement("div");
+      head.className = "quiz-summary-row-head";
       const strong = document.createElement("strong");
       strong.textContent = cat.label;
-      row.appendChild(strong);
-      row.appendChild(document.createTextNode(`${r.correct} / ${r.answered}`));
+      const scoreEl = document.createElement("span");
+      scoreEl.className = "quiz-summary-row-score";
+      scoreEl.textContent = `${r.correct} / ${r.answered}`;
+      head.appendChild(strong);
+      head.appendChild(scoreEl);
+
+      const track = document.createElement("div");
+      track.className = "quiz-summary-bar";
+      const fill = document.createElement("div");
+      fill.className = "quiz-summary-bar-fill";
+      fill.style.width = `${(r.correct / r.answered) * 100}%`;
+      track.appendChild(fill);
+
+      row.appendChild(head);
+      row.appendChild(track);
       els.quizSummaryBreakdown.appendChild(row);
     });
+
+    renderMissedList();
+
     els.retryMissedBtn.hidden = missed.length === 0;
     els.retryMissedBtn.textContent = `Retry Missed (${missed.length})`;
+  }
+
+  function renderMissedList() {
+    els.quizMissed.hidden = missed.length === 0;
+    els.quizMissedList.innerHTML = "";
+    missed.forEach((q) => {
+      const li = document.createElement("li");
+      li.className = "quiz-missed-item";
+
+      const micEl = document.createElement("span");
+      micEl.className = "quiz-missed-mic";
+      micEl.textContent = q.mic.displayName;
+
+      const qEl = document.createElement("span");
+      qEl.className = "quiz-missed-q";
+      qEl.textContent = q.prompt;
+
+      const answers = document.createElement("span");
+      answers.className = "quiz-missed-answers";
+      const yours = document.createElement("span");
+      yours.className = "quiz-missed-yours";
+      yours.textContent = `You said ${labelFor(q, q.chosenValue)}`;
+      const right = document.createElement("span");
+      right.className = "quiz-missed-right";
+      right.textContent = `Answer: ${labelFor(q, q.correctValue)}`;
+      answers.appendChild(yours);
+      answers.appendChild(right);
+
+      li.appendChild(micEl);
+      li.appendChild(qEl);
+      li.appendChild(answers);
+      els.quizMissedList.appendChild(li);
+    });
   }
 
   // --------------------------------------------------------------- Order tab
@@ -929,11 +1100,43 @@
   els.tabReferenceBtn.addEventListener("click", () => switchTab("reference"));
 
   els.startQuizBtn.addEventListener("click", startQuiz);
+  els.weakSpotsBtn.addEventListener("click", selectWeakSpots);
   els.quizNextBtn.addEventListener("click", nextQuestion);
   els.retryMissedBtn.addEventListener("click", retryMissed);
   els.newRoundBtn.addEventListener("click", () => {
     showScreen("picker");
     renderCategoryPicker();
+  });
+
+  // A–D and 1–4 pick an answer, Enter advances. Bound because the letter
+  // badges on the options are just decoration otherwise. Mirrors js/app.js's
+  // shortcut handler: bail out whenever a form control has focus, so this
+  // never hijacks typing in the Reference search or a filter dropdown.
+  document.addEventListener("keydown", (e) => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (els.quizTab.hidden || els.quizActive.hidden) return;
+    const tag = document.activeElement ? document.activeElement.tagName : "";
+    if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+
+    if (e.key === "Enter") {
+      if (!els.quizNextBtn.disabled) {
+        e.preventDefault();
+        nextQuestion();
+      }
+      return;
+    }
+    if (answeredCurrent) return;
+
+    const key = e.key.toLowerCase();
+    const byLetter = OPTION_KEYS.indexOf(key);
+    const byNumber = /^[1-4]$/.test(key) ? Number(key) - 1 : -1;
+    const index = byLetter >= 0 ? byLetter : byNumber;
+    if (index < 0) return;
+    const btn = els.quizOptions.children[index];
+    if (btn) {
+      e.preventDefault();
+      btn.click();
+    }
   });
 
   els.startOrderBtn.addEventListener("click", startOrderSession);

@@ -66,24 +66,54 @@
 
     <section id="quiz-tab">
       <div id="quiz-picker" class="quiz-picker">
-        <p class="mode-note">Pick which categories to be quizzed on, then start a 10-question round.</p>
+        <p class="mode-note">Pick which categories to be quizzed on, then start a round.</p>
         <div id="category-list" class="category-list"></div>
+        <div class="quiz-picker-controls">
+          <label class="pool-filter">
+            <span>Questions</span>
+            <select id="quiz-count-select">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+            </select>
+          </label>
+          <button type="button" id="weak-spots-btn" class="weak-spots-btn">Study my weak spots</button>
+        </div>
         <button type="button" id="start-quiz-btn" class="share-btn share-btn--page">Start Quiz</button>
       </div>
 
       <div id="quiz-active" class="quiz-active" hidden>
-        <p id="quiz-progress" class="quiz-progress"></p>
+        <div class="quiz-status">
+          <span id="quiz-progress" class="quiz-progress"></span>
+          <span class="quiz-chips">
+            <span id="quiz-streak" class="quiz-chip quiz-chip--streak" hidden></span>
+            <span id="quiz-score" class="quiz-chip quiz-chip--score"></span>
+          </span>
+        </div>
+        <div class="quiz-progress-track">
+          <div id="quiz-progress-fill" class="quiz-progress-fill"></div>
+        </div>
         <div class="quiz-question">
           <p id="quiz-prompt" class="quiz-prompt"></p>
           <div id="quiz-options" class="quiz-options" role="group" aria-label="Answer choices"></div>
         </div>
-        <p id="quiz-feedback" class="status-banner" role="status" hidden></p>
-        <button type="button" id="quiz-next-btn" class="share-btn share-btn--page" hidden>Next</button>
+        <!-- The visual feedback renders inline inside the chosen option, but
+             this stays as the live region so answers are still announced. -->
+        <p id="quiz-feedback" class="visually-hidden" role="status"></p>
+        <div class="quiz-actions">
+          <span id="quiz-action-note" class="quiz-action-note"></span>
+          <button type="button" id="quiz-next-btn" class="share-btn share-btn--page" disabled>Next</button>
+        </div>
       </div>
 
       <div id="quiz-summary" class="quiz-summary" hidden>
         <h2 id="quiz-summary-score"></h2>
+        <p id="quiz-summary-trend" class="quiz-summary-trend" hidden></p>
         <div id="quiz-summary-breakdown" class="quiz-summary-breakdown"></div>
+        <div id="quiz-missed" class="quiz-missed" hidden>
+          <h3 class="quiz-missed-title">Mics you missed</h3>
+          <ul id="quiz-missed-list" class="quiz-missed-list"></ul>
+        </div>
         <div class="quiz-summary-actions">
           <button type="button" id="retry-missed-btn" class="share-btn share-btn--page share-btn--secondary" hidden>Retry Missed</button>
           <button type="button" id="new-round-btn" class="share-btn share-btn--page">New Round</button>

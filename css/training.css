@@ -72,13 +72,6 @@
   text-align: center;
 }
 
-.quiz-feedback-facts {
-  display: block;
-  margin-top: var(--space-2);
-  font-size: var(--fs-sm);
-  opacity: 0.85;
-}
-
 .quiz-picker {
   display: flex;
   flex-direction: column;
@@ -92,10 +85,13 @@
   gap: var(--space-3);
 }
 
+/* No justify-content: space-between — in a 200px-min grid cell it stranded
+   the checkbox hard-left and its own label hard-right with a gap between
+   them, which read as two unrelated things. Shared by the Quiz, Order and
+   Match pickers, so all three get the fix. */
 .category-pill {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--border);
@@ -188,10 +184,60 @@
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
+  /* min-width:0 so a long category name wraps inside the pill instead of
+     forcing the grid cell wider than its track. */
+  min-width: 0;
+  flex: 1;
 }
 
 .category-pill-name { font-weight: 600; font-size: var(--fs-base); }
 .category-pill-accuracy { font-size: var(--fs-xs); color: var(--muted); }
+
+/* Accuracy as a bar, so six categories can be compared at a glance rather
+   than by reading six percentages. Quiz-only for now (Order/Match report
+   "3 / 5 rounds correct", not a percentage), hence the separate element
+   rather than restyling .category-pill-accuracy itself. */
+.category-pill-bar {
+  height: 3px;
+  border-radius: 999px;
+  background: var(--no-match-bg);
+  overflow: hidden;
+  margin: var(--space-2) 0 var(--space-1);
+}
+
+.category-pill-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.quiz-picker-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+
+.weak-spots-btn {
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.weak-spots-btn:hover { background: var(--bg); }
+.weak-spots-btn:disabled { opacity: 0.5; cursor: default; }
+
+.weak-spots-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .quiz-active {
   margin-top: var(--space-5);
@@ -200,10 +246,52 @@
   gap: var(--space-4);
 }
 
+.quiz-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 .quiz-progress {
   font-size: var(--fs-sm);
   color: var(--muted);
   margin: 0;
+}
+
+.quiz-chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.quiz-chip {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+}
+
+.quiz-chip--score { color: var(--match); background: var(--match-bg); }
+.quiz-chip--streak { color: var(--partial); background: var(--partial-bg); }
+
+.quiz-progress-track {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--no-match-bg);
+  overflow: hidden;
+}
+
+/* Width is set by JS from session.length — a retry round is 1–9 questions
+   and the count is user-selectable, so it can't be a fixed segment count. */
+.quiz-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  transition: width 160ms ease;
 }
 
 .quiz-question {
@@ -218,14 +306,21 @@
   margin: 0;
 }
 
+/* Full-width rows, not a grid. The longest real option — the AKG C414's six
+   switchable polar patterns — is 86 characters and wraps to seven or eight
+   lines in a two-column grid at phone width. min-height is set by JS on each
+   render so the inline explanation can expand without moving the Next
+   button below it. */
 .quiz-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
 
 .quiz-option {
-  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   font-size: var(--fs-base);
   font-family: inherit;
   border: 1px solid var(--border);
@@ -234,23 +329,82 @@
   color: var(--text);
   cursor: pointer;
   text-align: left;
+  overflow: hidden;
   transition: border-color 120ms ease, background-color 120ms ease;
 }
 
 .quiz-option:hover:not(:disabled) { background: var(--bg); }
 .quiz-option:disabled { cursor: default; }
 
+.quiz-option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.quiz-option-badge {
+  flex: none;
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-2);
+  line-height: 1.4;
+}
+
+.quiz-option-label { flex: 1; min-width: 0; }
+
+.quiz-option-icon {
+  flex: none;
+  display: inline-flex;
+}
+
+.quiz-option-icon svg { width: 1rem; height: 1rem; }
+
+/* Label stays --text rather than the state colour: --match on --match-bg is
+   only 3.5:1, under the 4.5:1 floor. The tint, border and glyph carry the
+   state instead — and the glyph matters on its own, since colour alone is
+   indistinguishable for red-green colour blindness. */
 .quiz-option--correct {
   background: var(--match-bg);
   border-color: var(--match);
-  color: var(--match);
 }
+
+.quiz-option--correct .quiz-option-icon,
+.quiz-option--correct .quiz-option-badge { color: var(--match); border-color: var(--match); }
 
 .quiz-option--incorrect {
   background: var(--loss-bg);
   border-color: var(--loss);
-  color: var(--loss);
 }
+
+.quiz-option--incorrect .quiz-option-icon,
+.quiz-option--incorrect .quiz-option-badge { color: var(--loss); border-color: var(--loss); }
+
+.quiz-option-explain {
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--loss);
+  color: var(--text);
+}
+
+.quiz-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.quiz-action-note {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.quiz-actions .share-btn--page { margin: 0; }
 
 .quiz-summary {
   margin-top: var(--space-5);
@@ -258,22 +412,100 @@
 
 .quiz-summary h2 { margin: 0 0 var(--space-2); }
 
+.quiz-summary-trend {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin: 0;
+}
+
 .quiz-summary-breakdown {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
   margin: var(--space-5) 0;
 }
 
 .quiz-summary-row {
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
   font-size: var(--fs-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.quiz-summary-row strong { display: block; font-size: var(--fs-base); }
+.quiz-summary-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.quiz-summary-row-head strong { font-size: var(--fs-base); }
+.quiz-summary-row-score { color: var(--muted); white-space: nowrap; }
+
+.quiz-summary-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--no-match-bg);
+  overflow: hidden;
+}
+
+.quiz-summary-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--match);
+}
+
+/* The round's actual study payload: which mics you got wrong, and what the
+   answer was. Built from the questions already held in memory. */
+.quiz-missed {
+  margin: 0 0 var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.quiz-missed-title {
+  margin: 0;
+  font-size: var(--fs-base);
+}
+
+.quiz-missed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quiz-missed-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.quiz-missed-mic { font-weight: 600; font-size: var(--fs-base); }
+.quiz-missed-q { font-size: var(--fs-xs); color: var(--muted); }
+
+.quiz-missed-answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  margin-top: var(--space-1);
+}
+
+.quiz-missed-yours { color: var(--loss); }
+.quiz-missed-right { color: var(--match); }
+.quiz-missed-answers span strong { font-weight: 600; }
 
 .quiz-summary-actions {
   display: flex;
@@ -472,5 +704,8 @@
 }
 
 @media (max-width: 480px) {
-  .quiz-options { grid-template-columns: 1fr; }
+  /* .quiz-options no longer needs a breakpoint — it's a single column at
+     every width now, for the long-option reason noted above its rule. */
+  .quiz-actions { flex-direction: column; align-items: stretch; }
+  .quiz-actions .share-btn--page { width: 100%; }
 }

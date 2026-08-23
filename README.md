@@ -224,8 +224,24 @@ into the same small print used for the single-category case.
 
 Four tabs:
 - **Quiz** — pick which categories to be quizzed on (Manufacturer, Country,
-  Operating Principle, Polar Pattern, Release Year, Price), then answer a
-  10-question round. Every category is the same multiple-choice shape — one
+  Operating Principle, Polar Pattern, Release Year, Price) and how many
+  questions to answer (5/10/20, default 10), or hit **Study my weak spots**
+  to auto-select the three categories you're worst at (never-studied counts
+  as weak). During a round a progress bar, a running score and a streak
+  chip sit above the question; answer options are full-width rows lettered
+  A–D and bound to those keys, with Enter to advance. Getting one wrong
+  expands the correction inside the option you picked, and the space for it
+  is reserved up front so the Next button doesn't move between a right and
+  a wrong answer. Correct/incorrect carry a check or cross glyph, not just
+  a colour, and the option label stays at `--text` rather than the state
+  colour (`--match` on `--match-bg` is only 3.5:1, under the 4.5:1 floor).
+  The round ends on a summary with per-category accuracy bars, a
+  **"Mics you missed"** list showing each mic, what was asked, your answer
+  and the right one, and an honest trend line — honest because
+  `recordQuizAnswer` writes as you play, so the comparison is against a
+  baseline snapshotted at round start rather than the all-time figure,
+  which by then already contains the round you just finished.
+  Every category is the same multiple-choice shape — one
   mic shown, 4 options — including Year and Price, which ask about a
   *bracket* rather than comparing two mics ("What decade was the ... released
   in?", "What price bracket is the ... in?"). The bucket edges
@@ -238,7 +254,9 @@ Four tabs:
   Russian-made mic in the pool) never runs short of *distractors*, since the
   question only needs enough *distinct values* to exist somewhere in the
   pool. After a round, wrong answers can be retried via "Retry Missed"
-  (replays those exact questions, not a fresh draw), and per-category
+  (replays those exact questions, not a fresh draw — note the progress bar
+  scales to `session.length`, since a retry round is however many you
+  missed, not ten), and per-category
   accuracy persists across visits in `localStorage` under
   `` `micle_${STORAGE_VERSION}_quiz_stats` `` — same versioned-key,
   default-shape convention as the main game's `micle_v1_stats`, added
