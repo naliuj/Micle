@@ -2,6 +2,76 @@
    tokens and shared components (.site-header, .mode-switcher, .status-banner,
    .board/.cell, .share-btn); doesn't redefine any :root variable. */
 
+.pool-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.pool-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  /* Prevents stretching full-width when used as a lone flex item inside a
+     column layout (the Order/Match Rounds picker) — harmless in the row
+     layout above (.pool-filters), where cross-axis alignment is vertical. */
+  align-self: flex-start;
+}
+
+/* No select styling exists elsewhere in the app (no <select> until this
+   feature) — matches .icon-btn's border/radius treatment for consistency. */
+.pool-filter select {
+  font: inherit;
+  font-size: var(--fs-base);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.pool-filter select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pool-filter-count {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  margin: 0;
+}
+
+/* A zero-match filter locks out every category/dimension at once, so it
+   needs to read as an unmissable warning rather than blend in with the
+   plain-text count it replaces. */
+.pool-filter-count--empty {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--loss);
+  background: var(--loss-bg);
+  border: 1px solid var(--loss);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Replaces the whole category/dimension list (not just a per-item note)
+   when the filter matches nothing — same reasoning as above. */
+.pool-empty-notice {
+  padding: var(--space-5);
+  border: 1px solid var(--loss);
+  border-radius: var(--radius-lg);
+  background: var(--loss-bg);
+  color: var(--loss);
+  font-weight: 600;
+  text-align: center;
+}
+
 .quiz-feedback-facts {
   display: block;
   margin-top: var(--space-2);
@@ -45,8 +115,10 @@
    one element that didn't look like it belonged. The checkmark glyph matches
    the app's own check icon (js/app.js's ICONS.check / the legend's match
    swatch in index.html), so a checked category reads as the same "match"
-   affordance used everywhere else. */
-.category-pill input[type="checkbox"] {
+   affordance used everywhere else. Shared with .match-card (Match mode's
+   mic-selection toggles), same affordance applied to a different label. */
+.category-pill input[type="checkbox"],
+.match-card input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
   flex: none;
@@ -63,13 +135,51 @@
   transition: background-color 120ms ease, border-color 120ms ease;
 }
 
-.category-pill input[type="checkbox"]:checked {
+.category-pill input[type="checkbox"]:checked,
+.match-card input[type="checkbox"]:checked {
   background-color: var(--accent);
   border-color: var(--accent);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
 }
 
-.category-pill input[type="checkbox"]:focus-visible {
+.category-pill input[type="checkbox"]:focus-visible,
+.match-card input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Radio variant — same custom-styled treatment as the checkbox above (the
+   Order/Match dimension pickers are single-select, so radio is the correct
+   semantic input), but a filled dot rather than a checkmark so it still
+   reads as visually distinct from a checkbox at a glance. */
+.category-pill input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background-color: var(--surface);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 120ms ease;
+}
+
+.category-pill input[type="radio"]:checked {
+  border-color: var(--accent);
+}
+
+.category-pill input[type="radio"]:checked::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.category-pill input[type="radio"]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -189,6 +299,176 @@
 .icon-btn--back {
   gap: var(--space-2);
   text-decoration: none;
+}
+
+/* ---------------------------------------------------------------- Order mode */
+
+.order-active {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.order-instructions {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  margin: 0;
+}
+
+.order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.order-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  /* Without this, a touch-drag on the grip starts a page scroll instead of
+     firing pointermove at the granularity the drag handler needs. */
+  touch-action: none;
+}
+
+.order-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.order-item--dragging {
+  position: relative;
+  z-index: 1;
+  opacity: 0.7;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.order-item-grip {
+  cursor: grab;
+  color: var(--muted);
+  font-size: var(--fs-lg);
+  line-height: 1;
+  touch-action: none;
+  flex: none;
+}
+
+.order-item-grip:active { cursor: grabbing; }
+
+.order-item-name {
+  flex: 1;
+  font-weight: 500;
+  min-width: 0;
+}
+
+.order-item-controls {
+  display: flex;
+  gap: var(--space-1);
+  flex: none;
+}
+
+.order-move-btn {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  line-height: 1;
+}
+
+.order-move-btn:hover { background: var(--bg); }
+.order-move-btn:disabled { opacity: 0.4; cursor: default; }
+
+.order-move-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.order-summary { margin-top: var(--space-5); }
+.order-summary h2 { margin: 0 0 var(--space-4); }
+
+.order-summary-list {
+  list-style: none;
+  margin: 0 0 var(--space-5);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.order-summary-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-size: var(--fs-sm);
+}
+
+.order-summary-item--correct { border-color: var(--match); color: var(--match); }
+.order-summary-item--incorrect { border-color: var(--loss); color: var(--loss); }
+
+/* ---------------------------------------------------------------- Match mode */
+
+.match-active {
+  margin-top: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+/* Reuses .category-pill's checkbox visual language (custom-styled checkbox +
+   label), since this is the same "toggle a choice on/off" affordance, just
+   applied to a mic instead of a category. */
+.match-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: var(--fs-base);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.match-card:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--hint-bg);
+}
+
+.match-card--correct {
+  border-color: var(--match);
+  background: var(--match-bg);
+  color: var(--match);
+}
+
+.match-card--incorrect {
+  border-color: var(--loss);
+  background: var(--loss-bg);
+  color: var(--loss);
 }
 
 @media (max-width: 480px) {

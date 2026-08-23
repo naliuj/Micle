@@ -625,6 +625,8 @@ main {
 }
 
 .share-btn:hover { opacity: 0.9; }
+.share-btn:disabled { opacity: 0.5; cursor: default; }
+.share-btn:disabled:hover { opacity: 0.5; }
 
 .share-btn--page {
   display: inline-flex;

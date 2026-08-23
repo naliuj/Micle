@@ -42,7 +42,9 @@ js/                   app logic (vanilla JS, no framework)
   compare.js            pure guess-comparison functions
   autocomplete.js        typeahead search component
   quiz.js                 pure quiz-question builders (mirrors compare.js's design)
-  training.js               Study Mode page orchestration
+  order.js                  pure Order-mode round builders (mirrors quiz.js's design)
+  match.js                   pure Match-mode round builders (mirrors quiz.js's design)
+  training.js                  Study Mode page orchestration
   schedule.js             resolves "today's" target mic from SCHEDULE.order (see below)
   storage.js               localStorage persistence, keyed by day index
   devtools.js               debug console API, no UI (see "Debugging" below)
@@ -197,14 +199,30 @@ distinct event in the GoatCounter dashboard) via `toGoatCounterEvent()`:
 
 ## Study Mode
 
-`/training/` is a standalone page (own `index.html`, `js/quiz.js` +
-`js/training.js`, `css/training.css`) for studying the mic pool instead of
-just playing against it. It reuses the main game's data, comparison logic,
-storage conventions, and design tokens rather than inventing parallel ones —
-it doesn't load `js/app.js`/`js/schedule.js`/`js/devtools.js`, since it has
-no "today's puzzle" concept.
+`/training/` is a standalone page (`index.html`, `js/quiz.js`/`js/order.js`/
+`js/match.js`, `js/training.js`, `css/training.css`) for studying the mic
+pool instead of just playing against it. It reuses the main game's data,
+comparison logic, storage conventions, and design tokens rather than
+inventing parallel ones — it doesn't load
+`js/app.js`/`js/schedule.js`/`js/devtools.js`, since it has no "today's
+puzzle" concept.
 
-Two tabs:
+A shared **Manufacturer/Country filter** sits above the tabs and narrows
+whichever mode is active (set once, not configured per tab). Narrowing which
+mic gets *asked about* is kept separate from where multiple-choice
+*distractors* come from — filtering the Quiz tab to one manufacturer still
+draws wrong answers from the whole pool, or every other category would lose
+distractor variety (e.g. an all-German manufacturer would leave zero Country
+distractors). A category/dimension that collapses to one possible answer
+under the active filter (e.g. "Manufacturer" once filtered to one
+manufacturer) is automatically disabled rather than left to produce a
+trivial round. A filter combination matching **zero** mics locks out every
+category/dimension at once, so it gets a distinct, unmissable warning
+treatment (`.pool-filter-count--empty`/`.pool-empty-notice` in
+`css/training.css`, replacing the whole picker list) rather than blending
+into the same small print used for the single-category case.
+
+Four tabs:
 - **Quiz** — pick which categories to be quizzed on (Manufacturer, Country,
   Operating Principle, Polar Pattern, Release Year, Price), then answer a
   10-question round. Every category is the same multiple-choice shape — one
@@ -212,8 +230,8 @@ Two tabs:
   *bracket* rather than comparing two mics ("What decade was the ... released
   in?", "What price bracket is the ... in?"). The bucket edges
   (`YEAR_BUCKET_EDGES`/`PRICE_BUCKET_EDGES` in `js/quiz.js`) were chosen
-  against the real pool, not guessed — decade buckets split 3/14/7/9/25/34/
-  13/6 across the 111 mics, price buckets split 19/37/32/13/10 — so no single
+  against the real pool, not guessed — decade buckets split 3/14/7/9/28/38/
+  12/7 across the 118 mics, price buckets split 20/38/34/16/10 — so no single
   bucket makes the question trivial. Distractors for every category are
   drawn from the pool's distinct values for that category, not from other
   mics — so a category with a low-population value (e.g. only one
@@ -225,6 +243,27 @@ Two tabs:
   `` `micle_${STORAGE_VERSION}_quiz_stats` `` — same versioned-key,
   default-shape convention as the main game's `micle_v1_stats`, added
   alongside it in `js/storage.js`.
+- **Order** — pick Price or Release Year and how many rounds to play (1/3/5/
+  10, defaulting to 5), then drag 5 mics into ascending order per round.
+  Dragging uses Pointer Events (unifies mouse/touch/pen in one code path,
+  unlike native HTML5 drag-and-drop's inconsistent touch support), and every
+  item is also reorderable via focus + arrow keys or visible move buttons,
+  with an `aria-live` region announcing each move — full keyboard parity,
+  not a drag-only interaction. Correctness tolerates exact ties (two mics
+  really do share an MSRP in the current pool): an arrangement is correct
+  whenever it's non-decreasing by value, and per-item "in place" feedback
+  compares *values* at each position against a sorted reference, not mic
+  identity, so tied mics can't be marked wrong just for swapping places.
+  Rounds chain together — each one's result is shown before moving to the
+  next, with a final session recap before returning to the picker — and
+  round-level pass/fail persists under `micle_v1_order_stats`.
+- **Match** — pick Polar Pattern or Operating Principle and how many rounds
+  to play (same 1/3/5/10 picker as Order), then select every mic (out of a
+  set of ~8, always a mix of matches and non-matches) that has a given value
+  per round. Polar Pattern matching is set-membership (a switchable mic can
+  have several patterns), the same semantics `comparePatterns()` uses in
+  `js/compare.js`. Same multi-round session/recap flow as Order; persists
+  under `micle_v1_match_stats`.
 - **Reference** — search or browse the full pool and see a mic's complete
   details. This repurposes `js/autocomplete.js`'s `browseAll()` (dormant on
   the main game's guess input, opt-in elsewhere) via a `browseAllOnEmpty`

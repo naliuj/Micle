@@ -970,9 +970,9 @@ const MIC_DB = [
   {
     id: "neumann-m149tube",
     manufacturer: "Neumann",
-    model: "M 149 Tube",
-    displayName: "Neumann M 149 Tube",
-    aliases: ["M149"],
+    model: "M 149",
+    displayName: "Neumann M 149",
+    aliases: ["M149", "M 149 Tube"],
     countryOfOrigin: "Germany",
     operatingPrinciple: "Tube",
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],

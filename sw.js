@@ -7,7 +7,7 @@
 //
 // Bump CACHE_VERSION whenever any cached file below changes — nothing else
 // invalidates the cache automatically (see README's "PWA" section).
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v4";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -27,6 +27,8 @@ const PRECACHE_URLS = [
   "/training/index.html",
   "/css/training.css",
   "/js/quiz.js",
+  "/js/order.js",
+  "/js/match.js",
   "/js/training.js",
 ];
 

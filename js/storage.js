@@ -137,3 +137,78 @@ function recordQuizAnswer(categoryKey, correct) {
   writeJSON(quizStatsKey(), stats);
   return stats;
 }
+
+function orderStatsKey() {
+  return `micle_${STORAGE_VERSION}_order_stats`;
+}
+
+// ORDER_DIMENSIONS comes from js/order.js — same lazy-reference safety as
+// defaultQuizStats()'s use of QUIZ_CATEGORIES above (resolved at call time,
+// not parse time).
+function defaultOrderStats() {
+  return {
+    totalRounds: 0,
+    totalFullyCorrect: 0,
+    byDimension: Object.fromEntries(ORDER_DIMENSIONS.map((d) => [d.key, { rounds: 0, fullyCorrect: 0 }])),
+  };
+}
+
+function loadOrderStats() {
+  const stored = readJSON(orderStatsKey(), {});
+  const defaults = defaultOrderStats();
+  return {
+    ...defaults,
+    ...stored,
+    byDimension: { ...defaults.byDimension, ...(stored.byDimension || {}) },
+  };
+}
+
+// fullyCorrect: round-level pass/fail (every position in place) — matches
+// "accuracy per dimension," partial credit is shown in the UI but not
+// persisted, keeping this the same granularity as recordQuizAnswer above.
+function recordOrderAnswer(dimensionKey, fullyCorrect) {
+  const stats = loadOrderStats();
+  stats.totalRounds += 1;
+  if (fullyCorrect) stats.totalFullyCorrect += 1;
+  const forDim = stats.byDimension[dimensionKey] || { rounds: 0, fullyCorrect: 0 };
+  forDim.rounds += 1;
+  if (fullyCorrect) forDim.fullyCorrect += 1;
+  stats.byDimension[dimensionKey] = forDim;
+  writeJSON(orderStatsKey(), stats);
+  return stats;
+}
+
+function matchStatsKey() {
+  return `micle_${STORAGE_VERSION}_match_stats`;
+}
+
+// MATCH_DIMENSIONS comes from js/match.js — same lazy-reference safety as above.
+function defaultMatchStats() {
+  return {
+    totalRounds: 0,
+    totalFullyCorrect: 0,
+    byDimension: Object.fromEntries(MATCH_DIMENSIONS.map((d) => [d.key, { rounds: 0, fullyCorrect: 0 }])),
+  };
+}
+
+function loadMatchStats() {
+  const stored = readJSON(matchStatsKey(), {});
+  const defaults = defaultMatchStats();
+  return {
+    ...defaults,
+    ...stored,
+    byDimension: { ...defaults.byDimension, ...(stored.byDimension || {}) },
+  };
+}
+
+function recordMatchAnswer(dimensionKey, fullyCorrect) {
+  const stats = loadMatchStats();
+  stats.totalRounds += 1;
+  if (fullyCorrect) stats.totalFullyCorrect += 1;
+  const forDim = stats.byDimension[dimensionKey] || { rounds: 0, fullyCorrect: 0 };
+  forDim.rounds += 1;
+  if (fullyCorrect) forDim.fullyCorrect += 1;
+  stats.byDimension[dimensionKey] = forDim;
+  writeJSON(matchStatsKey(), stats);
+  return stats;
+}

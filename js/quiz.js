@@ -56,9 +56,11 @@ function formatPrice(mic) {
 }
 
 // Bucket edges chosen against the real pool (checked via a one-off node -e
-// against data/mics.js), not guessed — decade buckets split 3/14/7/9/25/34/
-// 13/6 across 111 mics, price buckets split 19/37/32/13/10. Neither has one
-// dominant bucket that would make the question trivial.
+// against data/mics.js), not guessed — decade buckets split 3/14/7/9/28/38/
+// 12/7 across 118 mics, price buckets split 20/38/34/16/10. Neither has one
+// dominant bucket that would make the question trivial. (These splits shift
+// slightly as mics are added — re-run the node -e check rather than hand-
+// editing this comment if it drifts far enough to matter.)
 const YEAR_BUCKET_EDGES = [1960, 1970, 1980, 1990, 2000, 2010, 2020];
 const YEAR_BUCKET_LABELS = ["Before 1960", "1960s", "1970s", "1980s", "1990s", "2000s", "2010s", "2020s"];
 
@@ -128,16 +130,22 @@ const QUIZ_CATEGORIES = [
 ];
 
 // Builds the option list for a multiple-choice question: one correct value
-// plus up to `want - 1` distractors drawn from the pool's *distinct* values
-// for this category (not from other mics directly) — so a category with a
-// low-population value (e.g. only one Russian-made mic) never runs short of
-// distractors, since it only needs enough *distinct values* to exist
-// somewhere in the pool, not enough *other mics* sharing the correct one.
-// `want - 1` naturally shrinks if the category has fewer distinct values
-// than needed, rather than duplicating an option or throwing.
-function buildMcOptions(pool, getValue, getLabel, correctValue, want = 4) {
+// plus up to `want - 1` distractors drawn from `distractorPool`'s *distinct*
+// values for this category (not from other mics directly) — so a category
+// with a low-population value (e.g. only one Russian-made mic) never runs
+// short of distractors, since it only needs enough *distinct values* to
+// exist somewhere in the pool, not enough *other mics* sharing the correct
+// one. `want - 1` naturally shrinks if the category has fewer distinct
+// values than needed, rather than duplicating an option or throwing.
+//
+// distractorPool is deliberately a separate parameter from the target pool
+// in buildMcQuestion/buildQuizSession below: when a manufacturer/country
+// filter narrows which mic gets *asked about*, distractor variety must still
+// come from the whole eligible pool, or a filter like "Neumann only" (all
+// German) would leave the Country category with zero valid wrong answers.
+function buildMcOptions(distractorPool, getValue, getLabel, correctValue, want = 4) {
   const seen = new Map(); // value -> label, first-seen label wins
-  for (const mic of pool) {
+  for (const mic of distractorPool) {
     const v = getValue(mic);
     // Skip a null value (only price, for a null-MSRP mic) — it has no real
     // bracket, so it must never surface as a selectable distractor.
@@ -153,16 +161,18 @@ function buildMcOptions(pool, getValue, getLabel, correctValue, want = 4) {
 // so the same mic isn't quizzed twice on the same category in one round.
 // Candidates with a null getValue (only price, for a null-MSRP mic — none
 // exist today, but the schema allows one) are skipped, since there'd be no
-// correct value to build a question around.
-function buildMcQuestion(category, pool, asked) {
-  const candidates = pool.filter(
+// correct value to build a question around. `targetPool` (which mic gets
+// asked about) and `distractorPool` (where wrong-answer variety comes from)
+// are separate on purpose — see buildMcOptions' comment above.
+function buildMcQuestion(category, targetPool, distractorPool, asked) {
+  const candidates = targetPool.filter(
     (m) => !asked.has(`${m.id}:${category.key}`) && category.getValue(m) != null
   );
   if (candidates.length === 0) return null;
   const mic = candidates[randomInt(candidates.length)];
   asked.add(`${mic.id}:${category.key}`);
   const correctValue = category.getValue(mic);
-  const options = buildMcOptions(pool, category.getValue, category.getLabel, correctValue);
+  const options = buildMcOptions(distractorPool, category.getValue, category.getLabel, correctValue);
   return {
     categoryKey: category.key,
     prompt: category.prompt(mic),
@@ -172,7 +182,10 @@ function buildMcQuestion(category, pool, asked) {
   };
 }
 
-function buildQuizSession(selectedCategoryKeys, pool, questionCount = 10) {
+// targetPool/distractorPool: pass the same array for both when there's no
+// active filter (the unfiltered case is then identical to before this split
+// existed). A filtered call narrows targetPool only.
+function buildQuizSession(selectedCategoryKeys, targetPool, distractorPool, questionCount = 10) {
   const cats = QUIZ_CATEGORIES.filter((c) => selectedCategoryKeys.includes(c.key));
   if (cats.length === 0) return [];
   const asked = new Set();
@@ -183,7 +196,7 @@ function buildQuizSession(selectedCategoryKeys, pool, questionCount = 10) {
   // instead of looping forever if a selection can't fill questionCount.
   while (questions.length < questionCount && guard++ < questionCount * 10) {
     const cat = cats[randomInt(cats.length)];
-    const q = buildMcQuestion(cat, pool, asked);
+    const q = buildMcQuestion(cat, targetPool, distractorPool, asked);
     if (q) questions.push(q);
   }
   return questions;

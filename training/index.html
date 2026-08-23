@@ -4,18 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Micle Study Mode</title>
-  <meta name="description" content="Quiz yourself on the Micle microphone pool by category, or browse the full reference list. Study up to get better at the daily game." />
+  <meta name="description" content="Quiz yourself on the Micle microphone pool by category, drag mics into price/year order, match mics by pattern or principle, or browse the full reference list." />
   <link rel="canonical" href="https://micle.julianro.se/training/" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Micle Study Mode" />
-  <meta property="og:description" content="Quiz yourself on the Micle microphone pool by category, or browse the full reference list." />
+  <meta property="og:description" content="Quiz yourself on the Micle microphone pool by category, drag mics into price/year order, match mics by pattern or principle, or browse the full reference list." />
   <meta property="og:url" content="https://micle.julianro.se/training/" />
   <meta property="og:image" content="https://micle.julianro.se/social-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Micle Study Mode" />
-  <meta name="twitter:description" content="Quiz yourself on the Micle microphone pool by category, or browse the full reference list." />
+  <meta name="twitter:description" content="Quiz yourself on the Micle microphone pool by category, drag mics into price/year order, match mics by pattern or principle, or browse the full reference list." />
   <meta name="twitter:image" content="https://micle.julianro.se/social-card.png" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
@@ -45,8 +45,22 @@
   </header>
 
   <main>
+    <div id="pool-filters" class="pool-filters">
+      <label class="pool-filter">
+        <span>Manufacturer</span>
+        <select id="filter-manufacturer"><option value="">Any</option></select>
+      </label>
+      <label class="pool-filter">
+        <span>Country</span>
+        <select id="filter-country"><option value="">Any</option></select>
+      </label>
+      <p id="pool-filter-count" class="pool-filter-count" aria-live="polite"></p>
+    </div>
+
     <div class="mode-switcher" role="tablist">
       <button type="button" id="tab-quiz-btn" class="mode-btn mode-btn--active" role="tab" aria-selected="true" data-tab="quiz">Quiz</button>
+      <button type="button" id="tab-order-btn" class="mode-btn" role="tab" aria-selected="false" data-tab="order">Order</button>
+      <button type="button" id="tab-match-btn" class="mode-btn" role="tab" aria-selected="false" data-tab="match">Match</button>
       <button type="button" id="tab-reference-btn" class="mode-btn" role="tab" aria-selected="false" data-tab="reference">Reference</button>
     </div>
 
@@ -73,6 +87,70 @@
         <div class="quiz-summary-actions">
           <button type="button" id="retry-missed-btn" class="share-btn share-btn--page share-btn--secondary" hidden>Retry Missed</button>
           <button type="button" id="new-round-btn" class="share-btn share-btn--page">New Round</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="order-tab" hidden>
+      <div id="order-picker" class="quiz-picker">
+        <p class="mode-note">Pick a dimension to sort by, then arrange mics from lowest to highest.</p>
+        <div id="order-dimension-list" class="category-list"></div>
+        <label class="pool-filter">
+          <span>Rounds</span>
+          <select id="order-rounds-select">
+            <option value="1">1</option>
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+          </select>
+        </label>
+        <button type="button" id="start-order-btn" class="share-btn share-btn--page">Start Round</button>
+      </div>
+
+      <div id="order-active" class="order-active" hidden>
+        <p id="order-prompt" class="quiz-progress"></p>
+        <p class="order-instructions">Arrange lowest to highest. Drag the grip, or focus an item and use arrow keys / the move buttons.</p>
+        <ul id="order-list" class="order-list" aria-label="Mics to arrange"></ul>
+        <p id="order-live" class="visually-hidden" aria-live="polite"></p>
+        <button type="button" id="submit-order-btn" class="share-btn share-btn--page">Submit Order</button>
+      </div>
+
+      <div id="order-summary" class="order-summary" hidden>
+        <h2 id="order-summary-score"></h2>
+        <ul id="order-summary-list" class="order-summary-list"></ul>
+        <div class="quiz-summary-actions">
+          <button type="button" id="new-order-round-btn" class="share-btn share-btn--page">New Round</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="match-tab" hidden>
+      <div id="match-picker" class="quiz-picker">
+        <p class="mode-note">Pick a dimension, then select every mic below that matches.</p>
+        <div id="match-dimension-list" class="category-list"></div>
+        <label class="pool-filter">
+          <span>Rounds</span>
+          <select id="match-rounds-select">
+            <option value="1">1</option>
+            <option value="3">3</option>
+            <option value="5" selected>5</option>
+            <option value="10">10</option>
+          </select>
+        </label>
+        <button type="button" id="start-match-btn" class="share-btn share-btn--page">Start Round</button>
+      </div>
+
+      <div id="match-active" class="match-active" hidden>
+        <p id="match-prompt" class="quiz-prompt"></p>
+        <div id="match-grid" class="match-grid" role="group" aria-label="Select every matching mic"></div>
+        <button type="button" id="submit-match-btn" class="share-btn share-btn--page">Submit Selection</button>
+      </div>
+
+      <div id="match-summary" class="order-summary" hidden>
+        <h2 id="match-summary-score"></h2>
+        <div id="match-summary-grid" class="match-grid"></div>
+        <div class="quiz-summary-actions">
+          <button type="button" id="new-match-round-btn" class="share-btn share-btn--page">New Round</button>
         </div>
       </div>
     </section>
@@ -119,6 +197,8 @@
   <script src="/js/compare.js"></script>
   <script src="/js/autocomplete.js"></script>
   <script src="/js/quiz.js"></script>
+  <script src="/js/order.js"></script>
+  <script src="/js/match.js"></script>
   <script src="/js/training.js"></script>
   <script src="/js/pwa.js"></script>
 </body>
