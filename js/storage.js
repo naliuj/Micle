@@ -99,6 +99,28 @@ function recordCompletion(dayIndex, won, guessCount) {
   return stats;
 }
 
+// Countries and makers the player has set aside — "I already know these,
+// stop asking me". Persisted because it's a standing fact about what they
+// know, not a per-round choice; re-picking it every reload would make the
+// feature pointless. Study Mode only: the daily game's schedule is shared,
+// so it can't honour a per-device preference.
+function studySetAsideKey() {
+  return `micle_${STORAGE_VERSION}_study_set_aside`;
+}
+
+function loadSetAside() {
+  const stored = readJSON(studySetAsideKey(), {});
+  const clean = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
+  return { countries: clean(stored.countries), manufacturers: clean(stored.manufacturers) };
+}
+
+function saveSetAside(setAside) {
+  writeJSON(studySetAsideKey(), {
+    countries: [...setAside.countries],
+    manufacturers: [...setAside.manufacturers],
+  });
+}
+
 function quizStatsKey() {
   return `micle_${STORAGE_VERSION}_quiz_stats`;
 }

@@ -57,13 +57,18 @@
          mode. Collapsed to a summary line by default — the summary carries
          the live state, so collapsing hides the controls, never the facts. -->
     <div id="round-setup" class="round-setup">
-      <div class="round-setup-summary">
-        <p id="round-setup-text" class="round-setup-text" aria-live="polite"></p>
-        <button type="button" id="round-setup-toggle" class="round-setup-toggle" aria-expanded="false" aria-controls="round-setup-panel">
+      <!-- The whole summary row is the control, not just the pill at the end:
+           a one-line bar whose only hit target is a small button at the far
+           edge reads as a label with a button beside it. The pill stays as
+           the affordance. Span, not <p> — a button only takes phrasing
+           content. -->
+      <button type="button" id="round-setup-toggle" class="round-setup-summary" aria-expanded="false" aria-controls="round-setup-panel">
+        <span id="round-setup-text" class="round-setup-text" aria-live="polite"></span>
+        <span class="round-setup-pill">
           Adjust
           <svg class="round-setup-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
-        </button>
-      </div>
+        </span>
+      </button>
       <div id="round-setup-panel" class="round-setup-panel" hidden>
         <!-- Country leads and Manufacturer cascades off it: the Manufacturer
              list only offers makers that build in the selected country, so
@@ -79,6 +84,15 @@
         <div class="pool-filter">
           <span id="round-length-label">Questions</span>
           <div id="round-length-pills" class="round-length-pills" role="radiogroup" aria-labelledby="round-length-label"></div>
+        </div>
+        <!-- Full-width row of its own: unlike the two filters above, this one
+             is a standing preference rather than a per-round choice, and it
+             carries a hint that needs the room. -->
+        <div class="pool-filter pool-filter--wide">
+          <span id="set-aside-label">Set aside</span>
+          <select id="set-aside-select" aria-labelledby="set-aside-label"><option value="">Add…</option></select>
+          <div id="set-aside-chips" class="set-aside-chips"></div>
+          <p class="set-aside-hint">Makers and countries you've already got down. They stop being asked about, but still turn up as wrong answers in Quiz.</p>
         </div>
       </div>
     </div>
@@ -144,7 +158,7 @@
         <p class="order-instructions">Arrange lowest to highest. Drag a row, or focus one and use the arrow keys / move buttons.</p>
         <ul id="order-list" class="order-list" aria-label="Mics to arrange"></ul>
         <p id="order-live" class="visually-hidden" aria-live="polite"></p>
-        <button type="button" id="submit-order-btn" class="share-btn share-btn--page">Submit Order</button>
+        <button type="button" id="submit-order-btn" class="share-btn share-btn--page">Submit</button>
       </div>
 
       <div id="order-summary" class="order-summary" hidden>

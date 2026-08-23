@@ -9,16 +9,30 @@
   gap: var(--space-3);
 }
 
+/* The row itself is the button. */
 .round-setup-summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
+  width: 100%;
+  font: inherit;
+  text-align: left;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--surface);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.round-setup-summary:hover { background: var(--bg); border-color: var(--muted); }
+.round-setup-summary:hover .round-setup-pill { background: var(--surface); }
+
+.round-setup-summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .round-setup-text {
@@ -28,13 +42,13 @@
 }
 
 /* Same pill geometry as .mode-btn / .weak-spots-btn — the selects in the
-   panel are the only OS chrome left on the page. */
-.round-setup-toggle {
+   panel are the only OS chrome left on the page. Decoration now: the row
+   around it takes the clicks, so this is only the affordance saying so. */
+.round-setup-pill {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   flex: none;
-  font: inherit;
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--muted);
@@ -42,16 +56,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   padding: var(--space-2) var(--space-4);
-  cursor: pointer;
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
-}
-
-.round-setup-toggle:hover { background: var(--bg); }
-.round-setup-toggle:disabled { opacity: 0.5; cursor: default; }
-
-.round-setup-toggle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .round-setup-chevron {
@@ -60,15 +65,23 @@
   transition: transform 120ms ease;
 }
 
-.round-setup-toggle[aria-expanded="true"] {
+.round-setup-summary[aria-expanded="true"] .round-setup-pill {
   color: #fff;
   background: var(--accent);
   border-color: var(--accent);
 }
 
-.round-setup-toggle[aria-expanded="true"] .round-setup-chevron {
+.round-setup-summary[aria-expanded="true"] .round-setup-chevron {
   transform: rotate(180deg);
 }
+
+/* aria-disabled rather than the disabled attribute: the row now *contains*
+   the blocked warning, and :disabled's opacity would drag that text under
+   the contrast floor while also dropping it out of the tab order. Only the
+   pill dims; the sentence stays fully legible and still focusable. */
+.round-setup-summary[aria-disabled="true"] { cursor: default; }
+.round-setup-summary[aria-disabled="true"]:hover { background: var(--surface); border-color: var(--loss); }
+.round-setup-summary[aria-disabled="true"] .round-setup-pill { opacity: 0.5; }
 
 .round-setup-panel {
   display: flex;
@@ -88,6 +101,60 @@
   font-size: var(--fs-xs);
   color: var(--muted);
   align-self: flex-start;
+}
+
+/* Its own full-width row under the two filters: a standing preference rather
+   than a per-round choice, and the hint needs the space. */
+.pool-filter--wide {
+  flex-basis: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-4);
+}
+
+/* The row is full-width for the chips and hint; the select itself shouldn't
+   stretch to match, or it reads as the panel's primary control. */
+.pool-filter--wide select {
+  align-self: flex-start;
+  min-width: 12rem;
+  max-width: 20rem;
+}
+
+.set-aside-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+/* Neutral, not --loss: a set-aside maker is switched off, not wrong. */
+.set-aside-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--text);
+  background: var(--no-match-bg);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.set-aside-chip:hover { border-color: var(--border); background: var(--surface); }
+.set-aside-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.set-aside-chip-x { display: inline-flex; width: 0.85rem; height: 0.85rem; color: var(--muted); }
+.set-aside-chip-x svg { width: 100%; height: 100%; }
+.set-aside-chip:hover .set-aside-chip-x { color: var(--text); }
+
+.set-aside-hint {
+  margin: var(--space-3) 0 0;
+  max-width: 46ch;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 .round-length-pills {

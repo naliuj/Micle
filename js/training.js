@@ -22,6 +22,8 @@
     roundLengthPills: document.getElementById("round-length-pills"),
     filterManufacturerSelect: document.getElementById("filter-manufacturer"),
     filterCountrySelect: document.getElementById("filter-country"),
+    setAsideSelect: document.getElementById("set-aside-select"),
+    setAsideChips: document.getElementById("set-aside-chips"),
 
     tabQuizBtn: document.getElementById("tab-quiz-btn"),
     tabOrderBtn: document.getElementById("tab-order-btn"),
@@ -129,6 +131,12 @@
   let countryFilter = "";
   let setupExpanded = false;
 
+  // Standing "I already know these" list, loaded from localStorage. Distinct
+  // in kind from the two filters above: those narrow a single round and reset
+  // on reload, this one persists, because what you already know doesn't
+  // change between rounds.
+  let setAside = loadSetAside();
+
   // Length is per-mode state now that one control serves all three: a Quiz
   // round is N questions, an Order/Match session is N rounds, so the units
   // genuinely differ and each mode keeps its own value across tab switches.
@@ -137,9 +145,27 @@
   let lengthByMode = { quiz: 10, order: 5, match: 5 };
   let activeTab = "quiz";
 
+  function isSetAside(mic) {
+    return setAside.countries.includes(mic.countryOfOrigin) || setAside.manufacturers.includes(mic.manufacturer);
+  }
+
+  // Everything the player is still willing to be asked about. Every count and
+  // every option in the setup bar is measured against this rather than the
+  // raw pool, so the numbers on screen always describe what a round can
+  // actually draw from.
+  function practicePool() {
+    return eligibleMics().filter((m) => !isSetAside(m));
+  }
+
+  // Set-aside is folded in here rather than at the call sites so it applies
+  // everywhere a round's *targets* come from. Quiz distractors deliberately
+  // bypass this (they take eligibleMics() directly), which is why a maker you
+  // set aside still appears as a wrong answer — recognising it well enough to
+  // reject it is exactly the knowledge you claimed to have.
   function applyFilters(pool) {
     return pool.filter(
       (m) =>
+        !isSetAside(m) &&
         (!manufacturerFilter || m.manufacturer === manufacturerFilter) &&
         (!countryFilter || m.countryOfOrigin === countryFilter)
     );
@@ -150,7 +176,7 @@
   // that country's whole set, not an empty one. Used to test an option
   // before the user commits to it.
   function projectedPool(country, manufacturer) {
-    const pool = eligibleMics().filter((m) => !country || m.countryOfOrigin === country);
+    const pool = practicePool().filter((m) => !country || m.countryOfOrigin === country);
     const keepsManufacturer = manufacturer && pool.some((m) => m.manufacturer === manufacturer);
     return keepsManufacturer ? pool.filter((m) => m.manufacturer === manufacturer) : pool;
   }
@@ -227,7 +253,13 @@
   }
 
   function refreshFilterSelects() {
-    const pool = eligibleMics();
+    const pool = practicePool();
+    // Setting aside the country you're filtered to would otherwise leave the
+    // filter pointing at a value the list no longer offers — same stranding
+    // the manufacturer cascade already clears below.
+    if (countryFilter && !pool.some((m) => m.countryOfOrigin === countryFilter)) {
+      countryFilter = "";
+    }
     // Each option is judged against the pool its own count describes —
     // country by the country alone, manufacturer by the manufacturer within
     // the selected country. Projecting a pinned manufacturer onto the
@@ -258,6 +290,86 @@
     );
   }
 
+  // What's already accounting for every mic in a given set — set aside
+  // Germany and Neumann's 17 mics are all out already, so adding Neumann
+  // would be a chip that changes nothing. Computed from whether each mic is
+  // covered rather than from "this maker is German", because the schema
+  // allows a maker to span countries even though none does today.
+  function micsForEntry(key, value) {
+    return eligibleMics().filter((m) => (key === "countries" ? m.countryOfOrigin : m.manufacturer) === value);
+  }
+
+  function coveringReasons(mics) {
+    if (mics.length === 0 || !mics.every(isSetAside)) return [];
+    const reasons = new Set();
+    mics.forEach((m) => {
+      if (setAside.countries.includes(m.countryOfOrigin)) reasons.add(m.countryOfOrigin);
+      if (setAside.manufacturers.includes(m.manufacturer)) reasons.add(m.manufacturer);
+    });
+    return [...reasons].sort((a, b) => a.localeCompare(b));
+  }
+
+  // The picker offers everything not already set aside — an entry that's out
+  // is represented by its chip, which is also how you put it back, so listing
+  // it in both places would just be two controls for one state.
+  function renderSetAside() {
+    const all = eligibleMics();
+    const groups = [
+      { label: "Countries", key: "countries", field: (m) => m.countryOfOrigin },
+      { label: "Manufacturers", key: "manufacturers", field: (m) => m.manufacturer },
+    ].map((g) => ({ ...g, options: countValues(all, g.field) }));
+
+    els.setAsideSelect.innerHTML = '<option value="">Add…</option>';
+    groups.forEach(({ label, key, options }) => {
+      const available = options.filter((o) => !setAside[key].includes(o.value));
+      if (available.length === 0) return;
+      const group = document.createElement("optgroup");
+      group.label = label;
+      available.forEach(({ value, count }) => {
+        const opt = document.createElement("option");
+        opt.value = `${key}:${value}`;
+        const covering = coveringReasons(micsForEntry(key, value));
+        // Disabled rather than hidden: seeing that Neumann is already
+        // covered, and by what, is more use than watching it vanish from
+        // the list the moment you set Germany aside.
+        opt.disabled = covering.length > 0;
+        opt.textContent = covering.length > 0
+          ? `${value} (${count}) — already out via ${covering.join(", ")}`
+          : `${value} (${count})`;
+        group.appendChild(opt);
+      });
+      els.setAsideSelect.appendChild(group);
+    });
+    els.setAsideSelect.value = "";
+
+    els.setAsideChips.innerHTML = "";
+    groups.forEach(({ key, options }) => {
+      setAside[key].forEach((value) => {
+        const found = options.find((o) => o.value === value);
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "set-aside-chip";
+        chip.setAttribute("aria-label", `Put ${value} back into practice`);
+        const name = document.createElement("span");
+        name.textContent = found ? `${value} (${found.count})` : value;
+        const icon = document.createElement("span");
+        icon.className = "set-aside-chip-x";
+        icon.innerHTML = ICONS.x;
+        chip.append(name, icon);
+        chip.addEventListener("click", () => {
+          setAside[key] = setAside[key].filter((v) => v !== value);
+          saveSetAside(setAside);
+          onFilterChange();
+        });
+        els.setAsideChips.appendChild(chip);
+      });
+    });
+  }
+
+  function setAsideCount() {
+    return setAside.countries.length + setAside.manufacturers.length;
+  }
+
   function renderLengthPills() {
     const options = LENGTH_OPTIONS[activeTab] || [];
     const noun = LENGTH_NOUN[activeTab] || "round";
@@ -285,7 +397,23 @@
   function poolDescription(n) {
     const active = [countryFilter, manufacturerFilter].filter(Boolean);
     const micWord = n === 1 ? "mic" : "mics";
-    return active.length === 0 ? `All ${n} ${micWord}` : `${active.join(", ")} · ${n} ${micWord}`;
+    if (active.length > 0) return `${active.join(", ")} · ${n} ${micWord}`;
+    // "All 118 mics" is a lie the moment anything is set aside, and the whole
+    // risk of a standing preference is forgetting it's on.
+    const total = eligibleMics().length;
+    return n === total ? `All ${n} ${micWord}` : `${n} of ${total} mics`;
+  }
+
+  // Names whichever controls are actually narrowing the pool, with the verb
+  // that fits each. Telling someone to "change Country or Manufacturer" when
+  // both read Any and the real cause is a set-aside maker sends them to the
+  // wrong control — and you don't "widen" a set-aside list, you take
+  // something back out of it.
+  function widenHint() {
+    const parts = [];
+    if (countryFilter || manufacturerFilter) parts.push("widen Country or Manufacturer");
+    if (setAsideCount() > 0) parts.push("put something back from Set aside");
+    return parts.length > 0 ? parts.join(", or ") : "widen Country or Manufacturer";
   }
 
   function renderSetupSummary() {
@@ -296,7 +424,7 @@
 
     let text;
     if (n === 0) {
-      text = "No mics match this filter — change Country or Manufacturer to continue.";
+      text = `No mics are left to practise — ${widenHint()} to continue.`;
     } else if (!viable) {
       // Name the count, the mode it falls short of, and the bar it has to
       // clear. "Not enough mics" alone leaves you guessing how much more is
@@ -306,7 +434,8 @@
     } else {
       const len = lengthByMode[activeTab];
       const noun = LENGTH_NOUN[activeTab] || "round";
-      text = `${poolDescription(n)} · ${len} ${noun}${len === 1 ? "" : "s"}`;
+      const aside = setAsideCount() > 0 ? ` · ${setAsideCount()} set aside` : "";
+      text = `${poolDescription(n)}${aside} · ${len} ${noun}${len === 1 ? "" : "s"}`;
     }
 
     els.roundSetupText.textContent = text;
@@ -315,7 +444,7 @@
     // A blocking state must never hide behind a collapsed control: force the
     // panel open and refuse to close it until the filter is fixed.
     if (!viable && !setupExpanded) setSetupExpanded(true);
-    els.roundSetupToggle.disabled = !viable;
+    els.roundSetupToggle.setAttribute("aria-disabled", String(!viable));
   }
 
   function setSetupExpanded(expanded) {
@@ -326,6 +455,7 @@
 
   function onFilterChange() {
     refreshFilterSelects();
+    renderSetAside();
     renderSetupSummary();
     renderCategoryPicker();
     renderOrderDimensionPicker();
@@ -347,8 +477,8 @@
     // one carries the count and the way out.
     notice.textContent =
       poolSize === 0
-        ? "No mics match the current filter. Change Country or Manufacturer above to continue."
-        : `Only ${poolSize} mic${poolSize === 1 ? " matches" : "s match"} the current filter — widen Country or Manufacturer above to start ${MODE_REQUIREMENTS[mode].article}.`;
+        ? `No mics are left to practise — ${widenHint()} above to continue.`
+        : `Only ${poolSize} mic${poolSize === 1 ? " is" : "s are"} left to practise — ${widenHint()} above to start ${MODE_REQUIREMENTS[mode].article}.`;
     listEl.appendChild(notice);
     startBtn.disabled = true;
   }
@@ -1533,7 +1663,7 @@
   // ------------------------------------------------------------------- Init
 
   els.roundSetupToggle.addEventListener("click", () => {
-    if (els.roundSetupToggle.disabled) return;
+    if (els.roundSetupToggle.getAttribute("aria-disabled") === "true") return;
     setSetupExpanded(!setupExpanded);
   });
 
@@ -1541,6 +1671,29 @@
     manufacturerFilter = els.filterManufacturerSelect.value;
     onFilterChange();
   });
+  els.setAsideSelect.addEventListener("change", () => {
+    const raw = els.setAsideSelect.value;
+    if (!raw) return;
+    const split = raw.indexOf(":");
+    const key = raw.slice(0, split);
+    const value = raw.slice(split + 1);
+    if (!setAside[key] || setAside[key].includes(value)) return;
+    // The option is disabled too, so this is unreachable by mouse or
+    // keyboard — but the guard belongs on the state change, not only on the
+    // control, so a stale selection can't add a chip that does nothing.
+    if (coveringReasons(micsForEntry(key, value)).length > 0) {
+      els.setAsideSelect.value = "";
+      return;
+    }
+    setAside[key].push(value);
+    setAside[key].sort((a, b) => a.localeCompare(b));
+    saveSetAside(setAside);
+    // refreshFilterSelects() clears a filter left pointing at something the
+    // list no longer offers, so setting aside what you're filtered to
+    // resolves itself rather than emptying the pool.
+    onFilterChange();
+  });
+
   els.filterCountrySelect.addEventListener("change", () => {
     countryFilter = els.filterCountrySelect.value;
     onFilterChange();
@@ -1634,6 +1787,7 @@
   });
 
   refreshFilterSelects();
+  renderSetAside();
   renderLengthPills();
   renderSetupSummary();
   renderCategoryPicker();
