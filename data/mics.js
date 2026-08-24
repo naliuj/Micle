@@ -253,6 +253,20 @@ const MIC_DB = [
     needsVerification: false,
   },
   {
+    id: "at-at4041",
+    manufacturer: "Audio-Technica",
+    model: "AT4041",
+    displayName: "Audio-Technica AT4041",
+    aliases: ["AT-4041"],
+    countryOfOrigin: "Japan",
+    operatingPrinciple: "Condenser (Small-Diaphragm)",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 1997,
+    msrp: 329,
+    needsVerification: false,
+  },
+  {
     id: "at-at4050",
     manufacturer: "Audio-Technica",
     model: "AT4050",
@@ -989,12 +1003,12 @@ const MIC_DB = [
     aliases: ["TLM170R", "TLM-170R"],
     countryOfOrigin: "Germany",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
+    polarPatterns: ["Omnidirectional", "Cardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1993,
     msrp: 3500, // Regular/MSRP price per Alto Music.
     needsVerification: false,
-    verificationNote: "5-position pattern switch simplified to 3 core named patterns.",
+    verificationNote: "5-position pattern switch; wide-angle cardioid is the one omitted.",
   },
   {
     id: "neumann-tlm103",
@@ -1211,7 +1225,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2000,
-    msrp: 349, // RecordingHacks MSRP; discontinued, ~2000 launch era.
+    msrp: 279,
     needsVerification: false,
   },
   {
@@ -1225,7 +1239,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2000,
-    msrp: 349, // RecordingHacks MSRP, single mic; discontinued, ~2002 launch era.
+    msrp: 229, // Single mic, not the matched pair.
     needsVerification: false,
   },
   {
