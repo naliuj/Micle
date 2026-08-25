@@ -1654,7 +1654,7 @@ const MIC_DB = [
     aliases: [],
     countryOfOrigin: "Japan",
     operatingPrinciple: "Condenser (Small-Diaphragm)",
-    polarPatterns: ["Omnidirectional"],
+    polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1976,
     msrp: 285, // Single lower-confidence source.
