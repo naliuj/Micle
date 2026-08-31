@@ -905,6 +905,12 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2002,
     msrp: 399, // Review-era US MSRP, ~2002-2003, base V69 (not Mogami edition).
+    needsVerification: true,
+    verificationNote:
+      "Retired from rotation, not actually unverified — needsVerification is the only flag that " +
+      "keeps a mic out of eligibleMics(). It was puzzle #37 (day 36, 2026-08-29), so the entry has " +
+      "to stay resolvable: deleting it outright would leave that already-played day pointing at " +
+      "nothing, breaking MicleDebug.gotoDate() and any future past-puzzle view.",
   },
 
   // ------------------------------------------------------------ Manchester Audio
