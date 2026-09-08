@@ -332,6 +332,11 @@
     const won = isAnswer || isWinningGuess(guessMic, target);
     const row = document.createElement("div");
     row.className = animate ? "board-row board-row--reveal" : "board-row";
+    // Gated on `animate` for the same reason the reveal is: renderBoard()
+    // rebuilds from saved state, so keying this off `won` alone would make a
+    // solved puzzle re-celebrate on every load and mode switch. isAnswer is
+    // excluded too — the row shown after a loss shouldn't take a bow.
+    if (animate && won && !isAnswer) row.classList.add("board-row--win");
     if (isAnswer) row.classList.add("board-row--answer");
     row.setAttribute("role", "row");
 
@@ -381,18 +386,39 @@
     updateGuessesLeft();
   }
 
+  // Text for the terminal and unlimited states, dots for an ordinary round in
+  // progress. The dots replace a plain string a screen reader used to announce
+  // directly, so every branch sets an aria-label carrying the same wording —
+  // the dots themselves are decoration and stay aria-hidden.
   function updateGuessesLeft() {
     const s = session();
     if (s.state.solved) {
-      els.guessesLeft.textContent = "Solved!";
+      setGuessesLeftText("Solved!");
     } else if (s.state.exhausted) {
-      els.guessesLeft.textContent = "Out of guesses";
+      setGuessesLeftText("Out of guesses");
     } else if (isUnlimited()) {
+      // Infinity mode has no cap, so there's nothing for six dots to represent.
       const count = s.state.guesses.length;
-      els.guessesLeft.textContent = `${count} guess${count === 1 ? "" : "es"} so far`;
+      setGuessesLeftText(`${count} guess${count === 1 ? "" : "es"} so far`);
     } else {
       const remaining = MAX_GUESSES - s.state.guesses.length;
-      els.guessesLeft.textContent = `${remaining} guess${remaining === 1 ? "" : "es"} left`;
+      renderGuessDots(remaining, `${remaining} guess${remaining === 1 ? "" : "es"} left`);
+    }
+  }
+
+  function setGuessesLeftText(text) {
+    els.guessesLeft.textContent = text;
+    els.guessesLeft.removeAttribute("aria-label");
+  }
+
+  function renderGuessDots(remaining, label) {
+    els.guessesLeft.textContent = "";
+    els.guessesLeft.setAttribute("aria-label", label);
+    for (let i = 0; i < MAX_GUESSES; i++) {
+      const dot = document.createElement("span");
+      dot.className = i < remaining ? "guess-dot" : "guess-dot guess-dot--spent";
+      dot.setAttribute("aria-hidden", "true");
+      els.guessesLeft.appendChild(dot);
     }
   }
 

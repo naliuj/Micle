@@ -400,6 +400,25 @@ main {
   color: var(--muted);
   margin: 0;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Six dots that drain as guesses are spent. A representation change rather
+   than motion, so these stay under prefers-reduced-motion — only the
+   transition below gets suppressed, by the global rule further down. */
+.guess-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: background-color 260ms ease, transform 260ms ease;
+}
+
+.guess-dot--spent {
+  background: var(--border);
+  transform: scale(0.72);
 }
 
 /* State-neutral base — app.js appends --win or --loss. Without the variants a
@@ -689,6 +708,36 @@ main {
 .board-row--reveal > .cell:nth-child(5) { animation-delay: 240ms; }
 .board-row--reveal > .cell:nth-child(6) { animation-delay: 300ms; }
 .board-row--reveal > .cell:nth-child(7) { animation-delay: 360ms; }
+
+/* The hi/lo arrow drifts the way it points, so the direction reads without
+   parsing the glyph. Deliberately slow and small: unlike the reveal, this one
+   sits on screen for the rest of the round, and anything faster or further
+   turns into a fidget in the player's peripheral vision. */
+@keyframes hint-drift-up {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+@keyframes hint-drift-down {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(3px); }
+}
+
+.cell--higher .cell-icon { animation: hint-drift-up 1.8s ease-in-out infinite; }
+.cell--lower .cell-icon { animation: hint-drift-down 1.8s ease-in-out infinite; }
+
+/* A single settle on the winning row. app.js only adds --win alongside
+   --reveal, never on a rebuild, so a solved puzzle doesn't re-celebrate on
+   every page load. The loss row is excluded at the source, not here. */
+@keyframes row-win {
+  from { transform: scale(1); }
+  55%  { transform: scale(1.025); }
+  to   { transform: scale(1); }
+}
+
+.board-row--win {
+  animation: row-win 420ms ease-out 380ms backwards;
+}
 
 /* The answer-reveal row (shown on a loss) reuses the win's all-green cell
    styling, since every category trivially "matches" the mic compared to
