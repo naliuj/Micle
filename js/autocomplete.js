@@ -1,5 +1,16 @@
 // Lightweight vanilla-JS typeahead over MIC_DB. No framework, no dependency.
 
+// retired: true is stronger than needsVerification: true — a quarantined mic
+// (needsVerification) is deliberately still findable here, playable as a
+// decoy; retired means fully pulled from play, unselectable anywhere this
+// module is used (the main game's guess input and Study Mode's Reference
+// tab both route through it), while the data/mics.js entry itself stays put
+// so anything that already referenced it by id (a past day's schedule
+// entry, a saved guess) keeps resolving. Computed once at load rather than
+// per keystroke — data/mics.js loads before this file in both index.html
+// and training/index.html, so MIC_DB is already populated here.
+const SELECTABLE_MICS = MIC_DB.filter((m) => m.retired !== true);
+
 // browseAllOnEmpty: opt-in, defaults false so the main game's guess input is
 // unaffected. The training page's reference view passes true to let players
 // browse the full pool instead of only searching it.
@@ -72,12 +83,12 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmp
   // when browseAllOnEmpty is true (see search() below) — the main game's
   // guess input leaves it off, so this stays inert there.
   function browseAll() {
-    return [...MIC_DB].sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true }));
+    return [...SELECTABLE_MICS].sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true }));
   }
 
   function search(query) {
     if (!query.trim()) return browseAllOnEmpty ? browseAll() : [];
-    return MIC_DB.map((mic) => ({ mic, s: score(query, mic) }))
+    return SELECTABLE_MICS.map((mic) => ({ mic, s: score(query, mic) }))
       .filter((r) => r.s < Infinity)
       // numeric so model numbers read naturally: KM 84 before KM 184.
       .sort(

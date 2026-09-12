@@ -906,11 +906,16 @@ const MIC_DB = [
     releaseYear: 2002,
     msrp: 399, // Review-era US MSRP, ~2002-2003, base V69 (not Mogami edition).
     needsVerification: true,
+    retired: true,
     verificationNote:
       "Retired from rotation, not actually unverified — needsVerification is the only flag that " +
       "keeps a mic out of eligibleMics(). It was puzzle #37 (day 36, 2026-08-29), so the entry has " +
       "to stay resolvable: deleting it outright would leave that already-played day pointing at " +
-      "nothing, breaking MicleDebug.gotoDate() and any future past-puzzle view.",
+      "nothing, breaking MicleDebug.gotoDate() and any future past-puzzle view. " +
+      "retired: true additionally pulls it out of js/autocomplete.js's search/browse results — the " +
+      "original fix deliberately left it guessable as a decoy (standing behaviour for quarantined " +
+      "mics), but Julian later asked for it to be fully unselectable everywhere, guess input and " +
+      "Study Mode's Reference tab included.",
   },
 
   // ------------------------------------------------------------ Manchester Audio
