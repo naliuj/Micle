@@ -241,9 +241,18 @@
           </div>
         </div>
       </div>
+      <div class="mic-map">
+        <div id="reference-map" class="mic-map-figure"></div>
+        <div id="reference-chips" class="country-chips" role="group" aria-label="Filter by country"></div>
+      </div>
       <div id="reference-detail">
-        <p id="reference-detail-empty">Search or click into the list above to see a mic's full details.</p>
-        <div id="reference-board" class="board" hidden></div>
+        <div id="reference-sort" class="mic-sort" hidden>
+          <span id="reference-sort-label" class="mic-sort-label">Sort</span>
+          <div id="reference-sort-pills" class="mic-sort-pills" role="group" aria-labelledby="reference-sort-label"></div>
+        </div>
+        <p id="reference-status" class="visually-hidden" role="status" aria-live="polite"></p>
+        <p id="reference-detail-empty" hidden>Search or click into the list above to see a mic's full details.</p>
+        <div id="reference-board" class="board board--reference" hidden></div>
       </div>
     </section>
   </main>
@@ -253,9 +262,11 @@
   </footer>
 
   <script src="/data/mics.js"></script>
+  <script src="/data/worldmap.js"></script>
   <script src="/js/storage.js"></script>
   <script src="/js/compare.js"></script>
   <script src="/js/autocomplete.js"></script>
+  <script src="/js/worldmap.js"></script>
   <script src="/js/quiz.js"></script>
   <script src="/js/order.js"></script>
   <script src="/js/match.js"></script>

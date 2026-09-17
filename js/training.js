@@ -100,6 +100,11 @@
     referenceList: document.getElementById("reference-list"),
     referenceDetailEmpty: document.getElementById("reference-detail-empty"),
     referenceBoard: document.getElementById("reference-board"),
+    referenceMap: document.getElementById("reference-map"),
+    referenceChips: document.getElementById("reference-chips"),
+    referenceSort: document.getElementById("reference-sort"),
+    referenceSortPills: document.getElementById("reference-sort-pills"),
+    referenceStatus: document.getElementById("reference-status"),
   };
 
   // Same filter as js/app.js's eligibleMics() — duplicated rather than
@@ -112,13 +117,27 @@
 
   // Mirrors app.js's private CATEGORIES list (label + getValue), just for
   // the reference detail card — also not shared, for the same reason above.
+  // sortKey ties each column to a comparator in js/worldmap.js's SORT_VALUE.
+  // Don't rename the labels: css/styles.css keys a full-width card-mode rule
+  // to the literal string [data-label="Polar Pattern"], and the 7-column
+  // .board-row grid is sized to REFERENCE_FIELDS.length + 1.
   const REFERENCE_FIELDS = [
-    { label: "Origin", getValue: (m) => m.countryOfOrigin },
-    { label: "Principle", getValue: (m) => m.operatingPrinciple },
-    { label: "Polar Pattern", getValue: formatPatterns },
-    { label: "Manufacturer", getValue: (m) => m.manufacturer },
-    { label: "Year", getValue: (m) => String(m.releaseYear) },
-    { label: "Price", getValue: formatPrice },
+    { label: "Origin", getValue: (m) => m.countryOfOrigin, sortKey: "country" },
+    { label: "Principle", getValue: (m) => m.operatingPrinciple, sortKey: "principle" },
+    { label: "Polar Pattern", getValue: formatPatterns, sortKey: "pattern" },
+    { label: "Manufacturer", getValue: (m) => m.manufacturer, sortKey: "manufacturer" },
+    { label: "Year", getValue: (m) => String(m.releaseYear), sortKey: "year" },
+    { label: "Price", getValue: formatPrice, sortKey: "price" },
+  ];
+
+  // The columns offered as sort pills below 800px, where the header row is
+  // display:none and there is nothing to click. Origin is omitted on purpose:
+  // in a country view every row shares one value, so sorting it is a no-op.
+  const SORT_PILLS = [
+    { key: "name", label: "Name" },
+    { key: "manufacturer", label: "Maker" },
+    { key: "year", label: "Year" },
+    { key: "price", label: "Price" },
   ];
 
   // -------------------------------------------------------- Round setup bar
@@ -522,6 +541,12 @@
       refreshFilterSelects();
       renderLengthPills();
       renderSetupSummary();
+    } else {
+      // Runs after the forEach above cleared `hidden`, so the tab is laid out
+      // by now. Idempotent — the map is built on the first visit only. If
+      // deep-linking (?tab=reference) is ever added it must route through
+      // switchTab so this stays the single entry point.
+      ensureReferenceMap();
     }
   }
 
@@ -1615,24 +1640,192 @@
 
   // ----------------------------------------------------------- Reference tab
 
-  function showMicDetail(mic) {
+  // The Reference tab draws from SELECTABLE_MICS (js/autocomplete.js —
+  // retired !== true), NOT eligibleMics() (needsVerification !== true), so the
+  // map, the table and the search box above them all agree. Clicking Germany
+  // and getting a mic the search can't find would read as a bug.
+  //
+  // Both predicates return 118 today, which makes them look interchangeable.
+  // They aren't: they coincide only because ONE mic (mxl-v69) happens to carry
+  // needsVerification AND retired at once. A mic that's retired but verified,
+  // or quarantined but still live, splits the two counts immediately.
+  function referencePool() {
+    return SELECTABLE_MICS;
+  }
+
+  // mode: "empty" (nothing picked) | "mic" (search) | "country" (map/chip).
+  // Sorting only applies to the country and empty views; a one-row search
+  // result has nothing to sort.
+  let referenceView = { mode: "empty", mic: null, country: null, sortKey: "manufacturer", sortDir: "asc" };
+  let referenceMapBuilt = false;
+
+  function referenceMics() {
+    if (referenceView.mode === "mic") return [referenceView.mic];
+    const pool = referencePool();
+    return referenceView.country ? pool.filter((m) => m.countryOfOrigin === referenceView.country) : pool;
+  }
+
+  function isoCountsFor(pool) {
+    const counts = {};
+    pool.forEach((m) => {
+      const iso = COUNTRY_ISO[m.countryOfOrigin];
+      if (iso) counts[iso] = (counts[iso] || 0) + 1;
+    });
+    return counts;
+  }
+
+  // Built once, on first reveal. Not at parse time: [hidden] is
+  // display:none !important, so anything measured in here before the tab is
+  // shown gets zeros. Nothing in this map measures itself (the SVG sizes from
+  // its viewBox), but the flag also keeps repeated tab switches from stacking
+  // duplicate SVGs.
+  function ensureReferenceMap() {
+    if (referenceMapBuilt) return;
+    referenceMapBuilt = true;
+    els.referenceMap.innerHTML = buildWorldMapSvg(isoCountsFor(referencePool()));
+    els.referenceMap.addEventListener("click", (e) => {
+      const path = e.target.closest("[data-country]");
+      if (path) selectCountry(path.dataset.country);
+    });
+    renderCountryChips();
+    renderReference();
+  }
+
+  function renderCountryChips() {
+    const counts = countValues(referencePool(), (m) => m.countryOfOrigin);
+    els.referenceChips.innerHTML = "";
+    counts.forEach(({ value, count }) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "country-chip";
+      btn.dataset.country = value;
+      btn.setAttribute("aria-pressed", String(referenceView.country === value));
+      btn.innerHTML = `${value} <span class="country-chip-count">${count}</span>`;
+      btn.addEventListener("click", () => selectCountry(value));
+      els.referenceChips.appendChild(btn);
+    });
+  }
+
+  // Selecting the country that's already active clears it — the chips are
+  // toggles, which aria-pressed already implies.
+  function selectCountry(country) {
+    const same = referenceView.mode === "country" && referenceView.country === country;
+    referenceView = same
+      ? { ...referenceView, mode: "empty", mic: null, country: null }
+      : { ...referenceView, mode: "country", mic: null, country, sortKey: "manufacturer", sortDir: "asc" };
+    els.referenceInput.value = "";
+    syncCountrySelection();
+    renderReference();
+  }
+
+  function syncCountrySelection() {
+    const active = referenceView.country;
+    els.referenceChips.querySelectorAll(".country-chip").forEach((chip) => {
+      chip.setAttribute("aria-pressed", String(chip.dataset.country === active));
+    });
+    els.referenceMap.querySelectorAll("[data-country]").forEach((path) => {
+      path.classList.toggle("mic-map-country--active", path.dataset.country === active);
+    });
+  }
+
+  // Clicking the active column flips direction; a new column starts ascending.
+  function setSort(key) {
+    if (referenceView.mode === "mic") return;
+    referenceView =
+      referenceView.sortKey === key
+        ? { ...referenceView, sortDir: referenceView.sortDir === "asc" ? "desc" : "asc" }
+        : { ...referenceView, sortKey: key, sortDir: "asc" };
+    renderReference();
+  }
+
+  function renderSortPills() {
+    els.referenceSortPills.innerHTML = "";
+    SORT_PILLS.forEach(({ key, label }) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      const active = referenceView.sortKey === key;
+      btn.className = active ? "mic-sort-pill mic-sort-pill--active" : "mic-sort-pill";
+      btn.setAttribute("aria-pressed", String(active));
+      btn.textContent = active ? `${label} ${referenceView.sortDir === "asc" ? "↑" : "↓"}` : label;
+      btn.addEventListener("click", () => setSort(key));
+      els.referenceSortPills.appendChild(btn);
+    });
+  }
+
+  function renderReference() {
+    const mics = referenceMics();
+    const isMicMode = referenceView.mode === "mic";
+
+    els.referenceSort.hidden = isMicMode;
     els.referenceDetailEmpty.hidden = true;
     els.referenceBoard.hidden = false;
+    if (!isMicMode) renderSortPills();
+
+    renderMicTable(isMicMode ? [referenceView.mic] : mics, isMicMode);
+    announceReference(mics.length, isMicMode);
+  }
+
+  // One sentence carrying the whole state change, for screen readers — far
+  // more useful than making someone traverse 48 rows to infer what happened.
+  function announceReference(count, isMicMode) {
+    if (isMicMode) {
+      els.referenceStatus.textContent = `Showing ${referenceView.mic.displayName}.`;
+      return;
+    }
+    const scope = referenceView.country ? `from ${referenceView.country}` : "in the pool";
+    const pill = SORT_PILLS.find((p) => p.key === referenceView.sortKey);
+    const dir = referenceView.sortDir === "asc" ? "ascending" : "descending";
+    els.referenceStatus.textContent = `${count} mic${count === 1 ? "" : "s"} ${scope}, sorted by ${(pill ? pill.label : referenceView.sortKey).toLowerCase()} ${dir}.`;
+  }
+
+  // Emits the same markup showMicDetail always did — a header row plus N
+  // .board-rows — so the ≤800px card mode, the data-label chips and the
+  // 7-column grid all keep working untouched. A search result is just N=1.
+  function renderMicTable(mics, isMicMode) {
     els.referenceBoard.innerHTML = "";
 
     const headerRow = document.createElement("div");
     headerRow.className = "board-row board-row--header";
-    const guessHeader = document.createElement("div");
-    guessHeader.className = "cell cell--guess";
-    headerRow.appendChild(guessHeader);
-    REFERENCE_FIELDS.forEach((f) => {
-      const cell = document.createElement("div");
-      cell.className = "cell cell--header";
-      cell.textContent = f.label;
-      headerRow.appendChild(cell);
-    });
+    headerRow.appendChild(buildHeaderCell({ label: "Microphone", sortKey: "name" }, isMicMode, "cell cell--guess cell--header"));
+    REFERENCE_FIELDS.forEach((f) => headerRow.appendChild(buildHeaderCell(f, isMicMode, "cell cell--header")));
     els.referenceBoard.appendChild(headerRow);
 
+    buildMicRows(mics, referenceView.sortKey, referenceView.sortDir).forEach((entry) => {
+      if (entry.type === "group") {
+        // A plain div, not a .board-row variant: below 800px .board-row picks
+        // up card padding/border/background and .board-row--header goes
+        // display:none, either of which would wreck a group heading.
+        const group = document.createElement("div");
+        group.className = "mic-group";
+        group.textContent = `${entry.label} · ${entry.count}`;
+        els.referenceBoard.appendChild(group);
+        return;
+      }
+      els.referenceBoard.appendChild(buildMicRow(entry.mic));
+    });
+  }
+
+  function buildHeaderCell(field, isMicMode, className) {
+    const cell = document.createElement("div");
+    cell.className = className;
+    // Origin is constant within a country view, so sorting it does nothing.
+    const sortable = !isMicMode && field.sortKey && !(referenceView.country && field.sortKey === "country");
+    if (!sortable) {
+      cell.textContent = field.label;
+      return cell;
+    }
+    const active = referenceView.sortKey === field.sortKey;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mic-sort-header";
+    btn.textContent = active ? `${field.label} ${referenceView.sortDir === "asc" ? "↑" : "↓"}` : field.label;
+    btn.addEventListener("click", () => setSort(field.sortKey));
+    cell.setAttribute("aria-sort", active ? (referenceView.sortDir === "asc" ? "ascending" : "descending") : "none");
+    cell.appendChild(btn);
+    return cell;
+  }
+
+  function buildMicRow(mic) {
     const row = document.createElement("div");
     row.className = "board-row";
     const nameCell = document.createElement("div");
@@ -1649,7 +1842,15 @@
       cell.appendChild(text);
       row.appendChild(cell);
     });
-    els.referenceBoard.appendChild(row);
+    return row;
+  }
+
+  // Kept as a (mic) => void so createAutocomplete's onSelect contract is
+  // unchanged; it's now just a state-setter over the shared renderer.
+  function showMicDetail(mic) {
+    referenceView = { ...referenceView, mode: "mic", mic, country: null };
+    syncCountrySelection();
+    renderReference();
   }
 
   createAutocomplete({
