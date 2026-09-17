@@ -8,7 +8,7 @@
 // CACHE_VERSION is stamped by scripts/stamp-cache-version.mjs — it's a hash
 // of every file listed below, so it changes exactly when they do. Don't edit
 // it by hand; run the script (see README's "PWA" section).
-const CACHE_VERSION = "4c6a3d87af2b";
+const CACHE_VERSION = "1b62125dcfff";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
@@ -17,6 +17,7 @@ const PRECACHE_URLS = [
   "/css/styles.css",
   "/data/mics.js",
   "/data/schedule.js",
+  "/data/worldmap.js",
   "/js/storage.js",
   "/js/compare.js",
   "/js/autocomplete.js",
@@ -30,6 +31,7 @@ const PRECACHE_URLS = [
   "/js/quiz.js",
   "/js/order.js",
   "/js/match.js",
+  "/js/worldmap.js",
   "/js/training.js",
   "/manifest.webmanifest",
   "/favicon.svg",

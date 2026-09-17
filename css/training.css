@@ -707,6 +707,217 @@
   font-size: var(--fs-base);
 }
 
+/* ------------------------------------------------------------- World map */
+
+.mic-map {
+  margin: var(--space-5) 0;
+}
+
+/* The SVG sizes itself from its viewBox aspect ratio, with no JS measurement
+   anywhere — which matters because [hidden] is display:none !important, so
+   anything that measured itself before the Reference tab was first shown
+   would silently read zero. */
+.mic-map-figure {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+}
+
+.mic-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Countries with no mics are inert scenery: no pointer events, no hover, no
+   click. Only the eight that have mics get data-country and the --has-mics
+   class from buildWorldMapSvg(). */
+.mic-map-country {
+  fill: var(--no-match-bg);
+  stroke: var(--bg);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+/* Selected vs merely-selectable is expressed with fill-opacity, not two
+   different colour tokens: --hint (#8fb0f0) and --accent (#7fa0e0) are almost
+   the same blue in dark mode, so a token swap left the active country
+   invisible. Opacity differentiates reliably in both schemes. */
+.mic-map-country--has-mics {
+  fill: var(--accent);
+  fill-opacity: 0.4;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: fill-opacity 120ms ease;
+}
+
+.mic-map-country--has-mics:hover { fill-opacity: 0.7; }
+
+.mic-map-country--active {
+  fill-opacity: 1;
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+/* The real control. Denmark is roughly 5x3 CSS px on a phone and Austria 8x3,
+   so the map alone can't be the way you pick a country — these chips are
+   keyboard-navigable, screen-reader-legible and comfortably tappable at every
+   width, and they carry the per-country counts the map can't show. */
+.country-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.country-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.country-chip:hover { background: var(--bg); }
+
+.country-chip[aria-pressed="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.country-chip-count {
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+}
+
+.country-chip[aria-pressed="true"] .country-chip-count { color: #fff; }
+
+/* --------------------------------------------------------- Sorting + table */
+
+/* Pills are the only sort control that survives card mode: below 800px
+   .board-row--header is display:none, so the clickable column headers
+   genuinely don't exist there. Both controls drive the same state. */
+.mic-sort {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.mic-sort-label {
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mic-sort-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.mic-sort-pill {
+  min-height: 2.25rem;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.mic-sort-pill:hover { background: var(--bg); }
+
+.mic-sort-pill--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Column headers become buttons so they're keyboard-operable. Styled to still
+   read as a table header rather than a control. */
+.board--reference .mic-sort-header {
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.board--reference .mic-sort-header:hover { color: var(--accent); }
+
+/* A manufacturer band between groups. Deliberately not a .board-row variant:
+   in card mode .board-row gains padding/border/background and
+   .board-row--header is hidden outright, both wrong for a heading. */
+.mic-group {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+
+.mic-group:first-child { margin-top: 0; }
+
+/* styles.css clamps .cell-text to 2 lines so the game board's tiles stay
+   height-matched. That's wrong here: this is a reference table, and at
+   desktop widths the clamp truncates "Condenser (Large-Diaphragm)" in 70 of
+   118 rows and the longer polar-pattern lists on top of that. Rows growing
+   unevenly is a much smaller cost than hiding the values the page exists to
+   show. --tile-h stays a floor, so short rows keep their shape. */
+.board--reference .cell-text {
+  display: block;
+  -webkit-line-clamp: none;
+  line-clamp: none;
+  overflow: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-map-country--has-mics,
+  .country-chip,
+  .mic-sort-pill {
+    transition: none;
+  }
+}
+
+/* The map is decoration below the card-mode breakpoint: at 375px Denmark is
+   about 5x3 CSS px and Austria 8x3, so it can't be a usable control there.
+   It stays visible as orientation — which country lit up when you tapped a
+   chip — but the chips do the work. */
+@media (max-width: 520px) {
+  .mic-map-figure {
+    padding: var(--space-2);
+  }
+
+  .country-chip {
+    flex: 1 1 calc(50% - var(--space-2));
+    justify-content: center;
+  }
+}
+
 .icon-btn--back {
   gap: var(--space-2);
   text-decoration: none;
