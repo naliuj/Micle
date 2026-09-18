@@ -58,7 +58,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2009,
-    msrp: 1499, // Berlin 47-T custom-shop MSRP per multiple dealer listings.
+    msrp: 798, // Base Berlin 47 street/MSRP (the 1499 figure was the multipattern 47-T custom shop).
     needsVerification: false,
     verificationNote: "Spreadsheet listed as 'ADK Berlin 47'; ADK's catalog has both 'Berlin 47' and a multipattern 'Berlin 47-T' — assumed fixed-cardioid base model.",
   },
