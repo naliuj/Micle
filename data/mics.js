@@ -75,7 +75,7 @@ const MIC_DB = [
     polarPatterns: ["Figure-8"],
     switchable: false,
     releaseYear: 2006,
-    msrp: 1000,
+    msrp: 1299, // Sweetwater regular price, Sept 2026 (was $1,000).
     needsVerification: false,
   },
 
@@ -90,7 +90,7 @@ const MIC_DB = [
     polarPatterns: ["Figure-8"],
     switchable: false,
     releaseYear: 2009,
-    msrp: 2299,
+    msrp: 2399, // Sweetwater regular price, Sept 2026 (was $2,299).
     verificationNote: "Stereo Blumlein-pair ribbon mic (two crossed figure-8 ribbon elements in one body). Original R88 released 2009; the 'mk2' update (removable cable) came in 2010 with the same capsules/specs. MSRP ($2299) is street price, maintainer-confirmed as acceptable in place of an official AEA MSRP.",
   },
   // ---------------------------------------------------------------- AKG
@@ -249,7 +249,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2002,
-    msrp: 495, // Current street price is lower, ~$329-349.
+    msrp: 329, // Current street price (list MSRP was $495).
     needsVerification: false,
   },
   {
@@ -277,7 +277,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1994, // Audio-Technica's own blog marked its 25th anniversary at AES 2019.
-    msrp: 895, // Current street price is lower, ~$699-769.
+    msrp: 769, // Sweetwater regular price, Sept 2026 (was $895).
     needsVerification: false,
   },
   {
@@ -291,7 +291,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2017,
-    msrp: 3499, // Audio-Technica official press release.
+    msrp: 3849, // Sweetwater regular price, Sept 2026 (was $3,499).
   },
   {
     id: "at-at4060",
@@ -390,7 +390,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1998,
-    msrp: 599,
+    msrp: 659, // Sweetwater regular price, Sept 2026 (was $599).
   },
 
   // ---------------------------------------------------------- Austrian Audio
@@ -405,7 +405,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2021,
-    msrp: 479, // Official US launch MSRP, Nov 2021.
+    msrp: 499, // Sweetwater regular price, Sept 2026 (was $479).
   },
   {
     id: "austrianaudio-cc8-sc",
@@ -503,7 +503,7 @@ const MIC_DB = [
     polarPatterns: ["Hypercardioid"],
     switchable: false,
     releaseYear: 1957,
-    msrp: 1050, // Official beyerdynamic.com US store price, matches Sweetwater.
+    msrp: 900, // Sweetwater regular price, Sept 2026 (was $1,050).
   },
   {
     id: "beyer-m201",
@@ -516,7 +516,7 @@ const MIC_DB = [
     polarPatterns: ["Hypercardioid"],
     switchable: false,
     releaseYear: 1970,
-    msrp: 500, // Official beyerdynamic.com US store price.
+    msrp: 400, // Sweetwater regular price, Sept 2026 (was $500).
     needsVerification: false,
   },
   {
@@ -530,7 +530,7 @@ const MIC_DB = [
     polarPatterns: ["Hypercardioid"],
     switchable: false,
     releaseYear: 1963,
-    msrp: 600, // Official beyerdynamic.com US store price.
+    msrp: 500, // Sweetwater regular price, Sept 2026 (was $600).
   },
 
   // ------------------------------------------------------------------- Blue
@@ -594,7 +594,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid"],
     switchable: true,
     releaseYear: 2016,
-    msrp: 4995,
+    msrp: 5675, // Sweetwater regular price, Sept 2026 (was $4,995).
   },
   // ------------------------------------------------------------------ Coles
   {
@@ -814,7 +814,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1968,
-    msrp: 750, // Current official MSRP; street price is much lower, ~$399-449.
+    msrp: 449, // Sweetwater regular price, Sept 2026 (was $750).
   },
   {
     id: "ev-re55",
@@ -948,7 +948,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1986,
-    msrp: 4399, // MSRP/regular price per Dale Pro Audio.
+    msrp: 3750, // Sweetwater regular price, Sept 2026 (was $4,399).
   },
   {
     id: "neumann-u47fet",
@@ -976,7 +976,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1994,
-    msrp: 1049, // MSRP per SoundPro listing.
+    msrp: 809, // Sweetwater regular price for the matte black KM 184, Sept 2026 (was $1,049).
   },
   {
     id: "neumann-kms105",
@@ -989,7 +989,7 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 2003,
-    msrp: 999, // Cited across multiple dealer listings.
+    msrp: 799, // Sweetwater regular price, Sept 2026 (was $999).
     needsVerification: false,
   },
   {
@@ -1003,7 +1003,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1998,
-    msrp: 7499, // MSRP per Full Compass/SoundPro listings.
+    msrp: 5995, // Sweetwater regular price, Sept 2026 (was $7,499).
     verificationNote: "Continuously variable pattern control, simplified to 3 core named patterns.",
   },
   {
@@ -1032,7 +1032,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1997,
-    msrp: 1478, // RecordingHacks MSRP; street price is commonly ~$1,000.
+    msrp: 1295, // Sweetwater regular price, Sept 2026 (was $1,478).
     needsVerification: false,
   },
   {
@@ -1046,7 +1046,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 2008,
-    msrp: 3858, // RecordingHacks MSRP; street price is commonly ~$2,200-2,900.
+    msrp: 2695, // Sweetwater regular price for the TLM 67 Set Z (only form sold), Sept 2026 (was $3,858).
     needsVerification: false,
     verificationNote: "3-position pattern switch (Omni/Cardioid/Figure-8) — matches the named patterns exactly, no simplification needed. Solid-state, not tube, despite emulating the tube-based U 67's character.",
   },
@@ -1061,7 +1061,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2006,
-    msrp: 2198, // RecordingHacks MSRP; street price is commonly ~$1,500-2,000.
+    msrp: 1995, // Sweetwater regular price, Sept 2026 (was $2,198).
     needsVerification: false,
   },
   {
@@ -1175,7 +1175,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional"],
     switchable: false,
     releaseYear: 1992,
-    msrp: 9000,
+    msrp: 9995, // Sweetwater regular price, Sept 2026 (was $9,000).
     verificationNote: "Binaural dummy-head mic — two fixed-omni capsules built into a life-size head/ears; directionality comes from the head shape itself, not a switchable pattern. MSRP confirmed by maintainer.",
   },
   // --------------------------------------------------------------- Pearlman
@@ -1222,7 +1222,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2001,
-    msrp: 599, // RecordingHacks MSRP; discontinued, ~2001 launch era.
+    msrp: 331, // Sweetwater regular price, Sept 2026 (was $599).
     needsVerification: false,
   },
   {
@@ -1236,7 +1236,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2000,
-    msrp: 279,
+    msrp: 270, // Sweetwater regular price, Sept 2026 (was $279).
     needsVerification: false,
   },
   {
@@ -1250,7 +1250,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2000,
-    msrp: 229, // Single mic, not the matched pair.
+    msrp: 219, // Sweetwater regular price for the single NT5-S, Sept 2026 (was $229).
     needsVerification: false,
   },
   {
@@ -1264,7 +1264,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 2004,
-    msrp: 419, // Consistent across Sweetwater, Portland Music, Adorama.
+    msrp: 335, // Sweetwater regular price, Sept 2026 (was $419).
   },
   {
     id: "rode-nt2000",
@@ -1277,7 +1277,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 2003,
-    msrp: 899, // RecordingHacks MSRP; discontinued, ~2004 era.
+    msrp: 619, // Sweetwater regular price, Sept 2026 (was $899).
     needsVerification: false,
   },
   {
@@ -1291,7 +1291,7 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 2005,
-    msrp: 369, // RecordingHacks MSRP; discontinued, ~2008 launch era.
+    msrp: 269, // Sweetwater regular price, Sept 2026 (was $369).
     needsVerification: false,
   },
 
@@ -1336,7 +1336,7 @@ const MIC_DB = [
     polarPatterns: ["Figure-8"],
     switchable: false,
     releaseYear: 2004,
-    msrp: 4295, // Street/MSRP price consistent across Guitar Center and Sweetwater.
+    msrp: 4299, // Sweetwater regular price, Sept 2026 (was $4,295).
     needsVerification: false,
     verificationNote: "Stereo (Blumlein-pair) ribbon mic; pattern given is per-capsule.",
   },
@@ -1400,7 +1400,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2005,
-    msrp: 259, // Dealer-listed MSRP; street price ~$219.
+    msrp: 219, // Sweetwater regular price, Sept 2026 (was $259).
     needsVerification: false,
   },
   {
@@ -1414,7 +1414,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1960,
-    msrp: 449, // MD 421-II street price, consistent across two dealers; no separately published Sennheiser MSRP found.
+    msrp: 429, // Sweetwater regular price for the current MD 421-II, Sept 2026 (was $449).
   },
   {
     id: "sennheiser-md441",
@@ -1427,7 +1427,7 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 1971,
-    msrp: 1479, // MD 441-U MSRP per ProAcoustics USA listing.
+    msrp: 1249, // Sweetwater regular price for the MD 441-U, Sept 2026 (was $1,479).
   },
   {
     id: "sennheiser-mkh40",
@@ -1498,7 +1498,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional"],
     switchable: false,
     releaseYear: 1996,
-    msrp: 192, // Current MSRP; street price ~$122-149.
+    msrp: 149, // Sweetwater regular price, Sept 2026 (was $192).
     verificationNote: "Modern reissue of the 520 'Green Bullet' design dating to 1949; 1996 is the 520DX-specific release.",
   },
   {
@@ -1527,7 +1527,7 @@ const MIC_DB = [
     polarPatterns: ["Supercardioid"],
     switchable: false,
     releaseYear: 1989,
-    msrp: 183,
+    msrp: 159, // Sweetwater regular price for the current Beta 57A, Sept 2026 (was $183).
     verificationNote: "Merged from the original Beta 57 (1989, confirmed via Shure's official company history, $139) and Beta 57A (year estimate ~1996, $226 confirmed). Year uses the confirmed 1989 original; MSRP averages both confirmed prices.",
   },
   {
@@ -1541,7 +1541,7 @@ const MIC_DB = [
     polarPatterns: ["Half-Cardioid"],
     switchable: false,
     releaseYear: 1994,
-    msrp: 391,
+    msrp: 269, // Sweetwater regular price for the current Beta 91A, Sept 2026 (was $391).
     needsVerification: false,
     verificationNote: "Merged from the original Beta 91 (year estimate ~mid-1990s, $437 confirmed; discontinued when the 91A released in 2010) and Beta 91A (2010, confirmed, $345). Year uses the original's uncertain estimate; MSRP averages both confirmed prices.",
   },
@@ -1584,7 +1584,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 2000,
-    msrp: 1340, // 2001 launch MSRP for the original KSM44 (current KSM44A is a different product, ~$1249).
+    msrp: 1099, // Sweetwater regular price for the current KSM44MP, Sept 2026 (was $1,340).
     needsVerification: false,
   },
   {
@@ -1598,7 +1598,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid"],
     switchable: true,
     releaseYear: 2004,
-    msrp: 632, // Single-mic MSRP; stereo pair is $1242.
+    msrp: 499, // Sweetwater regular price, Sept 2026 (was $632).
     needsVerification: false,
   },
   {
@@ -1638,7 +1638,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2001,
-    msrp: 592, // Official MSRP; street price is commonly ~$399.
+    msrp: 439, // Current street price (official MSRP was $592).
     needsVerification: false,
     verificationNote: "SM7 family: SM7 (1973) -> SM7A (~1990s) -> SM7B (~2001); confirm the exact SM7B year.",
   },
@@ -1653,7 +1653,7 @@ const MIC_DB = [
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 1978,
-    msrp: 549, // MAP/street price ~$439.
+    msrp: 439, // Sweetwater regular price, Sept 2026 (was $549).
   },
 
   // ----------------------------------------------------------------- Sony
@@ -1714,7 +1714,7 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
     releaseYear: 2001,
-    msrp: 11995,
+    msrp: 12995, // Sweetwater regular price, Sept 2026 (was $11,995).
     verificationNote: "Modern reissue of the vintage 1959 ELA M 251 (originally AKG-built in Austria for the German Telefunken brand — that original is a genuinely different historical product). This entry is the CURRENT reissue, hand-built in the USA by Telefunken Elektroakustik (founded 2000-2001, Connecticut). Release year (2001) and MSRP ($11,995) both maintainer-confirmed.",
   },
   // ------------------------------------------------------------ Warm Audio
