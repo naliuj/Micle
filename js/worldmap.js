@@ -89,14 +89,29 @@ function buildMicRows(mics, sortKey, sortDir) {
     groups.get(mic.manufacturer).push(mic);
   });
 
-  const names = [...groups.keys()].sort((a, b) => (sortDir === "desc" ? compareText(b, a) : compareText(a, b)));
+  const byName = (a, b) => (sortDir === "desc" ? compareText(b, a) : compareText(a, b));
+  const names = [...groups.keys()].sort(byName);
+
+  // A third of the makers in the pool have exactly one mic, which made a third
+  // of the headings sit over a single card. Those are gathered into one group,
+  // kept in maker order, and placed last. Only when there's something to set
+  // them apart from: in a country view where every maker is single, a lone
+  // "One of a kind" heading over the whole list would say nothing, and with
+  // just one single-mic maker there's nothing to gather.
+  const singles = names.filter((name) => groups.get(name).length === 1);
+  const gatherSingles = singles.length > 1 && singles.length < names.length;
+  const grouped = gatherSingles ? names.filter((name) => groups.get(name).length > 1) : names;
 
   const rows = [];
-  names.forEach((name) => {
+  grouped.forEach((name) => {
     const inGroup = groups.get(name).sort((a, b) => compareText(a.displayName, b.displayName));
     rows.push({ type: "group", label: name, count: inGroup.length });
     inGroup.forEach((mic) => rows.push({ type: "mic", mic }));
   });
+  if (gatherSingles) {
+    rows.push({ type: "group", label: "One of a kind", count: singles.length });
+    singles.forEach((name) => rows.push({ type: "mic", mic: groups.get(name)[0] }));
+  }
   return rows;
 }
 

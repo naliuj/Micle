@@ -895,6 +895,254 @@
   overflow: visible;
 }
 
+/* ------------------------------------------------------ Reference card grid
+
+   Every mic is a card at every width, laid out as a gallery. The card
+   deliberately matches the daily board's card mode (css/styles.css, inside
+   @media (max-width: 800px)) — the same labelled chips via data-label, the
+   same full-width Polar Pattern — so a mic reads the same wherever you meet
+   it.
+
+   It's a separate rule set rather than a shared one because the two exist for
+   different reasons: card mode is how the game board survives a narrow
+   viewport, this is how the reference browses. They already differ (the
+   photo slot, the darker chips) and may diverge further. If you change chip
+   styling in one, check the other. */
+.board--reference {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+/* The labels live on each chip now, and the sort pills above cover sorting,
+   so a shared column header has nothing left to do. */
+.board--reference > .board-row--header {
+  display: none;
+}
+
+.board--reference > .mic-group {
+  grid-column: 1 / -1;
+}
+
+/* The gallery gets more room than the quiz screens: 4 cards across instead
+   of 3, which alone takes about 2,200px off the page. :has() keys it to the
+   tab actually being visible, so Quiz, Order and Match keep the shared 920px
+   and no JS has to toggle a class on tab switch. */
+main:has(#reference-tab:not([hidden])) {
+  max-width: 1180px;
+}
+
+/* Twelve narrow tracks, so each chip can take a share that suits its value:
+   Origin and Principle split the first row, Polar Pattern gets the second to
+   itself, and the third is Manufacturer at half width with Year and Price in
+   a quarter each. A plain two-column grid left Price alone on a fourth row,
+   which cost ~2,100px across the page and looked like a missing chip; three
+   equal thirds on the bottom row were too narrow for the word MANUFACTURER,
+   which can't wrap and spilled out of its chip. */
+.board--reference > .board-row {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+/* Thumbnail and name on one line across the top of the card. */
+.board--reference .mic-card-head {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.board--reference .mic-card-head > .cell--guess {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: var(--fs-md);
+  min-height: 0;
+}
+
+/* The explicit single full-width track matters. The base .cell is a centred
+   flex box, and with display: grid its justify-content: center centres the
+   implicit track instead — so a short value like "Cardioid" sat in a narrow
+   track in the middle while long values ran full width from the left. */
+.board--reference > .board-row > .cell:not(.cell--guess) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  align-items: start;
+  align-content: start;
+  gap: 0.1rem;
+  text-align: left;
+  min-height: 3.1rem;
+  padding: var(--space-2);
+  background: var(--bg);
+}
+
+.board--reference > .board-row > .cell:not(.cell--guess)::before {
+  content: attr(data-label);
+  font-size: var(--fs-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+/* Keyed to the REFERENCE_FIELDS labels in js/training.js, like card mode's
+   Polar Pattern rule. If a label is renamed its chip falls back to the
+   default span below and still renders — it just loses its tuned width. */
+.board--reference > .board-row > .cell:not(.cell--guess) {
+  grid-column: span 6;
+}
+
+.board--reference > .board-row > .cell[data-label="Year"],
+.board--reference > .board-row > .cell[data-label="Price"] {
+  grid-column: span 3;
+}
+
+/* Pattern lists run several times longer than any other value. */
+.board--reference > .board-row > .cell[data-label="Polar Pattern"] {
+  grid-column: 1 / -1;
+}
+
+/* Each card sizes its own bottom row. Card width depends on how many columns
+   happen to fit, not directly on the viewport — at 800px three columns leave
+   a card ~237px wide, and a quarter of that is too narrow for a five-figure
+   price like $14,998, which can't wrap. So the card is a size container, and
+   below the threshold Manufacturer takes the full row with Year and Price
+   halving the next one: four chip rows instead of three, but nothing spills.
+   A viewport media query would get this wrong, since the same viewport can
+   produce different card widths as the column count steps. */
+.board--reference > .board-row {
+  container-type: inline-size;
+}
+
+@container (max-width: 250px) {
+  .board--reference > .board-row > .cell[data-label="Manufacturer"] {
+    grid-column: 1 / -1;
+  }
+
+  .board--reference > .board-row > .cell[data-label="Year"],
+  .board--reference > .board-row > .cell[data-label="Price"] {
+    grid-column: span 6;
+  }
+}
+
+/* A fixed square, so a card is the same height with or without its photo.
+   contain, not cover: mics range from squat boundary plates to tall pencil
+   condensers, and cover would crop the top off the long ones — it would also
+   mean displaying a crop of a licensed image, one more change to disclose. */
+.mic-photo {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  margin: 0;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.mic-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mic-photo--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--border);
+}
+
+.mic-photo--empty svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.mic-photo-credit {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.mic-photo-credit a {
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mic-photo-credit a:hover { color: var(--accent); }
+
+/* Wider than the 360px stats dialog it borrows from — the stored photos are
+   600px on the long edge and this is the only place they're seen full size. */
+.modal--photo {
+  max-width: min(640px, calc(100vw - 2 * var(--space-5)));
+}
+
+.modal--photo .modal-content { max-width: 640px; }
+
+/* Natural size, capped — not stretched to fill. width:100% blew a portrait
+   302x600 photo up into a 600x630 box and letterboxed the mic inside it. */
+.photo-modal-img {
+  display: block;
+  margin: 0 auto var(--space-3);
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  background: var(--bg);
+  border-radius: var(--radius-md);
+}
+
+/* The thumbnail is a control now, so it needs the button reset and a visible
+   affordance on hover and focus. */
+.mic-photo--button {
+  padding: 0;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+
+.mic-photo--button:hover { border-color: var(--accent); }
+
+.mic-photo--button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.photo-credits {
+  margin-top: var(--space-6);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+
+.photo-credits summary {
+  cursor: pointer;
+  padding: var(--space-2) 0;
+}
+
+.photo-credits ul {
+  margin: 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  line-height: 1.5;
+}
+
+.photo-credits a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.photo-credits a:hover { color: var(--accent); }
+
 @media (prefers-reduced-motion: reduce) {
   .mic-map-country--has-mics,
   .country-chip,
