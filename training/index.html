@@ -253,30 +253,9 @@
         <p id="reference-status" class="visually-hidden" role="status" aria-live="polite"></p>
         <p id="reference-detail-empty" hidden>Search or click into the list above to see a mic's full details.</p>
         <div id="reference-board" class="board board--reference" hidden></div>
-        <!-- Every photo's licence, author and the change made to it. The cards
-             carry a short credit each; this is the long form, and it's where
-             the resize is disclosed, which CC licences require. -->
-        <details id="photo-credits" class="photo-credits" hidden>
-          <summary>Photo credits</summary>
-          <ul id="photo-credits-list"></ul>
-        </details>
       </div>
     </section>
   </main>
-
-  <!-- The stored photos are 600px on the long edge, so there's real detail
-       behind the 56px thumbnail. Reuses the .modal pattern from the daily
-       game's stats dialog, widened for an image. -->
-  <dialog id="photo-modal" class="modal modal--photo" aria-labelledby="photo-modal-title">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="photo-modal-title"></h2>
-        <button id="photo-modal-close" type="button" class="icon-btn" aria-label="Close">✕</button>
-      </div>
-      <img id="photo-modal-img" class="photo-modal-img" alt="" />
-      <p id="photo-modal-credit" class="mic-photo-credit"></p>
-    </div>
-  </dialog>
 
   <footer class="site-footer">
     <p>Study Mode quizzes you on the same mic pool as the daily game. <a href="/">Back to Micle</a>.</p>
@@ -284,7 +263,6 @@
 
   <script src="/data/mics.js"></script>
   <script src="/data/worldmap.js"></script>
-  <script src="/data/photos.js"></script>
   <script src="/js/storage.js"></script>
   <script src="/js/compare.js"></script>
   <script src="/js/autocomplete.js"></script>

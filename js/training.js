@@ -9,7 +9,6 @@
     x: `<svg ${SVG_ATTRS}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>`,
     arrowUp: `<svg ${SVG_ATTRS}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>`,
     arrowDown: `<svg ${SVG_ATTRS}><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>`,
-    mic: `<svg ${SVG_ATTRS}><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>`,
   };
 
   const OPTION_KEYS = ["a", "b", "c", "d"];
@@ -104,13 +103,6 @@
     referenceMap: document.getElementById("reference-map"),
     referenceChips: document.getElementById("reference-chips"),
     referenceSort: document.getElementById("reference-sort"),
-    photoModal: document.getElementById("photo-modal"),
-    photoModalTitle: document.getElementById("photo-modal-title"),
-    photoModalImg: document.getElementById("photo-modal-img"),
-    photoModalCredit: document.getElementById("photo-modal-credit"),
-    photoModalClose: document.getElementById("photo-modal-close"),
-    photoCredits: document.getElementById("photo-credits"),
-    photoCreditsList: document.getElementById("photo-credits-list"),
     referenceSortPills: document.getElementById("reference-sort-pills"),
     referenceStatus: document.getElementById("reference-status"),
   };
@@ -1771,31 +1763,7 @@
     if (!isMicMode) renderSortPills();
 
     renderMicTable(isMicMode ? [referenceView.mic] : mics, isMicMode);
-    renderPhotoCredits();
     announceReference(mics.length, isMicMode);
-  }
-
-  // Lists every photo, not just the ones currently on screen — the obligation
-  // doesn't come and go with the country filter. Hidden entirely until there's
-  // at least one photo to credit.
-  function renderPhotoCredits() {
-    const entries = Object.entries(MIC_PHOTOS).sort(([a], [b]) => a.localeCompare(b));
-    els.photoCredits.hidden = entries.length === 0;
-    if (entries.length === 0) return;
-    els.photoCreditsList.innerHTML = "";
-    entries.forEach(([id, photo]) => {
-      const mic = MIC_DB.find((m) => m.id === id);
-      const li = document.createElement("li");
-      li.append(`${mic ? mic.displayName : id} — photo by `);
-      li.appendChild(creditLink(photo.author, photo.authorUrl || photo.sourceUrl));
-      li.append(", ");
-      li.appendChild(creditLink(photo.license, photo.licenseUrl));
-      li.append(", ");
-      li.appendChild(creditLink("source", photo.sourceUrl));
-      if (photo.modified) li.append(`, ${photo.modified}`);
-      li.append(".");
-      els.photoCreditsList.appendChild(li);
-    });
   }
 
   // One sentence carrying the whole state change, for screen readers — far
@@ -1864,15 +1832,7 @@
     const nameCell = document.createElement("div");
     nameCell.className = "cell cell--guess";
     nameCell.textContent = mic.displayName;
-    // Thumbnail and name share the card's top line. A full-width photo banner
-    // was tried first and more than doubled the page (24,162px against the old
-    // table's 10,104), because it reserved a 4:3 block on all 118 cards while
-    // none had a photo. A thumbnail keeps every card the same height whether or
-    // not its photo exists yet.
-    const head = document.createElement("div");
-    head.className = "mic-card-head";
-    head.append(buildMicPhoto(mic), nameCell);
-    row.appendChild(head);
+    row.appendChild(nameCell);
     REFERENCE_FIELDS.forEach((f) => {
       const cell = document.createElement("div");
       cell.className = "cell";
@@ -1883,89 +1843,7 @@
       cell.appendChild(text);
       row.appendChild(cell);
     });
-    const credit = buildMicCredit(mic);
-    if (credit) row.appendChild(credit);
     return row;
-  }
-
-  // A photo when data/photos.js has one, a placeholder otherwise. Most mics
-  // won't have a photo for a while, so the placeholder is the normal case
-  // rather than an error state — and it makes no request, which is why photos
-  // are listed explicitly in MIC_PHOTOS instead of being probed for by id.
-  // Probing would cost one 404 per photo-less mic on every render.
-  function buildMicPhoto(mic) {
-    const photo = MIC_PHOTOS[mic.id];
-    if (!photo) {
-      const empty = document.createElement("div");
-      empty.className = "mic-photo mic-photo--empty";
-      empty.setAttribute("aria-hidden", "true");
-      empty.innerHTML = ICONS.mic;
-      return empty;
-    }
-
-    // A button, not a figure: the thumbnail opens the full-size photo. The
-    // button carries the accessible name, so the image itself is decorative —
-    // labelling both would announce the mic twice.
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "mic-photo mic-photo--button";
-    button.setAttribute("aria-label", `View larger photo of the ${mic.displayName}`);
-    button.addEventListener("click", () => openPhotoModal(mic, photo));
-    const img = document.createElement("img");
-    img.src = `/images/mics/${photo.file}`;
-    img.alt = "";
-    // Dimensions up front so the grid doesn't reflow as photos arrive, and
-    // lazy so a 118-card page only fetches what's near the viewport.
-    img.width = photo.width;
-    img.height = photo.height;
-    img.loading = "lazy";
-    img.decoding = "async";
-    button.appendChild(img);
-    return button;
-  }
-
-  function openPhotoModal(mic, photo) {
-    els.photoModalTitle.textContent = mic.displayName;
-    els.photoModalImg.src = `/images/mics/${photo.file}`;
-    els.photoModalImg.alt = `Photo of the ${mic.displayName}`;
-    els.photoModalImg.width = photo.width;
-    els.photoModalImg.height = photo.height;
-
-    els.photoModalCredit.innerHTML = "";
-    els.photoModalCredit.append("Photo: ");
-    els.photoModalCredit.appendChild(creditLink(photo.author, photo.authorUrl || photo.sourceUrl));
-    els.photoModalCredit.append(" · ");
-    els.photoModalCredit.appendChild(creditLink(photo.license, photo.licenseUrl));
-    els.photoModalCredit.append(" · ");
-    els.photoModalCredit.appendChild(creditLink("source", photo.sourceUrl));
-    if (photo.modified) els.photoModalCredit.append(` · ${photo.modified}`);
-    els.photoModal.showModal();
-  }
-
-  // Author, source and licence — what a CC licence asks for — at the foot of
-  // the card, since a 56px thumbnail has no room for a caption. The change
-  // made to the original ("resized") is recorded in the credits list rather
-  // than on every card, which CC's guidance accepts as a reasonable manner.
-  function buildMicCredit(mic) {
-    const photo = MIC_PHOTOS[mic.id];
-    if (!photo) return null;
-    const credit = document.createElement("p");
-    credit.className = "mic-photo-credit";
-    credit.append("Photo: ");
-    credit.appendChild(creditLink(photo.author, photo.sourceUrl));
-    credit.append(" · ");
-    credit.appendChild(creditLink(photo.license, photo.licenseUrl));
-    return credit;
-  }
-
-  function creditLink(text, href) {
-    if (!href) return document.createTextNode(text);
-    const a = document.createElement("a");
-    a.href = href;
-    a.textContent = text;
-    a.rel = "noopener";
-    a.target = "_blank";
-    return a;
   }
 
   // Kept as a (mic) => void so createAutocomplete's onSelect contract is
@@ -1985,22 +1863,6 @@
   });
 
   // ------------------------------------------------------------------- Init
-
-  els.photoModalClose.addEventListener("click", () => els.photoModal.close());
-  // A click landing on the dialog itself rather than its content is a click on
-  // the backdrop. Esc is handled natively by <dialog>.
-  els.photoModal.addEventListener("click", (e) => {
-    if (e.target === els.photoModal) els.photoModal.close();
-  });
-  // <dialog> closes itself on Escape, so this is belt-and-braces. It's here
-  // because that native behaviour couldn't be confirmed in the automated
-  // browser used to test this — the keydown arrived unprevented but no cancel
-  // event followed — and a modal that traps you is worse than a redundant
-  // line. Closing an already-closed dialog is a no-op, so if the native path
-  // does fire first, this changes nothing.
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && els.photoModal.open) els.photoModal.close();
-  });
 
   els.roundSetupToggle.addEventListener("click", () => {
     if (els.roundSetupToggle.getAttribute("aria-disabled") === "true") return;

@@ -906,7 +906,7 @@
    It's a separate rule set rather than a shared one because the two exist for
    different reasons: card mode is how the game board survives a narrow
    viewport, this is how the reference browses. They already differ (the
-   photo slot, the darker chips) and may diverge further. If you change chip
+   darker chips, the chip widths) and may diverge further. If you change chip
    styling in one, check the other. */
 .board--reference {
   display: grid;
@@ -949,21 +949,11 @@ main:has(#reference-tab:not([hidden])) {
   background: var(--surface);
 }
 
-/* Thumbnail and name on one line across the top of the card. */
-.board--reference .mic-card-head {
+.board--reference > .board-row > .cell--guess {
   grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.board--reference .mic-card-head > .cell--guess {
-  flex: 1;
-  min-width: 0;
   border: none;
   background: transparent;
-  padding: 0;
+  padding: 0 var(--space-1) var(--space-1);
   font-size: var(--fs-md);
   min-height: 0;
 }
@@ -1033,115 +1023,6 @@ main:has(#reference-tab:not([hidden])) {
     grid-column: span 6;
   }
 }
-
-/* A fixed square, so a card is the same height with or without its photo.
-   contain, not cover: mics range from squat boundary plates to tall pencil
-   condensers, and cover would crop the top off the long ones — it would also
-   mean displaying a crop of a licensed image, one more change to disclose. */
-.mic-photo {
-  flex: none;
-  width: 56px;
-  height: 56px;
-  margin: 0;
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  overflow: hidden;
-}
-
-.mic-photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-.mic-photo--empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--border);
-}
-
-.mic-photo--empty svg {
-  width: 1.4rem;
-  height: 1.4rem;
-}
-
-.mic-photo-credit {
-  grid-column: 1 / -1;
-  margin: 0;
-  font-size: var(--fs-2xs);
-  color: var(--muted);
-  line-height: 1.35;
-}
-
-.mic-photo-credit a {
-  color: var(--muted);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.mic-photo-credit a:hover { color: var(--accent); }
-
-/* Wider than the 360px stats dialog it borrows from — the stored photos are
-   600px on the long edge and this is the only place they're seen full size. */
-.modal--photo {
-  max-width: min(640px, calc(100vw - 2 * var(--space-5)));
-}
-
-.modal--photo .modal-content { max-width: 640px; }
-
-/* Natural size, capped — not stretched to fill. width:100% blew a portrait
-   302x600 photo up into a 600x630 box and letterboxed the mic inside it. */
-.photo-modal-img {
-  display: block;
-  margin: 0 auto var(--space-3);
-  max-width: 100%;
-  max-height: 70vh;
-  width: auto;
-  height: auto;
-  background: var(--bg);
-  border-radius: var(--radius-md);
-}
-
-/* The thumbnail is a control now, so it needs the button reset and a visible
-   affordance on hover and focus. */
-.mic-photo--button {
-  padding: 0;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: border-color 120ms ease;
-}
-
-.mic-photo--button:hover { border-color: var(--accent); }
-
-.mic-photo--button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.photo-credits {
-  margin-top: var(--space-6);
-  font-size: var(--fs-xs);
-  color: var(--muted);
-}
-
-.photo-credits summary {
-  cursor: pointer;
-  padding: var(--space-2) 0;
-}
-
-.photo-credits ul {
-  margin: 0;
-  padding-left: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  line-height: 1.5;
-}
-
-.photo-credits a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
-.photo-credits a:hover { color: var(--accent); }
 
 @media (prefers-reduced-motion: reduce) {
   .mic-map-country--has-mics,
