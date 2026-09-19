@@ -11,66 +11,97 @@
 // and training/index.html, so MIC_DB is already populated here.
 const SELECTABLE_MICS = MIC_DB.filter((m) => m.retired !== true);
 
+// The matcher below sits at module scope rather than inside
+// createAutocomplete because two features need it: the typeahead here, and
+// the Reference tab's live filter in js/training.js, which narrows a table
+// instead of a dropdown and so can't go through createAutocomplete at all.
+// Every function is pure — nothing reads the closure — so hoisting them
+// changed no behaviour for the guess input.
+//
+// All of them carry a mic- prefix because there are no modules here: every
+// script shares one global scope, so a bare fold/normalize/compact/rank/score
+// would be five of the most collision-prone names in the language sitting in
+// it. js/training.js already declares `let score = 0` for the quiz — harmless
+// today, since that one is inside its IIFE and this file resolves its own
+// names lexically, but it's exactly the collision the prefix makes impossible
+// to reintroduce by accident.
+
+// Latin letters that don't decompose under NFD and so survive the combining-mark
+// strip below. Without these, "rode" misses RØDE and "bruel" misses Brüel & Kjær.
+const MIC_FOLD = { ø: "o", æ: "ae", œ: "oe", ß: "ss", đ: "d", ð: "d", ł: "l", þ: "th" };
+
+// Fold accents so a plain-ASCII query reaches the real spelling: ü->u, é->e,
+// Ø->o, æ->ae. Players type "rode" and "bruel", not "RØDE" and "Brüel".
+function micFold(s) {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[øæœßđðłþ]/g, (c) => MIC_FOLD[c]);
+}
+
+function micNormalize(s) {
+  return micFold(s).trim();
+}
+
+// Space- and punctuation-insensitive form. Model numbers get typed without the
+// separator far more often than with it, and 30 of the 110 mics were otherwise
+// unreachable that way — "u89", "md409", "beta52" and "kms105" all found
+// nothing despite the mic existing.
+function micCompact(s) {
+  return micFold(s).replace(/[^a-z0-9]/g, "");
+}
+
+function micRank(candidate, q) {
+  if (candidate === q) return 0;
+  if (candidate.startsWith(q)) return 1;
+  if (candidate.split(/\s+/).some((word) => word.startsWith(q))) return 2;
+  if (candidate.includes(q)) return 3;
+  return Infinity;
+}
+
+function micScore(query, mic) {
+  const q = micNormalize(query);
+  const qc = micCompact(query);
+  let best = Infinity;
+  // manufacturer is searched too: most displayNames start with the brand, but
+  // not all ("Aston Origin" vs "Aston Microphones", "DPA 4006C" vs "DPA
+  // Microphones"), so brand search shouldn't depend on how a name was written.
+  for (const text of [mic.displayName, mic.manufacturer, ...mic.aliases]) {
+    best = Math.min(best, micRank(micNormalize(text), q));
+    // Half a step worse than a literal hit, so exact spellings still sort
+    // ahead of punctuation-insensitive ones.
+    if (qc) best = Math.min(best, micRank(micCompact(text), qc) + 0.5);
+  }
+  return best;
+}
+
+// Does this mic match at all, ignoring how well? The Reference tab's filter
+// wants membership, not ranking — the table has its own sort, and capping
+// results would silently hide mics from a list whose whole job is to show
+// them. An empty query matches everything, so "no query" needs no special
+// case at the call site.
+function micMatchesQuery(query, mic) {
+  return !query.trim() || micScore(query, mic) < Infinity;
+}
+
 // browseAllOnEmpty: opt-in, defaults false so the main game's guess input is
-// unaffected. The training page's reference view passes true to let players
-// browse the full pool instead of only searching it.
+// unaffected.
+//
+// NOTE: nothing passes true any more. The Reference tab was its only caller,
+// and it no longer builds an autocomplete at all — its search box filters the
+// table directly through micMatchesQuery above. So browseAllOnEmpty and
+// browseAll() below are currently unreachable. They're left in place rather
+// than deleted because this file is the daily game's guess input and the
+// signature change isn't worth the blast radius for ten dead lines; delete
+// them if nothing has claimed them by the next time this file is touched.
 function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmpty = false }) {
   let activeIndex = -1;
   let currentResults = [];
 
-  // Latin letters that don't decompose under NFD and so survive the combining-mark
-  // strip below. Without these, "rode" misses RØDE and "bruel" misses Brüel & Kjær.
-  const FOLD = { ø: "o", æ: "ae", œ: "oe", ß: "ss", đ: "d", ð: "d", ł: "l", þ: "th" };
-
-  // Fold accents so a plain-ASCII query reaches the real spelling: ü->u, é->e,
-  // Ø->o, æ->ae. Players type "rode" and "bruel", not "RØDE" and "Brüel".
-  function fold(s) {
-    return s
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/[øæœßđðłþ]/g, (c) => FOLD[c]);
-  }
-
-  function normalize(s) {
-    return fold(s).trim();
-  }
-
-  // Space- and punctuation-insensitive form. Model numbers get typed without the
-  // separator far more often than with it, and 30 of the 110 mics were otherwise
-  // unreachable that way — "u89", "md409", "beta52" and "kms105" all found
-  // nothing despite the mic existing.
-  function compact(s) {
-    return fold(s).replace(/[^a-z0-9]/g, "");
-  }
-
-  function rank(candidate, q) {
-    if (candidate === q) return 0;
-    if (candidate.startsWith(q)) return 1;
-    if (candidate.split(/\s+/).some((word) => word.startsWith(q))) return 2;
-    if (candidate.includes(q)) return 3;
-    return Infinity;
-  }
-
-  function score(query, mic) {
-    const q = normalize(query);
-    const qc = compact(query);
-    let best = Infinity;
-    // manufacturer is searched too: most displayNames start with the brand, but
-    // not all ("Aston Origin" vs "Aston Microphones", "DPA 4006C" vs "DPA
-    // Microphones"), so brand search shouldn't depend on how a name was written.
-    for (const text of [mic.displayName, mic.manufacturer, ...mic.aliases]) {
-      best = Math.min(best, rank(normalize(text), q));
-      // Half a step worse than a literal hit, so exact spellings still sort
-      // ahead of punctuation-insensitive ones.
-      if (qc) best = Math.min(best, rank(compact(text), qc) + 0.5);
-    }
-    return best;
-  }
-
   // Must comfortably exceed the largest single-manufacturer group, or searching a
   // brand name silently drops mics. This was 8, which meant "neumann" — 14
-  // matches, all tying on score and then sorted alphabetically — showed only the
+  // matches, all tying on micScore and then sorted alphabetically — showed only the
   // KM/KMS/KU/M/SM/TLM models and hid the entire U-series, U 87 Ai included.
   // The list is capped at 280px with overflow-y: auto, so a longer result set
   // scrolls rather than overflowing.
@@ -88,7 +119,7 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmp
 
   function search(query) {
     if (!query.trim()) return browseAllOnEmpty ? browseAll() : [];
-    return SELECTABLE_MICS.map((mic) => ({ mic, s: score(query, mic) }))
+    return SELECTABLE_MICS.map((mic) => ({ mic, s: micScore(query, mic) }))
       .filter((r) => r.s < Infinity)
       // numeric so model numbers read naturally: KM 84 before KM 184.
       .sort(

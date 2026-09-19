@@ -217,28 +217,25 @@
 
     <section id="reference-tab" hidden>
       <p class="mode-note">Search or browse the full pool to study up before you play.</p>
+      <!-- A plain search input, deliberately NOT a combobox: it narrows the
+           table below as you type rather than opening a listbox to pick from,
+           so the combobox roles it used to carry would promise a popup that
+           no longer exists. type="search" gets the native clear button. -->
       <div class="guess-form">
         <div class="guess-row">
-          <div class="autocomplete">
-            <label for="reference-input" class="visually-hidden">Search or browse microphones</label>
-            <input
-              id="reference-input"
-              name="reference-search"
-              type="text"
-              placeholder="Search or browse microphones…"
-              role="combobox"
-              aria-expanded="false"
-              aria-autocomplete="list"
-              aria-controls="reference-list"
-              autocomplete="off"
-              data-lpignore="true"
-              data-1p-ignore
-              data-bwignore
-              data-form-type="other"
-              data-protonpass-ignore="true"
-            />
-            <ul id="reference-list" class="ac-list" role="listbox" hidden></ul>
-          </div>
+          <label for="reference-input" class="visually-hidden">Search microphones</label>
+          <input
+            id="reference-input"
+            name="reference-search"
+            type="search"
+            placeholder="Search microphones…"
+            autocomplete="off"
+            data-lpignore="true"
+            data-1p-ignore
+            data-bwignore
+            data-form-type="other"
+            data-protonpass-ignore="true"
+          />
         </div>
       </div>
       <div class="mic-map">
@@ -246,12 +243,26 @@
         <div id="reference-chips" class="country-chips" role="group" aria-label="Filter by country"></div>
       </div>
       <div id="reference-detail">
+        <!-- Both rows are filled by js/training.js: the menus from the FACETS
+             table, the chips from whatever is currently selected. The chip row
+             stays hidden until something is on, so an unfiltered tab is one
+             line of controls, not two. -->
+        <div class="mic-filters">
+          <span id="reference-filter-label" class="mic-filters-label">Filter</span>
+          <div id="reference-filter-menus" class="mic-filter-menus" role="group" aria-labelledby="reference-filter-label"></div>
+        </div>
+        <!-- Panels live outside the button strip and render as plain blocks
+             under the whole bar rather than popovers anchored to their own
+             button: no positioning JS, no collision handling, and nothing can
+             clip them if the strip ever gains an overflow. -->
+        <div id="reference-filter-panels" class="mic-filter-panels"></div>
+        <div id="reference-active-filters" class="mic-active-filters" role="group" aria-label="Active filters" hidden></div>
         <div id="reference-sort" class="mic-sort" hidden>
           <span id="reference-sort-label" class="mic-sort-label">Sort</span>
           <div id="reference-sort-pills" class="mic-sort-pills" role="group" aria-labelledby="reference-sort-label"></div>
         </div>
         <p id="reference-status" class="visually-hidden" role="status" aria-live="polite"></p>
-        <p id="reference-detail-empty" hidden>Search or click into the list above to see a mic's full details.</p>
+        <p id="reference-empty" class="mic-empty" hidden></p>
         <div id="reference-board" class="board board--reference" hidden></div>
       </div>
     </section>

@@ -97,8 +97,10 @@
     newMatchRoundBtn: document.getElementById("new-match-round-btn"),
 
     referenceInput: document.getElementById("reference-input"),
-    referenceList: document.getElementById("reference-list"),
-    referenceDetailEmpty: document.getElementById("reference-detail-empty"),
+    referenceFilterMenus: document.getElementById("reference-filter-menus"),
+    referenceFilterPanels: document.getElementById("reference-filter-panels"),
+    referenceActiveFilters: document.getElementById("reference-active-filters"),
+    referenceEmpty: document.getElementById("reference-empty"),
     referenceBoard: document.getElementById("reference-board"),
     referenceMap: document.getElementById("reference-map"),
     referenceChips: document.getElementById("reference-chips"),
@@ -120,11 +122,30 @@
   // sortKey ties each column to a comparator in js/worldmap.js's SORT_VALUE.
   // Don't rename the labels: css/styles.css keys a full-width card-mode rule
   // to the literal string [data-label="Polar Pattern"], css/training.css keys
-  // the Reference card's chip widths to Origin, Principle and Polar Pattern,
+  // the Reference table's right-aligned numeric columns to Year and Price,
   // and the 7-column .board-row grid is sized to REFERENCE_FIELDS.length + 1.
+  // The order mirrors app.js's CATEGORIES so a mic reads the same in the
+  // reference as it does on the daily board.
+  // Mirrors app.js's own PRINCIPLE_ABBR, deliberately including the wording:
+  // "Condenser (LDC)" is what a player sees on the daily board, so the
+  // reference contracting it the same way keeps one vocabulary across the
+  // site. It also keeps the column to one line in ~90 of 118 rows, since the
+  // full "Condenser (Large-Diaphragm)" wraps at every sensible column width.
+  // Polar Pattern is deliberately NOT abbreviated the way the board does it:
+  // pattern names are the thing being learned here, and only a handful of
+  // multi-pattern mics run long.
+  const PRINCIPLE_ABBR = {
+    "Condenser (Large-Diaphragm)": "Condenser (LDC)",
+    "Condenser (Small-Diaphragm)": "Condenser (SDC)",
+  };
+
   const REFERENCE_FIELDS = [
     { label: "Origin", getValue: (m) => m.countryOfOrigin, sortKey: "country" },
-    { label: "Principle", getValue: (m) => m.operatingPrinciple, sortKey: "principle" },
+    {
+      label: "Principle",
+      getValue: (m) => PRINCIPLE_ABBR[m.operatingPrinciple] || m.operatingPrinciple,
+      sortKey: "principle",
+    },
     { label: "Polar Pattern", getValue: formatPatterns, sortKey: "pattern" },
     { label: "Manufacturer", getValue: (m) => m.manufacturer, sortKey: "manufacturer" },
     { label: "Year", getValue: (m) => String(m.releaseYear), sortKey: "year" },
@@ -1654,16 +1675,198 @@
     return SELECTABLE_MICS;
   }
 
-  // mode: "empty" (nothing picked) | "mic" (search) | "country" (map/chip).
-  // Sorting only applies to the country and empty views; a one-row search
-  // result has nothing to sort.
-  let referenceView = { mode: "empty", mic: null, country: null, sortKey: "manufacturer", sortDir: "asc" };
+  // Filtering is a bag of orthogonal facets, not a mode. The old state was
+  // mode: "empty" | "country" | "mic", which conflated *what is selected*
+  // with *what is filtered* — workable while country was the only filter,
+  // wrong the moment anything can be on alongside it.
+  //
+  // "mic" mode is gone with it. That existed only because the search box
+  // picked one mic out of a dropdown, which then had to suppress sorting and
+  // country selection. Now the box filters the table live, so typing a full
+  // name yields a one-row table: same result, no special case — and the dead
+  // end it created (the only way out of mic mode was toggling a country chip
+  // on and off again) disappears rather than needing an escape hatch.
+  //
+  // Ranges are null-when-unset and are never seeded to the pool's bounds, so
+  // "no filter" stays distinguishable from a deliberate extreme — see
+  // buildRangePanel.
+  //
+  // sortKey starts at "name": the table carries a Manufacturer column, and
+  // every displayName already begins with its maker, so a name sort clusters
+  // by maker anyway. Choosing Maker explicitly still switches on the grouped
+  // view with its per-maker counts.
+  let referenceView = {
+    query: "",
+    filters: {
+      manufacturer: [],
+      principle: [],
+      pattern: [],
+      country: [],
+      switchable: null, // null = any | true | false
+      yearFrom: null,
+      yearTo: null,
+      priceFrom: null,
+      priceTo: null,
+    },
+    sortKey: "name",
+    sortDir: "asc",
+  };
   let referenceMapBuilt = false;
+  let openFacetKey = null;
+
+  // One descriptor per facet drives the buttons, the panels, the counts, the
+  // active chips and the clear — so adding a facet is one entry here, not six
+  // edits scattered through the render path.
+  //
+  // `values` fans out for pattern and returns a single-element array for the
+  // rest. Counting and matching both go through it, so a mic can never be
+  // counted into an option it wouldn't actually match. The pattern counts sum
+  // to 173 rather than 118 on purpose: a six-pattern mic really is in six
+  // buckets, and checking Figure-8 should find every mic that can do figure-8,
+  // not only the ten that do nothing else.
+  //
+  // Because the pattern facet tests membership, the non-canonical array order
+  // in data/mics.js (the same three patterns appear as both "Omni, Cardioid,
+  // Fig-8" and "Cardioid, Omni, Fig-8") is irrelevant here — includes() does
+  // not care. js/autocomplete.js's patternSignature exists to canonicalise for
+  // a different job and is deliberately not needed.
+  const FACETS = [
+    { key: "manufacturer", label: "Manufacturer", kind: "list", values: (m) => [m.manufacturer] },
+    {
+      key: "principle",
+      label: "Principle",
+      kind: "list",
+      values: (m) => [m.operatingPrinciple],
+      // Show the same contraction the table and the daily board show.
+      format: (v) => PRINCIPLE_ABBR[v] || v,
+    },
+    { key: "pattern", label: "Polar pattern", kind: "list", values: (m) => m.polarPatterns },
+    // Country deliberately has no dropdown button. The chips under the map are
+    // already a multi-select country control with counts, sitting directly
+    // above the table — a seventh button would be a second control for one
+    // piece of state, which is the thing the set-aside list argues against.
+    // It stays a facet here so it filters, counts and clears like the others.
+    { key: "country", label: "Country", kind: "list", values: (m) => [m.countryOfOrigin], control: "chips" },
+    {
+      key: "year",
+      label: "Year",
+      kind: "range",
+      from: "yearFrom",
+      to: "yearTo",
+      get: (m) => m.releaseYear,
+      format: (n) => String(n),
+    },
+    {
+      key: "price",
+      label: "Price",
+      kind: "range",
+      from: "priceFrom",
+      to: "priceTo",
+      get: (m) => m.msrp,
+      // Matches formatPrice in js/quiz.js so a chip reads like the column.
+      format: (n) => `$${n.toLocaleString("en-US")}`,
+    },
+    { key: "switchable", label: "Switchable", kind: "bool" },
+  ];
+
+  const SWITCHABLE_CHOICES = [
+    { value: "any", label: "Any", state: null },
+    { value: "yes", label: "Yes", state: true },
+    { value: "no", label: "No", state: false },
+  ];
+
+  // Each range slider steps over the sorted DISTINCT values of its field, not
+  // over the raw number line. For year that's barely different — 49 values
+  // spread fairly evenly across 1949-2025. For price it's the whole ballgame:
+  // 70 of 118 mics sit under $1,000 against a $14,998 top end, so a linear
+  // track buries most of the pool in its left sixteenth and one pixel of
+  // travel is worth about $50. Stepping over the values instead gives every
+  // position a real, reachable price and spends travel where the mics
+  // actually are.
+  function rangeValues(facet) {
+    const seen = new Set();
+    referencePool().forEach((m) => {
+      const v = facet.get(m);
+      if (v != null) seen.add(v);
+    });
+    return [...seen].sort((a, b) => a - b);
+  }
+
+  function rangeIsSet(facet) {
+    return referenceView.filters[facet.from] !== null || referenceView.filters[facet.to] !== null;
+  }
+
+  function facetIsActive(facet) {
+    if (facet.kind === "range") return rangeIsSet(facet);
+    if (facet.kind === "bool") return referenceView.filters.switchable !== null;
+    return referenceView.filters[facet.key].length > 0;
+  }
+
+  function matchesFacet(mic, facet, filters) {
+    if (facet.kind === "list") {
+      const chosen = filters[facet.key];
+      // Empty means "no constraint", never "nothing matches".
+      return chosen.length === 0 || facet.values(mic).some((v) => chosen.includes(v));
+    }
+    if (facet.kind === "bool") {
+      return filters.switchable === null || mic.switchable === filters.switchable;
+    }
+    const from = filters[facet.from];
+    const to = filters[facet.to];
+    if (from === null && to === null) return true;
+    const v = facet.get(mic);
+    // A null value drops out the moment a bound is set. msrp is number|null in
+    // the schema and formatPrice prints null as "Unknown"; letting it through
+    // would put a mic inside "$300–$800" whose own Price cell says Unknown.
+    // compareMics already refuses to guess at a null price the same way.
+    if (v == null) return false;
+    return (from === null || v >= from) && (to === null || v <= to);
+  }
+
+  // Base set for a facet's own counts: the pool narrowed by the query and by
+  // every OTHER facet, but not by this one. That exclusion is what keeps
+  // multi-select usable — count Neumann against a base that already excludes
+  // non-Neumann and every other maker reads 0, so Shure could never be added
+  // to a Neumann selection. Pass null to apply all of them; that's the table.
+  //
+  // The query is in the base set for every facet. It's a different axis from
+  // all of them, and if it weren't included, typing "ksm" and opening
+  // Manufacturer would offer "Neumann 17" — a count that yields no rows when
+  // clicked, which is worse than showing no count at all.
+  function referenceMicsExcept(exceptKey) {
+    const { query, filters } = referenceView;
+    return referencePool().filter(
+      (m) =>
+        micMatchesQuery(query, m) &&
+        FACETS.every((f) => f.key === exceptKey || matchesFacet(m, f, filters))
+    );
+  }
 
   function referenceMics() {
-    if (referenceView.mode === "mic") return [referenceView.mic];
-    const pool = referencePool();
-    return referenceView.country ? pool.filter((m) => m.countryOfOrigin === referenceView.country) : pool;
+    return referenceMicsExcept(null);
+  }
+
+  // countValues' multi-valued twin. Kept separate rather than generalising
+  // that one: it is the counting half of the round-setup cascade and of the
+  // country chips, and neither has an array-valued field to worry about.
+  function countFacetValues(pool, facet) {
+    const counts = new Map();
+    pool.forEach((m) =>
+      facet.values(m).forEach((v) => {
+        if (v != null) counts.set(v, (counts.get(v) || 0) + 1);
+      })
+    );
+    return counts;
+  }
+
+  // The facet vocabulary is fixed by the full pool and built exactly once.
+  // Only counts, checked and disabled change afterwards, which means a render
+  // never creates or destroys a control — so a render can never steal focus
+  // from the checkbox you just pressed or the number you are mid-way through
+  // typing. That invariant is what keeps the whole thing simple.
+  function facetVocabulary(facet) {
+    const counts = countFacetValues(referencePool(), facet);
+    return [...counts.keys()].sort((a, b) => compareText(a, b));
   }
 
   function isoCountsFor(pool) {
@@ -1683,55 +1886,538 @@
   function ensureReferenceMap() {
     if (referenceMapBuilt) return;
     referenceMapBuilt = true;
+    // Built from the FULL pool so every country that ever has mics keeps its
+    // data-country hook and stays clickable; syncCountryScope greys out the
+    // ones the current filters empty, rather than removing them.
     els.referenceMap.innerHTML = buildWorldMapSvg(isoCountsFor(referencePool()));
     els.referenceMap.addEventListener("click", (e) => {
       const path = e.target.closest("[data-country]");
       if (path) selectCountry(path.dataset.country);
     });
-    renderCountryChips();
+    buildCountryChips();
+    buildFacetControls();
     renderReference();
   }
 
-  function renderCountryChips() {
-    const counts = countValues(referencePool(), (m) => m.countryOfOrigin);
+  function buildCountryChips() {
     els.referenceChips.innerHTML = "";
-    counts.forEach(({ value, count }) => {
+    facetVocabulary(FACETS.find((f) => f.key === "country")).forEach((value) => {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "country-chip";
       btn.dataset.country = value;
-      btn.setAttribute("aria-pressed", String(referenceView.country === value));
-      btn.innerHTML = `${value} <span class="country-chip-count">${count}</span>`;
+      btn.setAttribute("aria-pressed", "false");
+      const name = document.createElement("span");
+      name.textContent = value;
+      const count = document.createElement("span");
+      count.className = "country-chip-count";
+      btn.append(name, " ", count);
       btn.addEventListener("click", () => selectCountry(value));
       els.referenceChips.appendChild(btn);
     });
   }
 
-  // Selecting the country that's already active clears it — the chips are
-  // toggles, which aria-pressed already implies.
-  function selectCountry(country) {
-    const same = referenceView.mode === "country" && referenceView.country === country;
-    referenceView = same
-      ? { ...referenceView, mode: "empty", mic: null, country: null }
-      : { ...referenceView, mode: "country", mic: null, country, sortKey: "manufacturer", sortDir: "asc" };
-    els.referenceInput.value = "";
-    syncCountrySelection();
+  // ------------------------------------------------------ Facet bar + panels
+
+  // key -> { btn, panel, badge, options: Map(value -> {input, count, label}),
+  //          inputs: slider refs for a range facet, null otherwise }
+  const facetControls = new Map();
+
+  function buildFacetControls() {
+    els.referenceFilterMenus.innerHTML = "";
+    els.referenceFilterPanels.innerHTML = "";
+    FACETS.filter((f) => f.control !== "chips").forEach((facet) => {
+      const btnId = `facet-btn-${facet.key}`;
+      const panelId = `facet-panel-${facet.key}`;
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.id = btnId;
+      btn.className = "facet-btn";
+      // A disclosure, not a menu: aria-expanded + aria-controls is the whole
+      // contract. aria-haspopup="menu" would promise roving-tabindex menu
+      // semantics (and that activating an item closes it), both wrong for a
+      // multi-select checklist.
+      btn.setAttribute("aria-expanded", "false");
+      btn.setAttribute("aria-controls", panelId);
+      const btnLabel = document.createElement("span");
+      btnLabel.textContent = facet.label;
+      const badge = document.createElement("span");
+      badge.className = "facet-btn-badge";
+      badge.hidden = true;
+      btn.append(btnLabel, badge);
+      btn.addEventListener("click", () => toggleFacet(facet.key));
+      btn.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          openFacet(facet.key);
+        }
+      });
+      els.referenceFilterMenus.appendChild(btn);
+
+      const panel = document.createElement("div");
+      panel.id = panelId;
+      panel.className = "facet-panel";
+      panel.setAttribute("role", "group");
+      panel.setAttribute("aria-labelledby", btnId);
+      panel.hidden = true;
+      els.referenceFilterPanels.appendChild(panel);
+
+      const entry = { facet, btn, panel, badge, options: new Map(), inputs: null };
+      if (facet.kind === "list") buildListPanel(entry);
+      else if (facet.kind === "bool") buildBoolPanel(entry);
+      else buildRangePanel(entry);
+
+      // Escape is bound on the panel, not the document, so it can't swallow
+      // Escape meant for the search box (which clears the query).
+      panel.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          e.stopPropagation();
+          closeFacet({ restoreFocus: true });
+        }
+      });
+      // focusout bubbles where blur does not, so tabbing past the last option
+      // closes the panel the same way clicking away does.
+      //
+      // The relatedTarget guard is load-bearing, not defensive. Clicking an
+      // option's own text moves focus off the checkbox with relatedTarget
+      // null — the <span> isn't focusable, so focus is on its way to the body
+      // — and closing on that hid the panel before the label could forward
+      // the click to its checkbox. The whole click was swallowed: the option
+      // appeared to just dismiss the panel without filtering anything.
+      // Only a move to a real element outside the panel should close it;
+      // clicks that land nowhere are left to the document mousedown handler.
+      panel.addEventListener("focusout", (e) => {
+        if (!e.relatedTarget) return;
+        if (!panel.contains(e.relatedTarget) && e.relatedTarget !== btn) closeFacet();
+      });
+
+      facetControls.set(facet.key, entry);
+    });
+  }
+
+  function buildListPanel(entry) {
+    const list = document.createElement("div");
+    list.className = "facet-options";
+    facetVocabulary(entry.facet).forEach((value) => {
+      const label = document.createElement("label");
+      label.className = "facet-option";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = value;
+      const name = document.createElement("span");
+      name.className = "facet-option-name";
+      name.textContent = entry.facet.format ? entry.facet.format(value) : value;
+      const count = document.createElement("span");
+      count.className = "facet-option-count";
+      label.append(input, name, count);
+      input.addEventListener("change", () => toggleListValue(entry.facet.key, value));
+      list.appendChild(label);
+      entry.options.set(value, { input, count, label });
+    });
+    entry.panel.appendChild(list);
+  }
+
+  // Three radios rather than a checkbox: a checkbox cannot express "any"
+  // honestly, and "any" has to be a visible, reachable choice rather than an
+  // absence. Mirrors the round-length radiogroup in training/index.html.
+  function buildBoolPanel(entry) {
+    const group = document.createElement("div");
+    group.className = "facet-options";
+    group.setAttribute("role", "radiogroup");
+    group.setAttribute("aria-label", "Switchable pattern");
+    SWITCHABLE_CHOICES.forEach(({ value, label: text, state }) => {
+      const label = document.createElement("label");
+      label.className = "facet-option";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = "facet-switchable";
+      input.value = value;
+      const name = document.createElement("span");
+      name.className = "facet-option-name";
+      name.textContent = text;
+      const count = document.createElement("span");
+      count.className = "facet-option-count";
+      label.append(input, name, count);
+      input.addEventListener("change", () => {
+        setFilters({ switchable: state });
+      });
+      group.appendChild(label);
+      entry.options.set(value, { input, count, label });
+    });
+    entry.panel.appendChild(group);
+  }
+
+  // A two-handle slider over rangeValues(), so every stop is a real value in
+  // the pool rather than a point on an abstract number line.
+  //
+  // Untouched is expressed as "both handles parked at the ends", which is the
+  // only thing a slider can mean by it — unlike a pair of text boxes, it has
+  // no empty state to distinguish from a deliberate extreme. The cost is that
+  // you can't deliberately ask for "1949 and later" as an active filter; the
+  // gain is that nothing is lost by it, since that filter excludes nothing.
+  // Both handles at the ends therefore writes null, not the pool's bounds.
+  function buildRangePanel(entry) {
+    const values = rangeValues(entry.facet);
+    const last = values.length - 1;
+
+    const readout = document.createElement("output");
+    readout.className = "facet-range-value";
+
+    const slider = document.createElement("div");
+    slider.className = "facet-slider";
+    const track = document.createElement("div");
+    track.className = "facet-slider-track";
+    const fill = document.createElement("div");
+    fill.className = "facet-slider-fill";
+    slider.append(track, fill);
+
+    const make = (which) => {
+      const input = document.createElement("input");
+      input.type = "range";
+      input.className = "facet-slider-input";
+      input.min = "0";
+      input.max = String(last);
+      input.step = "1";
+      input.value = which === "from" ? "0" : String(last);
+      input.setAttribute("aria-label", `${which === "from" ? "Minimum" : "Maximum"} ${entry.facet.label.toLowerCase()}`);
+      slider.appendChild(input);
+      return input;
+    };
+    const from = make("from");
+    const to = make("to");
+
+    // Clamp rather than swap, so the handles can't cross and the reversed
+    // state simply can't be reached — the thing a pair of text boxes needs a
+    // validation message for.
+    const onSlide = (moved) => {
+      let a = Number(from.value);
+      let b = Number(to.value);
+      if (a > b) {
+        if (moved === from) b = a;
+        else a = b;
+        from.value = String(a);
+        to.value = String(b);
+      }
+      setFilters({
+        [entry.facet.from]: a === 0 ? null : values[a],
+        [entry.facet.to]: b === last ? null : values[b],
+      });
+    };
+    from.addEventListener("input", () => onSlide(from));
+    to.addEventListener("input", () => onSlide(to));
+
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "facet-range-reset";
+    reset.textContent = "Reset";
+    reset.addEventListener("click", () => {
+      from.value = "0";
+      to.value = String(last);
+      setFilters({ [entry.facet.from]: null, [entry.facet.to]: null });
+    });
+
+    entry.inputs = { from, to, values, last, readout, fill };
+    entry.panel.append(readout, slider, reset);
+  }
+
+  // ------------------------------------------------------------ State setters
+
+  function setFilters(patch) {
+    referenceView = { ...referenceView, filters: { ...referenceView.filters, ...patch } };
     renderReference();
   }
 
-  function syncCountrySelection() {
-    const active = referenceView.country;
+  function toggleListValue(key, value) {
+    const list = referenceView.filters[key];
+    setFilters({ [key]: list.includes(value) ? list.filter((v) => v !== value) : [...list, value] });
+  }
+
+  // The country chips and the map are two views of one facet, so a click on
+  // either is the same membership toggle a checkbox would be.
+  //
+  // Note what this no longer does: it doesn't clear the search box and it
+  // doesn't reset the sort. Both were fine when country was the only filter
+  // and picking one meant starting over; with orthogonal facets, changing one
+  // must not silently throw away another or a view preference.
+  function selectCountry(country) {
+    toggleListValue("country", country);
+  }
+
+  function clearAllFilters() {
+    referenceView = {
+      ...referenceView,
+      query: "",
+      filters: {
+        manufacturer: [],
+        principle: [],
+        pattern: [],
+        country: [],
+        switchable: null,
+        yearFrom: null,
+        yearTo: null,
+        priceFrom: null,
+        priceTo: null,
+      },
+    };
+    els.referenceInput.value = "";
+    // The sliders need no resetting here: syncFacetControls drives their
+    // positions from state on every render, so nulling the bounds parks both
+    // handles back at the ends on its own.
+    // Sort is a view preference, not a filter — clearing filters shouldn't
+    // silently re-sort the table under someone.
+    renderReference();
+  }
+
+  function anyFilterActive() {
+    return referenceView.query.trim() !== "" || FACETS.some((f) => facetIsActive(f));
+  }
+
+  // --------------------------------------------------------- Open/close panels
+
+  function openFacet(key) {
+    closeFacet();
+    const entry = facetControls.get(key);
+    if (!entry) return;
+    openFacetKey = key;
+    entry.panel.hidden = false;
+    entry.btn.setAttribute("aria-expanded", "true");
+    syncFacetControls();
+    const first = entry.panel.querySelector("input");
+    if (first) first.focus();
+  }
+
+  function closeFacet({ restoreFocus = false } = {}) {
+    if (openFacetKey === null) return;
+    const entry = facetControls.get(openFacetKey);
+    openFacetKey = null;
+    if (!entry) return;
+    entry.panel.hidden = true;
+    entry.btn.setAttribute("aria-expanded", "false");
+    if (restoreFocus) entry.btn.focus();
+  }
+
+  function toggleFacet(key) {
+    if (openFacetKey === key) closeFacet({ restoreFocus: true });
+    else openFacet(key);
+  }
+
+  // mousedown, not click: it fires before focus moves, so it can't race the
+  // label-to-checkbox activation that a click listener would.
+  document.addEventListener("mousedown", (e) => {
+    if (openFacetKey === null) return;
+    const entry = facetControls.get(openFacetKey);
+    if (entry && !entry.panel.contains(e.target) && !entry.btn.contains(e.target)) closeFacet();
+  });
+
+  // ---------------------------------------------------------------- Rendering
+
+  function syncFacetControls() {
+    facetControls.forEach((entry) => {
+      const { facet } = entry;
+      const active = facetIsActive(facet);
+      entry.btn.classList.toggle("facet-btn--active", active);
+
+      if (facet.kind === "list") {
+        const counts = countFacetValues(referenceMicsExcept(facet.key), facet);
+        const chosen = referenceView.filters[facet.key];
+        entry.options.forEach(({ input, count, label }, value) => {
+          const n = counts.get(value) || 0;
+          count.textContent = String(n);
+          input.checked = chosen.includes(value);
+          // A selected option is never disabled — it always has to be
+          // un-selectable, and by construction its own count can't be 0.
+          input.disabled = n === 0 && !input.checked;
+          label.classList.toggle("facet-option--empty", n === 0);
+        });
+        entry.badge.hidden = chosen.length === 0;
+        entry.badge.textContent = String(chosen.length);
+        return;
+      }
+
+      if (facet.kind === "bool") {
+        const base = referenceMicsExcept(facet.key);
+        const state = referenceView.filters.switchable;
+        SWITCHABLE_CHOICES.forEach(({ value, state: s }) => {
+          const opt = entry.options.get(value);
+          const n = s === null ? base.length : base.filter((m) => m.switchable === s).length;
+          opt.count.textContent = String(n);
+          opt.input.checked = state === s;
+          opt.label.classList.toggle("facet-option--empty", n === 0);
+        });
+        entry.badge.hidden = state === null;
+        entry.badge.textContent = state === true ? "Yes" : "No";
+        return;
+      }
+
+      // Range. The handles are the source of the displayed value, so writing
+      // state back into them is always a no-op mid-drag — none of the
+      // don't-clobber-the-user care a text box needs.
+      const { from, to, values, last, readout, fill } = entry.inputs;
+      const fromV = referenceView.filters[facet.from];
+      const toV = referenceView.filters[facet.to];
+      const a = fromV == null ? 0 : values.indexOf(fromV);
+      const b = toV == null ? last : values.indexOf(toV);
+      from.value = String(a);
+      to.value = String(b);
+      // The thumb reads out an index by default, which is meaningless aloud.
+      from.setAttribute("aria-valuetext", facet.format(values[a]));
+      to.setAttribute("aria-valuetext", facet.format(values[b]));
+      readout.textContent = `${facet.format(values[a])} – ${facet.format(values[b])}`;
+      fill.style.left = `${(a / last) * 100}%`;
+      fill.style.right = `${100 - (b / last) * 100}%`;
+
+      entry.badge.hidden = !rangeIsSet(facet);
+      entry.badge.textContent = "1";
+    });
+  }
+
+  // Re-scopes the chips and the map without touching innerHTML: eight buttons
+  // and eight paths get their text and classes updated in place. Re-emitting
+  // the SVG would re-parse ~160 path elements on every keystroke, and
+  // rebuilding the chips would destroy the focus ring of the chip just
+  // pressed.
+  function syncCountryScope() {
+    const facet = FACETS.find((f) => f.key === "country");
+    // Counts exclude the country facet itself, exactly like every dropdown.
+    // Get this wrong and picking Germany zeroes every other country, blanks
+    // the map and makes a second country unselectable for good.
+    const base = referenceMicsExcept("country");
+    const counts = countFacetValues(base, facet);
+    const chosen = referenceView.filters.country;
+
     els.referenceChips.querySelectorAll(".country-chip").forEach((chip) => {
-      chip.setAttribute("aria-pressed", String(chip.dataset.country === active));
+      const value = chip.dataset.country;
+      const n = counts.get(value) || 0;
+      const selected = chosen.includes(value);
+      chip.setAttribute("aria-pressed", String(selected));
+      chip.querySelector(".country-chip-count").textContent = String(n);
+      chip.disabled = n === 0 && !selected;
+      chip.classList.toggle("country-chip--empty", n === 0);
     });
+
     els.referenceMap.querySelectorAll("[data-country]").forEach((path) => {
-      path.classList.toggle("mic-map-country--active", path.dataset.country === active);
+      const value = path.dataset.country;
+      const n = counts.get(value) || 0;
+      const selected = chosen.includes(value);
+      path.classList.toggle("mic-map-country--active", selected);
+      // Losing --has-mics restores the base rule's pointer-events: none, so an
+      // emptied country goes inert exactly like a mic-less one already does.
+      path.classList.toggle("mic-map-country--has-mics", n > 0 || selected);
     });
+  }
+
+  function renderFilterChips() {
+    els.referenceActiveFilters.innerHTML = "";
+    const chips = [];
+
+    if (referenceView.query.trim() !== "") {
+      // The query gets a chip like everything else. It is a second control for
+      // one piece of state, which this file normally resists — but the chip
+      // row's whole job is to be the single visible summary of what is
+      // narrowing the table, and leaving out the most aggressive narrowing of
+      // all would be the bigger lie. It also makes "Clear all" honest.
+      chips.push({ label: `Search: “${referenceView.query.trim()}”`, onRemove: () => {
+        els.referenceInput.value = "";
+        referenceView = { ...referenceView, query: "" };
+        renderReference();
+      } });
+    }
+
+    FACETS.forEach((facet) => {
+      if (facet.kind === "list") {
+        referenceView.filters[facet.key].forEach((value) => {
+          chips.push({
+            label: facet.format ? facet.format(value) : value,
+            onRemove: () => toggleListValue(facet.key, value),
+          });
+        });
+        return;
+      }
+      if (facet.kind === "bool") {
+        if (referenceView.filters.switchable === null) return;
+        chips.push({
+          label: referenceView.filters.switchable ? "Switchable" : "Not switchable",
+          onRemove: () => setFilters({ switchable: null }),
+        });
+        return;
+      }
+      if (!rangeIsSet(facet)) return;
+      chips.push({
+        label: `${facet.label} ${rangeLabel(facet)}`,
+        onRemove: () => setFilters({ [facet.from]: null, [facet.to]: null }),
+      });
+    });
+
+    chips.forEach(({ label, onRemove }) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "set-aside-chip";
+      chip.setAttribute("aria-label", `Remove filter: ${label}`);
+      const name = document.createElement("span");
+      name.textContent = label;
+      const icon = document.createElement("span");
+      icon.className = "set-aside-chip-x";
+      icon.innerHTML = ICONS.x;
+      chip.append(name, icon);
+      chip.addEventListener("click", onRemove);
+      els.referenceActiveFilters.appendChild(chip);
+    });
+
+    if (chips.length > 0) {
+      const clear = document.createElement("button");
+      clear.type = "button";
+      clear.className = "mic-clear-all";
+      clear.textContent = "Clear all";
+      clear.addEventListener("click", clearAllFilters);
+      els.referenceActiveFilters.appendChild(clear);
+    }
+    els.referenceActiveFilters.hidden = chips.length === 0;
+  }
+
+  // "or earlier" / "and later", not "before" / "after": the bounds are
+  // inclusive, and a chip that misstates its own filter is worse than a long
+  // one.
+  function rangeLabel(facet) {
+    const from = referenceView.filters[facet.from];
+    const to = referenceView.filters[facet.to];
+    if (from !== null && to !== null) return `${facet.format(from)}–${facet.format(to)}`;
+    if (from !== null) return `${facet.format(from)} and up`;
+    return `${facet.format(to)} or less`;
+  }
+
+  // A column whose visible rows all share one value has nothing to sort, so
+  // its control goes away. This generalises the old "Origin is constant inside
+  // a country view" rule to every column, and lands three more things for
+  // free: a one-row result loses every sort control (which is exactly what
+  // mic mode used to do by hand), and filtering to a single manufacturer both
+  // drops that column's sort and — because sortKey then falls back to "name" —
+  // stops buildMicRows emitting a lone group heading over the whole list.
+  function constantColumns(mics) {
+    const constant = new Set();
+    if (mics.length <= 1) {
+      constant.add("name");
+      REFERENCE_FIELDS.forEach((f) => constant.add(f.sortKey));
+      return constant;
+    }
+    REFERENCE_FIELDS.forEach((f) => {
+      const first = f.getValue(mics[0]);
+      if (mics.every((m) => f.getValue(m) === first)) constant.add(f.sortKey);
+    });
+    return constant;
+  }
+
+  // displayName is unique across the pool, so "name" is constant only when
+  // there's at most one row — which makes it the one always-valid sort and the
+  // safe place to land when the active one loses its column.
+  function normalizeSort(constant) {
+    if (constant.has(referenceView.sortKey) && referenceView.sortKey !== "name") {
+      referenceView = { ...referenceView, sortKey: "name", sortDir: "asc" };
+    }
   }
 
   // Clicking the active column flips direction; a new column starts ascending.
   function setSort(key) {
-    if (referenceView.mode === "mic") return;
     referenceView =
       referenceView.sortKey === key
         ? { ...referenceView, sortDir: referenceView.sortDir === "asc" ? "desc" : "asc" }
@@ -1739,9 +2425,9 @@
     renderReference();
   }
 
-  function renderSortPills() {
+  function renderSortPills(constant) {
     els.referenceSortPills.innerHTML = "";
-    SORT_PILLS.forEach(({ key, label }) => {
+    SORT_PILLS.filter(({ key }) => !constant.has(key)).forEach(({ key, label }) => {
       const btn = document.createElement("button");
       btn.type = "button";
       const active = referenceView.sortKey === key;
@@ -1753,43 +2439,89 @@
     });
   }
 
+  // No debounce on any of this. 118 rows of 7 cells is well inside the
+  // browser's own input-to-paint budget, and a timer would add latency you can
+  // feel on every keystroke to solve a problem that doesn't exist at this
+  // size — while opening a window where the table disagrees with the box. If
+  // it ever does need help, coalesce with requestAnimationFrame rather than
+  // reintroducing a delay.
   function renderReference() {
     const mics = referenceMics();
-    const isMicMode = referenceView.mode === "mic";
+    const constant = constantColumns(mics);
+    normalizeSort(constant);
 
-    els.referenceSort.hidden = isMicMode;
-    els.referenceDetailEmpty.hidden = true;
-    els.referenceBoard.hidden = false;
-    if (!isMicMode) renderSortPills();
+    syncCountryScope();
+    syncFacetControls();
+    renderFilterChips();
 
-    renderMicTable(isMicMode ? [referenceView.mic] : mics, isMicMode);
-    announceReference(mics.length, isMicMode);
+    const empty = mics.length === 0;
+    // A sort control over nothing reads as a broken table.
+    els.referenceSort.hidden = empty;
+    els.referenceBoard.hidden = empty;
+    els.referenceEmpty.hidden = !empty;
+
+    if (empty) {
+      els.referenceEmpty.textContent = emptyMessage();
+      els.referenceBoard.innerHTML = "";
+    } else {
+      renderSortPills(constant);
+      renderMicTable(mics, constant);
+    }
+    announceReference(mics.length);
+  }
+
+  function emptyMessage() {
+    const q = referenceView.query.trim();
+    const facets = FACETS.some((f) => facetIsActive(f));
+    if (q && facets) return `No mics match “${q}” with these filters.`;
+    if (q) return `No mics match “${q}”.`;
+    return "No mics match these filters.";
   }
 
   // One sentence carrying the whole state change, for screen readers — far
   // more useful than making someone traverse 48 rows to infer what happened.
-  function announceReference(count, isMicMode) {
-    if (isMicMode) {
-      els.referenceStatus.textContent = `Showing ${referenceView.mic.displayName}.`;
+  // role="status" is aria-live="polite", so while typing each update
+  // supersedes the last rather than queueing a backlog of them.
+  function announceReference(count) {
+    if (count === 0) {
+      els.referenceStatus.textContent = emptyMessage();
       return;
     }
-    const scope = referenceView.country ? `from ${referenceView.country}` : "in the pool";
+    const q = referenceView.query.trim();
+    // Three short sentences rather than one long clause. Strung together with
+    // commas the facets ran into each other — "54 mics, price $400–$1,760,
+    // sorted by name" gives no way to hear where the filters stop and the
+    // sort begins, and a two-value facet adds commas of its own.
+    const parts = [];
+    FACETS.forEach((facet) => {
+      if (!facetIsActive(facet)) return;
+      if (facet.kind === "list") {
+        parts.push(referenceView.filters[facet.key].map((v) => (facet.format ? facet.format(v) : v)).join(" or "));
+      } else if (facet.kind === "bool") {
+        parts.push(referenceView.filters.switchable ? "switchable" : "not switchable");
+      } else {
+        parts.push(`${facet.label.toLowerCase()} ${rangeLabel(facet)}`);
+      }
+    });
     const pill = SORT_PILLS.find((p) => p.key === referenceView.sortKey);
     const dir = referenceView.sortDir === "asc" ? "ascending" : "descending";
-    els.referenceStatus.textContent = `${count} mic${count === 1 ? "" : "s"} ${scope}, sorted by ${(pill ? pill.label : referenceView.sortKey).toLowerCase()} ${dir}.`;
+    const showing = `Showing ${count} mic${count === 1 ? "" : "s"}${q ? ` matching “${q}”` : ""}.`;
+    const filters = parts.length ? ` Filtered to ${parts.join("; ")}.` : "";
+    els.referenceStatus.textContent = `${showing}${filters} Sorted by ${(pill ? pill.label : referenceView.sortKey).toLowerCase()} ${dir}.`;
   }
 
-  // Emits the same markup showMicDetail always did — a header row plus N
-  // .board-rows — so the ≤800px card mode, the data-label chips and the
-  // 7-column grid all keep working untouched. A search result is just N=1.
-  function renderMicTable(mics, isMicMode) {
-    els.referenceBoard.innerHTML = "";
+  // A header row plus N .board-rows, so the ≤800px wrapped-row mode, the
+  // data-label chips and the 7-column grid all keep working untouched.
+  // Built into a fragment and appended once: 118 rows otherwise cost 118
+  // layout passes instead of one.
+  function renderMicTable(mics, constant) {
+    const frag = document.createDocumentFragment();
 
     const headerRow = document.createElement("div");
     headerRow.className = "board-row board-row--header";
-    headerRow.appendChild(buildHeaderCell({ label: "Microphone", sortKey: "name" }, isMicMode, "cell cell--guess cell--header"));
-    REFERENCE_FIELDS.forEach((f) => headerRow.appendChild(buildHeaderCell(f, isMicMode, "cell cell--header")));
-    els.referenceBoard.appendChild(headerRow);
+    headerRow.appendChild(buildHeaderCell({ label: "Microphone", sortKey: "name" }, constant, "cell cell--guess cell--header"));
+    REFERENCE_FIELDS.forEach((f) => headerRow.appendChild(buildHeaderCell(f, constant, "cell cell--header")));
+    frag.appendChild(headerRow);
 
     buildMicRows(mics, referenceView.sortKey, referenceView.sortDir).forEach((entry) => {
       if (entry.type === "group") {
@@ -1799,18 +2531,24 @@
         const group = document.createElement("div");
         group.className = "mic-group";
         group.textContent = `${entry.label} · ${entry.count}`;
-        els.referenceBoard.appendChild(group);
+        frag.appendChild(group);
         return;
       }
-      els.referenceBoard.appendChild(buildMicRow(entry.mic));
+      frag.appendChild(buildMicRow(entry.mic));
     });
+
+    els.referenceBoard.innerHTML = "";
+    els.referenceBoard.appendChild(frag);
   }
 
-  function buildHeaderCell(field, isMicMode, className) {
+  function buildHeaderCell(field, constant, className) {
     const cell = document.createElement("div");
     cell.className = className;
-    // Origin is constant within a country view, so sorting it does nothing.
-    const sortable = !isMicMode && field.sortKey && !(referenceView.country && field.sortKey === "country");
+    // Same data-label the body cells carry, so css/training.css can align a
+    // heading over its column (Year and Price right) with one rule instead of
+    // a second set keyed to nth-child.
+    cell.dataset.label = field.label;
+    const sortable = field.sortKey && !constant.has(field.sortKey);
     if (!sortable) {
       cell.textContent = field.label;
       return cell;
@@ -1846,20 +2584,21 @@
     return row;
   }
 
-  // Kept as a (mic) => void so createAutocomplete's onSelect contract is
-  // unchanged; it's now just a state-setter over the shared renderer.
-  function showMicDetail(mic) {
-    referenceView = { ...referenceView, mode: "mic", mic, country: null };
-    syncCountrySelection();
+  // The search box narrows the table rather than opening a dropdown, so it
+  // carries no combobox roles and needs no autocomplete instance. It matches
+  // through micMatchesQuery (js/autocomplete.js), the same matcher the daily
+  // game's guess input ranks with — so "ksm", "rode" and "u89" find the same
+  // mics in both places and the two can't drift apart.
+  els.referenceInput.addEventListener("input", () => {
+    referenceView = { ...referenceView, query: els.referenceInput.value };
     renderReference();
-  }
+  });
 
-  createAutocomplete({
-    input: els.referenceInput,
-    listEl: els.referenceList,
-    isGuessed: () => false,
-    browseAllOnEmpty: true,
-    onSelect: showMicDetail,
+  els.referenceInput.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || els.referenceInput.value === "") return;
+    els.referenceInput.value = "";
+    referenceView = { ...referenceView, query: "" };
+    renderReference();
   });
 
   // ------------------------------------------------------------------- Init

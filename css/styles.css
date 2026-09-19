@@ -47,6 +47,15 @@
   /* Uniform tile height: icon line + two text lines + padding. Tuned against
      the widest real values in the pool, not derived arithmetically. */
   --tile-h: 4.25rem;
+
+  /* Declares which schemes this page supports, so the UA draws its own
+     controls — checkboxes, radios, range thumbs, scrollbars, the search
+     field's clear button — in the matching one. Without it every native
+     control is painted light no matter what the page looks like, which is
+     why a checkbox sat white-on-white against a dark panel. It keys off
+     prefers-color-scheme, the same signal the dark overrides below use, so
+     the two can't drift apart. */
+  color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {

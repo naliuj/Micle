@@ -895,139 +895,508 @@
   overflow: visible;
 }
 
-/* ------------------------------------------------------ Reference card grid
+/* -------------------------------------------------- Reference compact table
 
-   Every mic is a card at every width, laid out as a gallery. The card
-   deliberately matches the daily board's card mode (css/styles.css, inside
-   @media (max-width: 800px)) — the same labelled chips via data-label, the
-   same full-width Polar Pattern — so a mic reads the same wherever you meet
-   it.
+   The Reference tab is a table, not a set of tiles. It reuses the daily
+   board's 7-column .board-row grid and its sticky header, but strips the
+   per-cell chrome the game needs and this doesn't: no tile borders, no
+   backgrounds, no --tile-h floor, no centring. A mic becomes one line, rows
+   butt together with a hairline between them, and every field stays in a
+   column you can run your eye down.
 
-   It's a separate rule set rather than a shared one because the two exist for
-   different reasons: card mode is how the game board survives a narrow
-   viewport, this is how the reference browses. They already differ (the
-   darker chips, the chip widths) and may diverge further. If you change chip
-   styling in one, check the other. */
+   Why not the game's tiles: a guess row is a row of results, so each cell is
+   a coloured object in its own right. Here nothing is being scored, so the
+   borders were 118 rows of decoration — they pushed the page to 10,104px
+   with roughly a sixth of that height carrying any value. */
 .board--reference {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--space-3);
-  align-items: start;
+  gap: 0;
 }
 
-/* The labels live on each chip now, and the sort pills above cover sorting,
-   so a shared column header has nothing left to do. */
-.board--reference > .board-row--header {
-  display: none;
-}
-
-.board--reference > .mic-group {
-  grid-column: 1 / -1;
-}
-
-/* The gallery gets more room than the quiz screens: 4 cards across instead
-   of 3, which alone takes about 2,200px off the page. :has() keys it to the
-   tab actually being visible, so Quiz, Order and Match keep the shared 920px
-   and no JS has to toggle a class on tab switch. */
+/* Wider than the quiz screens: the extra 260px all goes to the columns, which
+   is the difference between the long pattern lists sitting on one line and
+   wrapping to two. :has() keys it to the tab actually being visible, so Quiz,
+   Order and Match keep the shared 920px without any JS toggling a class. */
 main:has(#reference-tab:not([hidden])) {
   max-width: 1180px;
 }
 
-/* Twelve narrow tracks, so each chip can take a share that suits its value:
-   Origin and Principle split the first row, Polar Pattern gets the second to
-   itself, and the third is Manufacturer at half width with Year and Price in
-   a quarter each. A plain two-column grid left Price alone on a fourth row,
-   which cost ~2,100px across the page and looked like a missing chip; three
-   equal thirds on the bottom row were too narrow for the word MANUFACTURER,
-   which can't wrap and spilled out of its chip. */
+/* Re-weighted from the game board's ratios. The name column is widest here
+   because it carries the full "Audio-Technica ATM87R" rather than a guess,
+   Origin and Manufacturer are single words, and Year and Price are narrow
+   fixed-width numbers. Polar Pattern keeps the lion's share — the C414's
+   six-pattern list is still the longest value in the pool. */
 .board--reference > .board-row {
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  grid-template-columns: 2fr 0.8fr 1.25fr 2.2fr 1.15fr 0.5fr 0.7fr;
+  gap: var(--space-4);
+  align-items: baseline;
+  padding: 0.4rem var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.board--reference > .board-row:hover {
   background: var(--surface);
 }
 
-.board--reference > .board-row > .cell--guess {
-  grid-column: 1 / -1;
+/* .cell is built for the game: a centred flex tile with a border, a fill and
+   a --tile-h floor. All four have to go for a table line. */
+.board--reference > .board-row > .cell {
+  min-height: 0;
+  padding: 0;
   border: none;
   background: transparent;
-  padding: 0 var(--space-1) var(--space-1);
-  font-size: var(--fs-md);
-  min-height: 0;
-}
-
-/* The explicit single full-width track matters. The base .cell is a centred
-   flex box, and with display: grid its justify-content: center centres the
-   implicit track instead — so a short value like "Cardioid" sat in a narrow
-   track in the middle while long values ran full width from the left. */
-.board--reference > .board-row > .cell:not(.cell--guess) {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  justify-content: stretch;
-  align-items: start;
-  align-content: start;
-  gap: 0.1rem;
+  align-items: stretch;
+  justify-content: flex-start;
   text-align: left;
-  min-height: 3.1rem;
-  padding: var(--space-2);
-  background: var(--bg);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  color: var(--muted);
 }
 
-.board--reference > .board-row > .cell:not(.cell--guess)::before {
-  content: attr(data-label);
+/* The name is the row's subject; everything else is an attribute of it. */
+.board--reference > .board-row > .cell--guess {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Numbers align on their right edge and share a digit width, so prices and
+   years compare by length down the column. */
+.board--reference > .board-row > .cell[data-label="Year"],
+.board--reference > .board-row > .cell[data-label="Price"] {
+  text-align: right;
+  align-items: flex-end;
+  font-variant-numeric: tabular-nums;
+}
+
+/* buildHeaderCell puts the same data-label on the header cells, so the two
+   rules above align each heading over its own column. The button has to opt
+   in separately — it's a block inside the cell with its own text-align. */
+.board--reference > .board-row--header {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-2);
+}
+
+.board--reference > .board-row--header > .cell {
+  align-items: stretch;
+}
+
+.board--reference > .board-row--header .mic-sort-header {
+  text-align: inherit;
+  width: 100%;
+}
+
+/* -------------------------------------------------- Reference on a phone
+
+   Seven columns don't survive a 390px viewport, and card mode (css/styles.css,
+   @media max-width 800px) is the wrong fallback here: it gives every value a
+   labelled chip with a 3.1rem floor, which ran the tab to 27,811px. Instead
+   the row keeps its line-per-mic shape and simply wraps — the name on its own
+   line, the six values flowing after it as one muted run separated by
+   middots. The labels go with the columns, which is survivable because every
+   value says what it is: a year, a price, a country, a pattern. */
+@media (max-width: 800px) {
+  .board--reference > .board-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--space-2);
+    padding: var(--space-2) var(--space-2) var(--space-3);
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  /* .board-row--header is already display:none in card mode, but the flex rule
+     above ties it on specificity and wins on order, which switched the seven
+     column names back on as a meaningless wrapped block above the list. The
+     extra class pins it shut regardless of order. */
+  .board--reference > .board-row.board-row--header {
+    display: none;
+  }
+
+  .board--reference > .board-row > .cell--guess {
+    flex: 0 0 100%;
+    font-size: var(--fs-base);
+    padding: 0 0 0.1rem;
+  }
+
+  .board--reference > .board-row > .cell:not(.cell--guess) {
+    display: block;
+    min-height: 0;
+    padding: 0;
+    font-size: var(--fs-xs);
+  }
+
+  /* Card mode hangs the category name off each chip. Back out both that and
+     the 3-line clamp it pairs with. */
+  .board--reference > .board-row > .cell:not(.cell--guess)::before {
+    content: none;
+  }
+
+  /* Inline, not block: the middot below is an ::after on the cell, and after a
+     block-level .cell-text it would drop onto its own line inside the cell
+     instead of following the value. */
+  .board--reference > .board-row > .cell:not(.cell--guess) > .cell-text {
+    display: inline;
+    -webkit-line-clamp: none;
+    line-clamp: none;
+  }
+
+  .board--reference > .board-row > .cell:not(.cell--guess):not(:last-child)::after {
+    content: "·";
+    margin-left: var(--space-2);
+    opacity: 0.5;
+  }
+
+  /* Right-alignment is a column property; inline in a wrapped run it would
+     just push the price away from the value before it. */
+  .board--reference > .board-row > .cell[data-label="Year"],
+  .board--reference > .board-row > .cell[data-label="Price"] {
+    text-align: left;
+    align-items: stretch;
+  }
+}
+
+/* ------------------------------------------------------- Reference filters
+
+   A row of disclosure buttons, each opening a checklist below the whole bar.
+   Panels are plain blocks in normal flow rather than popovers anchored to
+   their own button: nothing to position, nothing to collide, and no ancestor
+   can clip them — the trap .board documents in css/styles.css, where an
+   overflow on one axis silently makes the element a scrollport on both.
+
+   Visual language is borrowed wholesale from the controls either side of it
+   (.country-chip below the map, .mic-sort-pill under it) so the tab reads as
+   one set of controls rather than three. */
+.mic-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.mic-filters-label {
   font-size: var(--fs-2xs);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   font-weight: 600;
-  opacity: 0.75;
+  color: var(--muted);
 }
 
-/* Keyed to the REFERENCE_FIELDS labels in js/training.js, like card mode's
-   Polar Pattern rule. If a label is renamed its chip falls back to the
-   default span below and still renders — it just loses its tuned width. */
-.board--reference > .board-row > .cell:not(.cell--guess) {
-  grid-column: span 6;
+.mic-filter-menus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
-.board--reference > .board-row > .cell[data-label="Year"],
-.board--reference > .board-row > .cell[data-label="Price"] {
-  grid-column: span 3;
+.facet-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
-/* Pattern lists run several times longer than any other value. */
-.board--reference > .board-row > .cell[data-label="Polar Pattern"] {
-  grid-column: 1 / -1;
+.facet-btn:hover { background: var(--bg); }
+
+/* Open and active are different states and can occur apart: a panel can be
+   open with nothing checked, and a facet stays filtered once closed. */
+.facet-btn[aria-expanded="true"] {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
-/* Each card sizes its own bottom row. Card width depends on how many columns
-   happen to fit, not directly on the viewport — at 800px three columns leave
-   a card ~237px wide, and a quarter of that is too narrow for a five-figure
-   price like $14,998, which can't wrap. So the card is a size container, and
-   below the threshold Manufacturer takes the full row with Year and Price
-   halving the next one: four chip rows instead of three, but nothing spills.
-   A viewport media query would get this wrong, since the same viewport can
-   produce different card widths as the column count steps. */
-.board--reference > .board-row {
-  container-type: inline-size;
+.facet-btn--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
-@container (max-width: 250px) {
-  .board--reference > .board-row > .cell[data-label="Manufacturer"] {
-    grid-column: 1 / -1;
-  }
+.facet-btn-badge {
+  font-size: var(--fs-2xs);
+  font-weight: 600;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--bg);
+  color: var(--muted);
+}
 
-  .board--reference > .board-row > .cell[data-label="Year"],
-  .board--reference > .board-row > .cell[data-label="Price"] {
-    grid-column: span 6;
+.facet-btn--active .facet-btn-badge {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.mic-filter-panels:empty { display: none; }
+
+.facet-panel {
+  margin-bottom: var(--space-3);
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* Manufacturer carries 34 options. Two columns keeps it from running a
+   third of a screen tall, and the cap turns the long tail into a scroll
+   rather than pushing the table off the page. */
+.facet-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-1) var(--space-4);
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.facet-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.25rem;
+  padding: 0 var(--space-2);
+  font-size: var(--fs-sm);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.facet-option:hover { background: var(--bg); }
+
+/* Drawn from the site's tokens rather than left to the UA.
+   accent-color alone only tints the CHECKED fill — an unchecked box keeps the
+   platform's own light-mode square, which stayed white-on-dark here however
+   the page declared its color-scheme. appearance:none plus a ::before glyph
+   is the only way to get both states right in every engine. The element stays
+   a real <input>, so the label association, keyboard behaviour and
+   screen-reader semantics are all untouched; only the painting changes. */
+.facet-option input[type="checkbox"],
+.facet-option input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  display: grid;
+  place-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.facet-option input[type="checkbox"] { border-radius: var(--radius-sm); }
+.facet-option input[type="radio"] { border-radius: 50%; }
+
+.facet-option input[type="checkbox"]:hover,
+.facet-option input[type="radio"]:hover { border-color: var(--accent); }
+
+.facet-option input:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* The glyph is --surface, not #fff. White on the dark theme's lighter accent
+   (#7fa0e0) is about 2:1 and barely legible; --surface tracks the theme and
+   lands near 6.5:1 in both — white on the light accent, near-black on the
+   dark one. */
+.facet-option input[type="checkbox"]::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.28rem;
+  border-left: 2px solid var(--surface);
+  border-bottom: 2px solid var(--surface);
+  transform: rotate(-45deg) translate(1px, -1px);
+  opacity: 0;
+}
+
+.facet-option input[type="checkbox"]:checked::before { opacity: 1; }
+
+.facet-option input[type="radio"]::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--surface);
+  opacity: 0;
+}
+
+.facet-option input[type="radio"]:checked::before { opacity: 1; }
+
+/* appearance:none takes the native focus ring with it. */
+.facet-option input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.facet-option-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.facet-option-count {
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dimmed, not hidden. An option that drops to zero under the other facets
+   still says something — and removing it would make the list jump under the
+   pointer mid-decision, and could pull the element out from under focus. */
+.facet-option--empty { opacity: 0.45; }
+
+.facet-option input:disabled { cursor: not-allowed; }
+.facet-option:has(input:disabled) { cursor: not-allowed; }
+
+/* Two <input type=range> stacked in one box. The inputs themselves are
+   pointer-transparent and only their thumbs take events, so the lower one
+   can't swallow clicks meant for the upper — the usual dual-handle trap —
+   and each stays a real range input, keyboard-operable with arrows, Home
+   and End for free. */
+.facet-range-value {
+  display: block;
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.facet-slider {
+  position: relative;
+  height: 1.75rem;
+  margin: 0 0.5rem;
+}
+
+.facet-slider-track,
+.facet-slider-fill {
+  position: absolute;
+  top: 50%;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.facet-slider-track {
+  left: 0;
+  right: 0;
+  background: var(--border);
+}
+
+.facet-slider-fill { background: var(--accent); }
+
+.facet-slider-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: none;
+  appearance: none;
+  -webkit-appearance: none;
+  pointer-events: none;
+}
+
+.facet-slider-input::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.facet-slider-input::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.facet-slider-input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--hint-bg); }
+.facet-slider-input:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--hint-bg); }
+
+.facet-slider-input::-moz-range-track { background: none; }
+
+.facet-range-reset {
+  margin-top: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+.facet-range-reset:hover { color: var(--text); }
+
+/* Reuses .set-aside-chip for each active filter — the same removable-chip
+   idiom the round-setup bar uses, rather than a second one that looks
+   almost but not quite like it. */
+.mic-active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.mic-clear-all {
+  margin-left: auto;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.mic-clear-all:hover { color: var(--text); }
+
+/* A country the current filters have emptied. It keeps its place so the row
+   doesn't reflow as you filter, but stops being a live control. */
+.country-chip--empty { opacity: 0.4; }
+.country-chip:disabled { cursor: not-allowed; }
+
+.mic-empty {
+  margin: var(--space-7) 0;
+  text-align: center;
+  color: var(--muted);
+}
+
+@media (max-width: 800px) {
+  .facet-options {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 55vh;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .mic-map-country--has-mics,
   .country-chip,
-  .mic-sort-pill {
+  .mic-sort-pill,
+  .facet-btn,
+  .facet-option input {
     transition: none;
   }
 }
