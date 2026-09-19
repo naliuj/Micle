@@ -895,21 +895,24 @@
   overflow: visible;
 }
 
-/* -------------------------------------------------- Reference compact table
+/* --------------------------------------------------- Reference tile rows
 
-   The Reference tab is a table, not a set of tiles. It reuses the daily
-   board's 7-column .board-row grid and its sticky header, but strips the
-   per-cell chrome the game needs and this doesn't: no tile borders, no
-   backgrounds, no --tile-h floor, no centring. A mic becomes one line, rows
-   butt together with a hairline between them, and every field stays in a
-   column you can run your eye down.
+   The daily board's look, compacted. Each value keeps its own bordered tile
+   on --surface, in the same 7 aligned columns, so a mic reads here the way it
+   reads when you're guessing it.
 
-   Why not the game's tiles: a guess row is a row of results, so each cell is
-   a coloured object in its own right. Here nothing is being scored, so the
-   borders were 118 rows of decoration — they pushed the page to 10,104px
-   with roughly a sixth of that height carrying any value. */
+   The one thing that doesn't carry over is --tile-h. That 4.25rem floor
+   exists so the game's guess rows stay height-matched to each other, which is
+   what makes a board of them look like a board. Nothing here is matched
+   against anything, so a one-line value gets one line: 74px per mic becomes
+   ~35px, and a screen shows about 25 mics instead of 12.
+
+   Tiles are left-aligned rather than centred, the other departure. Centring
+   is right on the board, where every cell is a short scored result; here the
+   Polar Pattern column carries things like the C414's six-pattern list, and
+   centred ragged text is materially harder to scan down a column of 118. */
 .board--reference {
-  gap: 0;
+  gap: 0.25rem;
 }
 
 /* Wider than the quiz screens: the extra 260px all goes to the columns, which
@@ -926,40 +929,36 @@ main:has(#reference-tab:not([hidden])) {
    fixed-width numbers. Polar Pattern keeps the lion's share — the C414's
    six-pattern list is still the longest value in the pool. */
 .board--reference > .board-row {
-  grid-template-columns: 2fr 0.8fr 1.25fr 2.2fr 1.15fr 0.5fr 0.7fr;
-  gap: var(--space-4);
-  align-items: baseline;
-  padding: 0.4rem var(--space-3);
-  border-bottom: 1px solid var(--border);
-}
-
-.board--reference > .board-row:hover {
-  background: var(--surface);
-}
-
-/* .cell is built for the game: a centred flex tile with a border, a fill and
-   a --tile-h floor. All four have to go for a table line. */
-.board--reference > .board-row > .cell {
-  min-height: 0;
+  grid-template-columns: 1.7fr 0.85fr 1.2fr 2.1fr 1.15fr 0.6fr 0.8fr;
+  gap: var(--space-2);
   padding: 0;
-  border: none;
-  background: transparent;
-  align-items: stretch;
-  justify-content: flex-start;
+}
+
+/* Same tile as the game, minus the floor. min-height is one line of text plus
+   its padding, so short values sit on one line and the pattern lists grow the
+   row only when they actually need to. */
+.board--reference > .board-row > .cell {
+  min-height: 1.95rem;
+  padding: 0.25rem var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  align-items: flex-start;
+  justify-content: center;
   text-align: left;
-  font-size: var(--fs-sm);
-  line-height: 1.35;
-  color: var(--muted);
+  font-size: var(--fs-xs);
+  line-height: 1.3;
 }
 
 /* The name is the row's subject; everything else is an attribute of it. */
 .board--reference > .board-row > .cell--guess {
-  color: var(--text);
   font-weight: 600;
 }
 
 /* Numbers align on their right edge and share a digit width, so prices and
-   years compare by length down the column. */
+   years compare by length down the column — worth keeping even though the
+   other tiles are left-aligned, since these two are the only columns you read
+   as quantities rather than labels. */
 .board--reference > .board-row > .cell[data-label="Year"],
 .board--reference > .board-row > .cell[data-label="Price"] {
   text-align: right;
@@ -967,18 +966,27 @@ main:has(#reference-tab:not([hidden])) {
   font-variant-numeric: tabular-nums;
 }
 
-/* buildHeaderCell puts the same data-label on the header cells, so the two
-   rules above align each heading over its own column. The button has to opt
-   in separately — it's a block inside the cell with its own text-align. */
+/* The header is a set of column labels, not a row of tiles — it has to shed
+   the chrome the rule above just gave every .cell. styles.css already resets
+   .board-row--header > .cell, but that selector ties this one on specificity
+   and loses on order, so it gets restated here rather than left to chance. */
+.board--reference > .board-row--header > .cell {
+  min-height: 0;
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  border: none;
+  background: transparent;
+  align-items: flex-start;
+}
+
 .board--reference > .board-row--header {
   border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-2);
+  margin-bottom: 0.25rem;
 }
 
-.board--reference > .board-row--header > .cell {
-  align-items: stretch;
-}
-
+/* buildHeaderCell puts the same data-label on the header cells, so the
+   right-alignment rule above lands on the Year and Price headings too. The
+   button has to opt in separately — it's a block inside the cell with its own
+   text-align. */
 .board--reference > .board-row--header .mic-sort-header {
   text-align: inherit;
   width: 100%;
@@ -1013,6 +1021,17 @@ main:has(#reference-tab:not([hidden])) {
     display: none;
   }
 
+  /* Tiles are a desktop-column device: at 390px each one would be a bordered
+     box on its own line and the tab would run past 25,000px. Here the values
+     go back to flowing as text, so every cell sheds the border, the fill and
+     the floor the tile rule gives it. */
+  .board--reference > .board-row > .cell {
+    min-height: 0;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+  }
+
   .board--reference > .board-row > .cell--guess {
     flex: 0 0 100%;
     font-size: var(--fs-base);
@@ -1021,9 +1040,9 @@ main:has(#reference-tab:not([hidden])) {
 
   .board--reference > .board-row > .cell:not(.cell--guess) {
     display: block;
-    min-height: 0;
     padding: 0;
     font-size: var(--fs-xs);
+    color: var(--muted);
   }
 
   /* Card mode hangs the category name off each chip. Back out both that and
