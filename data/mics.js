@@ -22,6 +22,10 @@
 // Multi-pattern mics with more than 3-4 switch positions are simplified to
 // their core named patterns (see individual notes) rather than enumerating
 // every intermediate switch position.
+// Boundary/PZM mics use "Half-Cardioid". Manufacturers also call this
+// hemi-cardioid or hemispherical; they're the same pattern, and spelling it
+// two ways made two mics that behave identically compare as a mismatch in
+// the game and split into separate buckets in the Reference filter.
 //
 // msrp is manufacturer's suggested retail price in whole USD, or null when
 // no credible price could be found (renders as "Unknown" in-game and never
@@ -314,7 +318,7 @@ const MIC_DB = [
     aliases: ["ATM-87R"],
     countryOfOrigin: "Japan",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Hemi-Cardioid"],
+    polarPatterns: ["Half-Cardioid"],
     switchable: false,
     releaseYear: 1993,
     msrp: 120,
