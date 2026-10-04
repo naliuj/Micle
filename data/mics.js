@@ -109,8 +109,24 @@ const MIC_DB = [
     polarPatterns: ["Omnidirectional", "Wide Cardioid", "Cardioid", "Supercardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1976,
-    msrp: 1216,
-    verificationNote: "Merged from 5 AKG C414 variants: B-ULS (1986/$1200), B-XL II (2004/$1099), XLII (2009/$1299), XLS (2009/$1249), EB (1976/no price found). Year uses the earliest and confirmed C414 EB (1976). MSRP averages the 3 unflagged prices (B-XL II, XLII, XLS) — B-ULS's estimate was excluded as unreliable, EB had no price at all.",
+    msrp: 1299, // Current Reverb price for the XLS/XLII.
+    // KNOWN COMPOSITE, held deliberately until this is split into per-variant
+    // entries. Patterns and price describe the current XLS/XLII; releaseYear is
+    // the 1976 EB. No single mic ever shipped in that combination, so don't
+    // treat any one field as describing a real variant.
+    //
+    // The research for that split, recorded so it needn't be redone:
+    //   EB (1976), B-ULS (1986), B-TL II (1993)  — 4 patterns: omni, cardioid,
+    //     hypercardioid, figure-8. (Vintage King lists the EB as a
+    //     "Four-pattern LDC Mic".)
+    //   B-XLS / B-XL II (2004)                   — 5, adding wide/soft cardioid.
+    //   XLS / XLII (2009)                        — 9 counting intermediate
+    //     positions; the 6 listed above are its named ones.
+    // Pricing the vintage variants is the hard part: AKG swapped the brass CK12
+    // capsule for nylon WITHOUT changing the model number, so EBs fetch ~$2,000
+    // (nylon) to $4,250-$6,400 (brass) with nothing on the mic to tell you which
+    // you have.
+    verificationNote: "One entry covering the 5 C414 variants in the inventory (EB, B-ULS, B-XL II, XLS, XLII). Patterns and price describe the current XLS/XLII; the year is the 1976 EB. Deliberately left as a composite pending a split into per-variant entries — see the comment above for the per-variant pattern counts. Every variant spelling stays reachable via aliases.",
   },
   {
     id: "akg-c451",
@@ -357,6 +373,35 @@ const MIC_DB = [
     verificationNote: "28mm edge-terminated dual-diaphragm capsule — actually large-diaphragm and multi-pattern, not small-diaphragm fixed-cardioid.",
   },
   {
+    id: "audix-d2",
+    manufacturer: "Audix",
+    model: "D2",
+    displayName: "Audix D2",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Dynamic",
+    polarPatterns: ["Hypercardioid"],
+    switchable: false,
+    releaseYear: 1997,
+    msrp: 189, // Sweetwater regular price, Oct 2026. RecordingHacks lists the original MSRP as $219.
+    needsVerification: false,
+  },
+  {
+    id: "audix-d4",
+    manufacturer: "Audix",
+    model: "D4",
+    displayName: "Audix D4",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Dynamic",
+    polarPatterns: ["Hypercardioid"],
+    switchable: false,
+    releaseYear: 1997,
+    msrp: 189, // Sweetwater regular price, Oct 2026. Launched at $329 (Pro Audio Review, Dec 1997); RecordingHacks lists $299.
+    needsVerification: false,
+    verificationNote: "Same $189 street price as the D2 — they're siblings, not a duplicated figure. The D4 is the lower-tuned one (VLM Type D, 40 Hz-18 kHz) for floor toms and kick; the D2 is VLM Type B with scooped mids for rack toms.",
+  },
+  {
     id: "audix-d6",
     manufacturer: "Audix",
     model: "D6",
@@ -382,6 +427,21 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2025,
     msrp: 299, // Official audixusa.com product page.
+  },
+  {
+    id: "audix-i5",
+    manufacturer: "Audix",
+    model: "i5",
+    displayName: "Audix i5",
+    aliases: [],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Dynamic",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 2004,
+    msrp: 105, // Sweetwater regular price, Oct 2026.
+    needsVerification: false,
+    verificationNote: "Year taken from the earliest located review (Pro Audio Review, Oct 2004); some retailers date general availability to March 2005. Both fall in the 2000s bucket, so only the daily game's exact hi/lo hint could be affected.",
   },
   {
     id: "audix-scx-one",
