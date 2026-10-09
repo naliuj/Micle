@@ -1274,6 +1274,23 @@ const MIC_DB = [
     verificationNote: "Capsule-swap system (interchangeable wide-cardioid/omni/hypercardioid capsules also sold); classified here by its stock cardioid capsule.",
   },
 
+  // ------------------------------------------------------------------ RCA
+  {
+    id: "rca-77dx",
+    manufacturer: "RCA",
+    model: "77-DX",
+    displayName: "RCA 77-DX",
+    aliases: ["Type 77-DX", "MI-4045"],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Ribbon",
+    polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
+    switchable: true,
+    releaseYear: 1954,
+    msrp: 2000, // Current vintage-market value, confirmed by maintainer — same basis as the vintage Neumanns. No launch-era list price could be sourced; RCA's own 1976 catalog listed MI-4045F at $425, two decades after launch.
+    needsVerification: false,
+    verificationNote: "Introduced 1954 per Wikipedia/Equipboard, succeeding the 77-D; some dealer listings say 1955 (likely first shipments). Pattern is set by a continuously variable rotating backshutter, not a switch — simplified here to the three positions RCA named on the control (N/U/B).",
+  },
+
   // -------------------------------------------------------------------- RODE
   {
     id: "rode-nt1000",

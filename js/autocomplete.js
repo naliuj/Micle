@@ -30,6 +30,17 @@ const SELECTABLE_MICS = MIC_DB.filter((m) => m.retired !== true);
 // strip below. Without these, "rode" misses RØDE and "bruel" misses Brüel & Kjær.
 const MIC_FOLD = { ø: "o", æ: "ae", œ: "oe", ß: "ss", đ: "d", ð: "d", ł: "l", þ: "th" };
 
+// Brand nicknames, keyed by the exact `manufacturer` string in data/mics.js.
+// These sit here rather than in each mic's `aliases` so that adding a mic to
+// one of these brands can't forget the nickname: "ev" reaches every
+// Electro-Voice mic, including the next one added. Accent folding and the
+// punctuation-insensitive form handle the rest ("rode" -> RØDE, "electro
+// voice" -> Electro-Voice), so this is only for names that share no letters
+// with the full spelling: "Electro-Voice" does not contain the substring "ev".
+const MIC_BRAND_ALIASES = {
+  "Electro-Voice": ["EV", "E-V", "ElectroVoice"],
+};
+
 // Fold accents so a plain-ASCII query reaches the real spelling: ü->u, é->e,
 // Ø->o, æ->ae. Players type "rode" and "bruel", not "RØDE" and "Brüel".
 function micFold(s) {
@@ -67,7 +78,19 @@ function micScore(query, mic) {
   // manufacturer is searched too: most displayNames start with the brand, but
   // not all ("Aston Origin" vs "Aston Microphones", "DPA 4006C" vs "DPA
   // Microphones"), so brand search shouldn't depend on how a name was written.
-  for (const text of [mic.displayName, mic.manufacturer, ...mic.aliases]) {
+  const brandAliases = MIC_BRAND_ALIASES[mic.manufacturer] || [];
+  for (const text of [
+    mic.displayName,
+    mic.manufacturer,
+    ...mic.aliases,
+    ...brandAliases,
+    // The nickname spliced into the full name, so a brand-plus-model query
+    // works the way it does for every other brand: scoring compares the whole
+    // query against one text at a time, so "ev re20" can only hit if some
+    // text reads "EV RE20". Brands whose displayName doesn't start with the
+    // manufacturer string are unaffected — replace() finds nothing.
+    ...brandAliases.map((a) => mic.displayName.replace(mic.manufacturer, a)),
+  ]) {
     best = Math.min(best, micRank(micNormalize(text), q));
     // Half a step worse than a literal hit, so exact spellings still sort
     // ahead of punctuation-insensitive ones.
