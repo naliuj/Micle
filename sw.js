@@ -8,7 +8,7 @@
 // CACHE_VERSION is stamped by scripts/stamp-cache-version.mjs — it's a hash
 // of every file listed below, so it changes exactly when they do. Don't edit
 // it by hand; run the script (see README's "PWA" section).
-const CACHE_VERSION = "c1d19abd5b3f";
+const CACHE_VERSION = "0f77ddbc3150";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
