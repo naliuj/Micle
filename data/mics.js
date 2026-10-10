@@ -672,7 +672,7 @@ const MIC_DB = [
     polarPatterns: ["Figure-8"],
     switchable: false,
     releaseYear: 1954,
-    msrp: 1621, // Sweetwater-listed MSRP (discounted street price is $1495).
+    msrp: 1762, // Price confirmed by maintainer (was $1,621, a Sweetwater-listed MSRP).
   },
 
   // -------------------------------------------------------- Crowley & Tripp
@@ -1268,7 +1268,7 @@ const MIC_DB = [
     operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Cardioid"],
     switchable: false,
-    releaseYear: 2015,
+    releaseYear: 2005,
     msrp: 528, // Peluso official site current MSRP, single mic w/ cardioid capsule.
     needsVerification: false,
     verificationNote: "Capsule-swap system (interchangeable wide-cardioid/omni/hypercardioid capsules also sold); classified here by its stock cardioid capsule.",
