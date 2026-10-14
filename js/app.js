@@ -503,6 +503,37 @@
       return;
     }
 
+    // A guess can score "match" on all six categories and still not be the
+    // answer, because isWinningGuess compares ids: the Audix D2 and D4 are
+    // identical on manufacturer, country, principle, pattern, year and price,
+    // differing only in frequency-response tuning, which isn't a category
+    // here. Without this the player sees six green cells and a round that
+    // doesn't end, which reads as the game being broken rather than as a
+    // two-way pick. Computed from compareGuess rather than keyed to those two
+    // ids so any future collision is covered without maintenance.
+    //
+    // Placed after the exhaustion branch deliberately — on the last guess the
+    // loss banner is the more important message, and this would only be
+    // overwritten by it anyway. The other mic is left unnamed: naming it would
+    // hand over the answer, since it's whichever one they didn't just guess.
+    const result = compareGuess(mic, target);
+    const everyCategoryMatches = CATEGORIES.every((cat) =>
+      HI_LO_KEYS.has(cat.key) ? result[cat.key].state === "match" : result[cat.key] === "match"
+    );
+    if (everyCategoryMatches) {
+      showStatus(
+        "Every category matches, but that's not the mic. Two mics in the pool are identical on all six.",
+        "note"
+      );
+    } else {
+      // Clear a note left by an earlier guess this round — otherwise it sits
+      // above a row that plainly doesn't match everything, still claiming it
+      // does. Unconditional hide is safe here: the win and loss branches have
+      // already returned, and refreshView() owns the banner the rest of the
+      // time, so a note is the only thing this can be clearing.
+      hideStatus();
+    }
+
     if (isDaily) saveDayState(daily.dayIndex, daily.state);
   }
 

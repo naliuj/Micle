@@ -452,6 +452,17 @@ main {
   border-color: var(--loss);
 }
 
+/* Informational, not a verdict — the round is still going. Uses the --hint
+   pair rather than --match or --loss for the reason given where those tokens
+   are defined: tint + border + text, never a solid fill. That matters here
+   more than anywhere else, because the only time this banner appears the row
+   directly above it is entirely green, and it must not read as a win. */
+.status-banner--note {
+  background: var(--hint-bg);
+  color: var(--hint);
+  border-color: var(--hint);
+}
+
 /* overflow must stay visible: `overflow-x: auto` forces overflow-y to compute
    to auto, which makes .board the nearest scrollport and silently defeats the
    sticky header row below. Narrow screens are handled by card mode, not scroll. */
