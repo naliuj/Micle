@@ -327,6 +327,36 @@ const MIC_DB = [
     msrp: 1695, // 1998 launch price per Mix magazine (same source as its release year).
   },
   {
+    id: "at-atm250",
+    manufacturer: "Audio-Technica",
+    model: "ATM250",
+    displayName: "Audio-Technica ATM250",
+    aliases: [],
+    countryOfOrigin: "Japan",
+    operatingPrinciple: "Dynamic",
+    polarPatterns: ["Hypercardioid"],
+    switchable: false,
+    releaseYear: 2006,
+    msrp: 229, // Current street price, Sweetwater (distributor MSRP is $320).
+    needsVerification: false,
+    verificationNote: "Introduced in the Artist Series relaunch announced at the NAMM Summer Session, July 2006, alongside the ATM710 and the dual-element ATM250DE. Hi-ENERGY neodymium element, 40Hz-15kHz, sold for kick drum and other high-SPL instrument work. Audio-Technica's US page now shows it unavailable and Sweetwater does not stock it while still taking orders, so it may be quietly end-of-life; the street price holds either way.",
+  },
+  {
+    id: "at-atm710",
+    manufacturer: "Audio-Technica",
+    model: "ATM710",
+    displayName: "Audio-Technica ATM710",
+    aliases: [],
+    countryOfOrigin: "Japan",
+    operatingPrinciple: "Condenser (Small-Diaphragm)",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 2006,
+    msrp: 259, // Street price: SoundPro MAP and ProAcoustics selling price agree (list MSRP is $367).
+    needsVerification: false,
+    verificationNote: "Handheld stage condenser from the July 2006 Artist Series relaunch, launch MSRP $299. Classified small-diaphragm on the same basis as the Neumann KMS 105, the pool's other handheld condenser. Its 80Hz high-pass filter and 10dB pad are not pattern controls, so switchable stays false. Markertek lists it lower at $219; $259 is taken as the street price because two independent retailers agree on it.",
+  },
+  {
     id: "at-atm87r",
     manufacturer: "Audio-Technica",
     model: "ATM87R",
@@ -342,6 +372,21 @@ const MIC_DB = [
     verificationNote: "A boundary/PZM-style condenser, not a handheld mic as its name might suggest.",
   },
 
+  {
+    id: "at-atm89r",
+    manufacturer: "Audio-Technica",
+    model: "ATM89R",
+    displayName: "Audio-Technica ATM89R",
+    aliases: [],
+    countryOfOrigin: "Japan",
+    operatingPrinciple: "Condenser (Small-Diaphragm)",
+    polarPatterns: ["Hypercardioid"],
+    switchable: false,
+    releaseYear: 1997,
+    msrp: 325, // Audio-Technica's last list price for the model, now discontinued.
+    needsVerification: false,
+    verificationNote: "Discontinued handheld back-electret condenser, built on the capsule assembly of the earlier 873R - hence small-diaphragm. Year is inferred: Sound on Sound reviewed it in September 1997 and no launch date is documented anywhere, so 1997 is the best available anchor; a year either side lands in the same 1990s quiz bucket. Price is Audio-Technica's own last list figure, corroborated by that review calling it the best sub-GBP-200 back-electret at then-current rates. Cardioid, subcardioid and omnidirectional elements were sold separately, but swapping them is a physical capsule change, so per the modular-capsule rule this is entered at its stock hypercardioid element and is not marked switchable.",
+  },
   // ---------------------------------------------------------------- Audix
   {
     id: "audix-adx51",
