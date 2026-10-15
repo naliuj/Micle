@@ -690,6 +690,11 @@
   // visibility/disabled guard, so it always runs the exact same code path
   // (analytics tracking included) a real click would.
   document.addEventListener("keydown", (e) => {
+    // Leave every modified key to the browser. Without this, Cmd/Ctrl+R and
+    // Cmd+Shift+R (reload, hard reload) were swallowed as the "r" shortcut and
+    // picked a random mic instead — as were Cmd+S/D/M/N/I. Shift alone is
+    // still allowed: "?" needs it. js/training.js's handlers already do this.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (els.statsModal.open) return;
 
     if (e.key === "/") {
