@@ -844,7 +844,10 @@
 
 .mic-sort-pill:hover { background: var(--bg); }
 
-.mic-sort-pill--active {
+/* :hover listed so .mic-sort-pill:hover can't replace the fill and leave
+   white text on --bg (unreadable in light mode). */
+.mic-sort-pill--active,
+.mic-sort-pill--active:hover {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
@@ -1134,7 +1137,10 @@ main:has(#reference-tab:not([hidden])) {
   color: var(--text);
 }
 
-.facet-btn--active {
+/* :hover listed so .facet-btn:hover can't replace the fill and leave white
+   text on --bg (unreadable in light mode). */
+.facet-btn--active,
+.facet-btn--active:hover {
   background: var(--accent);
   border-color: var(--accent);
   color: #fff;
