@@ -1846,17 +1846,18 @@ const MIC_DB = [
   // ------------------------------------------------------------ Telefunken
   {
     id: "telefunken-elam251e",
-    manufacturer: "Telefunken Elektroakustik",
+    manufacturer: "Telefunken",
     model: "ELA M 251E",
-    displayName: "TELEFUNKEN ELA M 251E",
-    aliases: ["ELA M 251E", "ELA M251E"],
-    countryOfOrigin: "USA",
+    displayName: "Telefunken ELA M 251E",
+    aliases: ["ELA M 251E", "ELA M251E", "ELA M 251"],
+    countryOfOrigin: "Germany",
     operatingPrinciple: "Tube",
     polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
     switchable: true,
-    releaseYear: 2001,
-    msrp: 12995, // Sweetwater regular price, Sept 2026 (was $11,995).
-    verificationNote: "Modern reissue of the vintage 1959 ELA M 251 (originally AKG-built in Austria for the German Telefunken brand — that original is a genuinely different historical product). This entry is the CURRENT reissue, hand-built in the USA by Telefunken Elektroakustik (founded 2000-2001, Connecticut). Release year (2001) and MSRP ($11,995) both maintainer-confirmed.",
+    releaseYear: 1959,
+    msrp: 21000, // Current vintage-market value, confirmed by maintainer — same basis as the vintage Neumanns.
+    needsVerification: false,
+    verificationNote: "The ORIGINAL vintage ELA M 251E, not the Telefunken Elektroakustik reissue (USA, from 2001) this entry previously described. AKG designed and built it in Vienna under a 1958 contract with Telefunken; introduced ~1959, produced to ~1962. Country is Germany per maintainer, for the Telefunken brand, although it was manufactured in Austria. The E (Export) version uses a socketed 6072 tube; the non-E 251 used an AC701K. CK12 capsule, three patterns on a body-mounted switch.",
   },
   // ------------------------------------------------------------ Warm Audio
   {
