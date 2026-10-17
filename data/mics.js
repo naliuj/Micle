@@ -566,11 +566,11 @@ const MIC_DB = [
     aliases: [],
     countryOfOrigin: "Austria",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Omnidirectional", "Cardioid", "Hypercardioid", "Figure-8"],
+    polarPatterns: ["Omnidirectional", "Cardioid", "Supercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 2019,
     msrp: 1399,
-    verificationNote: "Austrian Audio's flagship, first product (April 2019). Switchable patterns plus continuously-variable/remote control via their PolarPilot app, simplified to 4 core patterns here. $1399 is the single-mic price (a 'Dual Set' stereo pair is priced separately).",
+    verificationNote: "Austrian Audio's flagship, first product (April 2019). The on-mic switch is SUPERcardioid, not hyper: their own spec sheet reads 'figure-8, supercardioid, cardioid, omnidirectional & custom programmable'. A retailer listing claims a five-position switch with hypercardioid and wide cardioid; the manufacturer's sheet is taken as authoritative. The custom slot, and the 255 patterns the PolarPilot app can craft, are deliberately not listed. $1399 is the single-mic price (a 'Dual Set' stereo pair is priced separately).",
   },
   // --------------------------------------------------------- Bruel & Kjaer
   {
@@ -1124,11 +1124,11 @@ const MIC_DB = [
     aliases: ["M149", "M 149 Tube"],
     countryOfOrigin: "Germany",
     operatingPrinciple: "Tube",
-    polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
+    polarPatterns: ["Omnidirectional", "Wide Cardioid", "Cardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1998,
     msrp: 5995, // Sweetwater regular price, Sept 2026 (was $7,499).
-    verificationNote: "Continuously variable pattern control, simplified to 3 core named patterns.",
+    verificationNote: "Nine-position pattern switch on the front of the body: these five named patterns plus one unnamed intermediate between each. The intermediates are omitted under the same convention applied to the AKG C414 — list what the maker names, not every detent. Not continuously variable, as this note previously said.",
   },
   {
     id: "neumann-tlm170r",
@@ -1138,12 +1138,12 @@ const MIC_DB = [
     aliases: ["TLM170R", "TLM-170R"],
     countryOfOrigin: "Germany",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Omnidirectional", "Cardioid", "Hypercardioid", "Figure-8"],
+    polarPatterns: ["Omnidirectional", "Wide Cardioid", "Cardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1993,
     msrp: 3500, // Regular/MSRP price per Alto Music.
     needsVerification: false,
-    verificationNote: "5-position pattern switch; wide-angle cardioid is the one omitted.",
+    verificationNote: "Five-position pattern switch, plus a sixth position marked R that hands pattern selection to a remote N 248 supply over the phantom voltage. Neumann's product page describes the response as linear 'in each of its five polar patterns'.",
   },
   {
     id: "neumann-tlm103",
@@ -1196,12 +1196,12 @@ const MIC_DB = [
     aliases: [],
     countryOfOrigin: "Germany",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Omnidirectional", "Cardioid", "Figure-8"],
+    polarPatterns: ["Omnidirectional", "Wide Cardioid", "Cardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1988,
     msrp: 3295, // Street price, sold as 'U 89 i' (current continuation of the U89 line).
     needsVerification: false,
-    verificationNote: "5-position pattern switch simplified to 3 core named patterns.",
+    verificationNote: "Five-position pattern switch. Neumann's U 89 data sheet names the positions 'omnidirectional, wide angle, cardioid, hypercardioid, figure-8', and their product-history page likewise credits it with five pickup patterns.",
   },
 
   {
@@ -1212,11 +1212,11 @@ const MIC_DB = [
     aliases: ["USM69", "USM 69"],
     countryOfOrigin: "Germany",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
-    polarPatterns: ["Omnidirectional", "Cardioid", "Hypercardioid", "Figure-8"],
+    polarPatterns: ["Omnidirectional", "Wide Cardioid", "Cardioid", "Hypercardioid", "Figure-8"],
     switchable: true,
     releaseYear: 1979,
     msrp: 2500,
-    verificationNote: "Stereo MS/XY mic, two 5-position capsules (simplified to 4 core patterns here). Year (1979) is the documented SM69/USM69 lineage origin. MSRP confirmed by maintainer.",
+    verificationNote: "Stereo MS/XY mic: two capsules, each with its own 5-position rotary selector offering omni, wide cardioid, cardioid, hypercardioid and figure-8, per Neumann's product page. Year (1979) is the documented SM69/USM69 lineage origin. MSRP confirmed by maintainer.",
   },
   {
     id: "neumann-sm23c",
