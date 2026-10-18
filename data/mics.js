@@ -1435,6 +1435,21 @@ const MIC_DB = [
     msrp: 269, // Sweetwater regular price, Sept 2026 (was $369).
     needsVerification: false,
   },
+  {
+    id: "rode-ntk",
+    manufacturer: "RØDE",
+    model: "NTK",
+    displayName: "RØDE NTK",
+    aliases: ["NT-K", "NTK1", "RODE NTK"],
+    countryOfOrigin: "Australia",
+    operatingPrinciple: "Tube",
+    polarPatterns: ["Cardioid"],
+    switchable: false,
+    releaseYear: 2001,
+    msrp: 619, // Sweetwater current listing, Oct 2026 — from search results; sale vs regular price not confirmed on the page.
+    needsVerification: false,
+    verificationNote: "Valve LDC with a 1-inch capsule; the multi-pattern sibling is the K2. 2001 per Sound On Sound's July 2001 review and Micpedia. Not in the studio inventory spreadsheet; added at maintainer request.",
+  },
 
   // ---------------------------------------------------------------- Royer
   {
