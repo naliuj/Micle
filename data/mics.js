@@ -1639,8 +1639,8 @@ const MIC_DB = [
     polarPatterns: ["Lobar (Shotgun)", "Figure-8"],
     switchable: false,
     releaseYear: 2003,
-    msrp: 3799,
-    verificationNote: "Fixed M-S stereo shotgun: a mid capsule (lobar/shotgun blending to supercardioid at low frequencies, MKH 416-derived) plus a side figure-8 capsule, decoded to stereo in post — not a player-switchable pattern. MSRP ($3799) is a mid-estimate from dealer street pricing, maintainer-confirmed as acceptable in place of an official Sennheiser MSRP.",
+    msrp: 1799, // Price confirmed by maintainer (was $3,799, a dealer street-price mid-estimate).
+    verificationNote: "Fixed M-S stereo shotgun: a mid capsule (lobar/shotgun blending to supercardioid at low frequencies, MKH 416-derived) plus a side figure-8 capsule, decoded to stereo in post — not a player-switchable pattern. MSRP ($1,799) confirmed by maintainer; replaces an earlier $3,799 mid-estimate from dealer street pricing.",
   },
   // ---------------------------------------------------------------- Shure
   {
