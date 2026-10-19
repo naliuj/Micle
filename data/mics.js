@@ -1689,17 +1689,17 @@ const MIC_DB = [
   {
     id: "shure-beta91",
     manufacturer: "Shure",
-    model: "Beta 91",
-    displayName: "Shure Beta 91",
-    aliases: ["Beta 91A"],
+    model: "Beta 91A",
+    displayName: "Shure Beta 91A",
+    aliases: ["Beta 91", "SM91"],
     countryOfOrigin: "USA",
     operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Half-Cardioid"],
     switchable: false,
-    releaseYear: 1994,
-    msrp: 269, // Sweetwater regular price for the current Beta 91A, Sept 2026 (was $391).
+    releaseYear: 2010,
+    msrp: 269, // Shure's MAP for the Beta 91A; list MSRP is $345.
     needsVerification: false,
-    verificationNote: "Merged from the original Beta 91 (year estimate ~mid-1990s, $437 confirmed; discontinued when the 91A released in 2010) and Beta 91A (2010, confirmed, $345). Year uses the original's uncertain estimate; MSRP averages both confirmed prices.",
+    verificationNote: "The current Beta 91A, not the original Beta 91 this entry used to describe. The 91A is a revised 91 — updated capsule, with the preamp and XLR connector integrated into the body instead of hanging off a cable. Year is a November 2010 release date, carried by one retailer listing and matching the date a maintainer had already confirmed; no Shure announcement could be sourced, so treat 2010 as well-supported rather than official. The id stays shure-beta91 because it is shipped in data/schedule.js and ids are permanent. NOTE: the source inventory holds BOTH an original Beta 91 (Studio E) and a Beta 91A (Studio Ops floating gear), so the original is currently unrepresented in the pool — split this the way the DPA 4011/4011C was if it should be playable.",
   },
   {
     id: "shure-beta98ds",
