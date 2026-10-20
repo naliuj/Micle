@@ -170,6 +170,10 @@ const CONFUSABLE_GROUPS = [
   ["bk-4007", "dpa-4007"],
   ["audix-d2", "audix-d4", "audix-d6", "audix-d6x"],
   ["austrianaudio-oc7", "austrianaudio-od5"],
+  ["austrianaudio-cc8", "austrianaudio-cc8-sc"],
+  // Both long shotgun tubes. The MKH 40 is deliberately absent — it is a
+  // short cardioid pencil and reads as a different shape entirely.
+  ["sennheiser-mkh816", "sennheiser-mkh418s"],
   ["earthworks-qtc40", "earthworks-sr69", "earthworks-tc25", "earthworks-tc40k"],
   ["neumann-km184", "neumann-km84", "warmaudio-wa84"],
   ["neumann-u87ai", "neumann-u89", "neumann-u67"],
