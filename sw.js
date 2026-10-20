@@ -16,7 +16,12 @@ const CACHE_NAME = `micle-${CACHE_VERSION}`;
 // schedule rebase — and activate() below deletes every cache that isn't the
 // current one. Sharing that cache would re-download ~2MB of photos on every
 // deploy. This key only changes if the image scheme itself does.
-const PHOTO_CACHE = "micle-photos-v1";
+//
+// v2: v1 could hold cached 404s, because the fetch handler used to store any
+// response rather than only a successful one. Those never expired here, so
+// the bump is the only way to clear them. Bump this again only to invalidate
+// every photo on purpose — a routine deploy must not.
+const PHOTO_CACHE = "micle-photos-v2";
 const PHOTO_PREFIX = "/images/mics/";
 
 const PRECACHE_URLS = [
@@ -90,8 +95,19 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        const copy = response.clone();
-        caches.open(target).then((cache) => cache.put(event.request, copy));
+        // Only cache a real hit. Without this a 404 is stored like a success
+        // and then served from cache forever — and for photos "forever" is
+        // literal, because PHOTO_CACHE is deliberately never version-busted.
+        // One request made while a photo was missing (mid-rebuild, or before
+        // build-photos had run) would poison that URL permanently, and the
+        // page would show the "Photo coming soon" placeholder for a mic that
+        // has a perfectly good file on the server.
+        if (response.ok) {
+          const copy = response.clone();
+          // put() rejects on a 206 and a few other shapes; swallow it rather
+          // than raising an unhandled rejection on every such request.
+          caches.open(target).then((cache) => cache.put(event.request, copy)).catch(() => {});
+        }
         return response;
       })
       .catch(() => caches.match(event.request))
