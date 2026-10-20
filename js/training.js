@@ -115,10 +115,6 @@
     referenceSheet: document.getElementById("reference-detail-sheet"),
     referenceSheetBody: document.getElementById("reference-sheet-body"),
     referenceSheetClose: document.getElementById("reference-sheet-close"),
-    lightbox: document.getElementById("photo-lightbox"),
-    lightboxImg: document.getElementById("photo-lightbox-img"),
-    lightboxCaption: document.getElementById("photo-lightbox-caption"),
-    lightboxClose: document.getElementById("photo-lightbox-close"),
   };
 
   // Same filter as js/app.js's eligibleMics() — duplicated rather than
@@ -2889,29 +2885,6 @@
   }
 
   // The detail body is identical in the side panel and the small-screen sheet,
-  // `caption` is optional on purpose. The Reference panel names the mic; the
-  // quiz must not, because the name is the answer to the question on screen.
-  function openLightbox(src, alt, caption) {
-    els.lightboxImg.src = src;
-    els.lightboxImg.alt = alt;
-    els.lightboxCaption.textContent = caption || "";
-    els.lightboxCaption.hidden = !caption;
-    els.lightbox.showModal();
-  }
-
-  // Wraps an <img> in a button so the enlargement is reachable by keyboard
-  // and announced, rather than being a click target only a mouse can find.
-  function makeZoomable(img, label, caption) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "photo-zoom";
-    btn.setAttribute("aria-label", label);
-    img.replaceWith(btn);
-    btn.appendChild(img);
-    btn.addEventListener("click", () => openLightbox(img.src, img.alt, caption));
-    return btn;
-  }
-
   // so it is built once and adopted by whichever container is in play.
   function buildMicDetail(mic) {
     const wrap = document.createElement("div");
@@ -3157,23 +3130,7 @@
     renderReference();
   });
 
-  // Clearing the src frees the decoded bitmap once the dialog is shut. It is
-  // done ONLY here, never from a "close" event: at least one engine fires a
-  // spurious close while showModal() is opening the dialog, which stripped
-  // the image a tick after it was set and left an open lightbox showing a
-  // broken-image icon. openLightbox sets the src before showing, so there is
-  // no stale frame to guard against anyway.
-  function closeLightbox() {
-    els.lightbox.close();
-    els.lightboxImg.removeAttribute("src");
-  }
-
-  els.lightboxClose.addEventListener("click", closeLightbox);
-  els.lightbox.addEventListener("click", (e) => {
-    // Backdrop click. The <img> and caption sit inside, so a click landing on
-    // the dialog element itself can only be the area around them.
-    if (e.target === els.lightbox) closeLightbox();
-  });
+  bindLightbox();
 
   els.referenceSheetClose.addEventListener("click", () => selectMic(null));
   // Covers both the Escape key and a click on the backdrop, so the selection

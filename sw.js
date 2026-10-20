@@ -8,7 +8,7 @@
 // CACHE_VERSION is stamped by scripts/stamp-cache-version.mjs — it's a hash
 // of every file listed below, so it changes exactly when they do. Don't edit
 // it by hand; run the script (see README's "PWA" section).
-const CACHE_VERSION = "2eb80151e442";
+const CACHE_VERSION = "74460d35e490";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 // Photos live in their own cache, deliberately NOT stamped with
@@ -29,6 +29,7 @@ const PRECACHE_URLS = [
   "/js/storage.js",
   "/js/compare.js",
   "/js/autocomplete.js",
+  "/js/lightbox.js",
   "/js/schedule.js",
   "/js/devtools.js",
   "/js/app.js",

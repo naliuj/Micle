@@ -900,3 +900,95 @@ main {
   .site-header h1 { font-size: var(--fs-md); }
   .header-actions { gap: var(--space-3); }
 }
+
+/* --------------------------------------------------------- Photo lightbox */
+
+/* Shared: Study Mode's Reference panel and quiz, and the daily game's
+   end-of-round reveal. Lives here rather than in training.css because the
+   daily game only loads this stylesheet. */
+
+/* A button wrapper so enlarging is reachable by keyboard, not just mouse.
+   Contents-display keeps it out of the layout entirely: the img inside goes
+   on sizing exactly as it did before being wrapped. */
+.photo-zoom {
+  display: contents;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: zoom-in;
+}
+.photo-zoom:focus-visible {
+  outline: none;
+}
+.photo-zoom:focus-visible img {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.photo-lightbox {
+  max-width: min(90vw, 36rem);
+  max-height: 90vh;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  overflow: visible;
+}
+.photo-lightbox::backdrop { background: rgb(0 0 0 / 0.72); }
+.photo-lightbox-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Leaves room for the caption and padding so a tall photo can't push the
+     dialog past the viewport. */
+  max-height: calc(90vh - 5rem);
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.photo-lightbox-caption {
+  margin: var(--space-3) 0 0;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+/* ------------------------------------------------- End-of-round reveal */
+
+/* The answer mic, shown once the round is over. Sits between the result
+   banner and the share button so it reads as part of the ending, while
+   staying compact enough that the guess board is still on screen. */
+.answer-reveal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  margin-bottom: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.answer-reveal-photo {
+  display: block;
+  width: 5.5rem;
+  height: 5.5rem;
+  flex: none;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  cursor: zoom-in;
+}
+.answer-reveal-text { min-width: 0; }
+.answer-reveal-name {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.answer-reveal-spec {
+  margin: var(--space-1) 0 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  line-height: 1.4;
+}
