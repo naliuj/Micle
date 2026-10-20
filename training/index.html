@@ -301,6 +301,18 @@
     </section>
   </main>
 
+  <!-- Outside every tab section on purpose. A <dialog> nested inside a
+       hidden section still inherits [hidden]'s display:none, so showModal()
+       promotes it to the top layer and it renders 0x0 — which is exactly
+       what happened when the quiz opened one living in #reference-tab. -->
+  <dialog id="photo-lightbox" class="photo-lightbox">
+    <button type="button" id="photo-lightbox-close" class="mic-sheet-close" aria-label="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <img id="photo-lightbox-img" class="photo-lightbox-img" alt="" />
+    <p id="photo-lightbox-caption" class="photo-lightbox-caption"></p>
+  </dialog>
+
   <footer class="site-footer">
     <p>Study Mode quizzes you on the same mic pool as the daily game. <a href="/">Back to Micle</a>.</p>
   </footer>
