@@ -120,6 +120,9 @@
         </div>
         <div class="quiz-question">
           <p id="quiz-prompt" class="quiz-prompt"></p>
+          <!-- Only the "Identify the mic" category fills this; every other
+               category leaves it hidden and the layout is unchanged. -->
+          <div id="quiz-photo" class="quiz-photo" hidden></div>
           <div id="quiz-options" class="quiz-options" role="group" aria-label="Answer choices"></div>
         </div>
         <!-- The visual feedback renders inline inside the chosen option, but

@@ -2089,3 +2089,23 @@ main:has(#reference-tab:not([hidden])) {
 .mic-map-hit--exact {
   stroke-width: 0;
 }
+
+/* The image prompt for "Identify the mic". Capped well below the options
+   column so the four answers stay on screen with it — the photo is the
+   question, but the answers are what you act on. */
+.quiz-photo {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--space-4);
+}
+.quiz-photo-img {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}

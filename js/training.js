@@ -45,6 +45,7 @@
     quizStreak: document.getElementById("quiz-streak"),
     quizProgressFill: document.getElementById("quiz-progress-fill"),
     quizPrompt: document.getElementById("quiz-prompt"),
+    quizPhoto: document.getElementById("quiz-photo"),
     quizOptions: document.getElementById("quiz-options"),
     quizFeedback: document.getElementById("quiz-feedback"),
     quizActionNote: document.getElementById("quiz-action-note"),
@@ -551,6 +552,11 @@
   // about it would just be "which one was it," not real recall, so it's
   // disabled rather than left to quietly produce a trivial round.
   function isCategoryTrivial(cat, targetPool) {
+    // A category that can only be built around some mics is trivial when the
+    // filtered pool contains none of them. "Identify the mic" needs a photo,
+    // and its getValue is the mic id — distinct for every mic — so the count
+    // below would never catch an all-unphotographed pool on its own.
+    if (cat.canAsk && !targetPool.some((m) => cat.canAsk(m))) return true;
     const distinctValues = new Set(targetPool.map(cat.getValue).filter((v) => v != null));
     return distinctValues.size <= 1;
   }
@@ -709,6 +715,31 @@
     beginRound(missed);
   }
 
+  // The image prompt for the "Identify the mic" category. Every other
+  // category leaves the slot empty, so the quiz looks exactly as it did.
+  function renderQuizPhoto(q) {
+    els.quizPhoto.innerHTML = "";
+    els.quizPhoto.hidden = !q.photo;
+    if (!q.photo) return;
+
+    const photo = typeof MIC_PHOTOS !== "undefined" ? MIC_PHOTOS[q.mic.id] : null;
+    const img = document.createElement("img");
+    img.className = "quiz-photo-img";
+    img.src = `/images/mics/${q.mic.id}-800.webp`;
+    // Never name the mic here — the alt text would hand over the answer to
+    // anyone using a screen reader, or reading the DOM.
+    img.alt = "Photograph of the microphone to identify";
+    if (photo) {
+      img.width = photo.w;
+      img.height = photo.h;
+    }
+    img.decoding = "async";
+    img.addEventListener("error", () => {
+      img.src = "/images/mics/_placeholder-light-800.webp";
+    }, { once: true });
+    els.quizPhoto.appendChild(img);
+  }
+
   function renderQuestion() {
     const q = session[currentIndex];
     answeredCurrent = false;
@@ -719,6 +750,7 @@
     els.quizStreak.hidden = streak < 2;
     els.quizStreak.textContent = `${streak} in a row`;
     els.quizPrompt.textContent = q.prompt;
+    renderQuizPhoto(q);
     els.quizFeedback.textContent = "";
     els.quizActionNote.textContent = "";
     els.quizNextBtn.disabled = true;
