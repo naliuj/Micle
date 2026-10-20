@@ -744,18 +744,20 @@
    different colour tokens: --hint (#8fb0f0) and --accent (#7fa0e0) are almost
    the same blue in dark mode, so a token swap left the active country
    invisible. Opacity differentiates reliably in both schemes. */
+/* Dimmed to context. The markers below carry which countries are in the
+   pool; the shapes just say where in the world you are looking. */
 .mic-map-country--has-mics {
   fill: var(--accent);
-  fill-opacity: 0.4;
+  fill-opacity: 0.15;
   pointer-events: auto;
   cursor: pointer;
   transition: fill-opacity 120ms ease;
 }
 
-.mic-map-country--has-mics:hover { fill-opacity: 0.7; }
+.mic-map-country--has-mics:hover { fill-opacity: 0.32; }
 
 .mic-map-country--active {
-  fill-opacity: 1;
+  fill-opacity: 0.45;
   stroke: var(--text);
   stroke-width: 2;
 }
@@ -1322,6 +1324,7 @@ main:has(#reference-tab:not([hidden])) {
 
 @media (prefers-reduced-motion: reduce) {
   .mic-map-country--has-mics,
+  .mic-map-marker,
   .facet-btn,
   .facet-option input {
     transition: none;
@@ -1330,8 +1333,10 @@ main:has(#reference-tab:not([hidden])) {
 
 /* The map is decoration below the card-mode breakpoint: at 375px Denmark is
    about 5x3 CSS px and Austria 8x3, so it can't be a usable control there.
-   It stays visible as orientation — which country lit up when you tapped a
-   chip — but the chips do the work. */
+   It stays visible as orientation — which country lit up when you picked one
+   — but the Country facet does the work. The markers shrink to stay separable
+   at that width (see sizeMarkers), which makes them small rather than
+   tappable, and that is the right trade here. */
 @media (max-width: 520px) {
   .mic-map-figure {
     padding: var(--space-2);
@@ -2108,4 +2113,28 @@ main:has(#reference-tab:not([hidden])) {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   background: var(--bg);
+}
+
+/* One dot per pool country, identical for all of them. Landmass area is an
+   accident of geography — Germany is 4.7x Denmark's and that ratio holds at
+   every map size — so size here would encode nothing but acreage. r and
+   stroke-width are set in JS from the rendered scale, because viewBox units
+   would shrink these to specks on a phone. */
+.mic-map-marker {
+  fill: var(--accent);
+  /* A ring in the page background, so two dots that nearly touch in the
+     Denmark/Germany/Austria cluster still read as two. */
+  stroke: var(--surface);
+  cursor: pointer;
+  pointer-events: all;
+  transition: fill-opacity 120ms ease;
+}
+.mic-map-marker--active {
+  fill: var(--text);
+}
+/* A country the current filters have emptied: still placed, clearly inert. */
+.mic-map-marker--empty {
+  fill-opacity: 0.25;
+  pointer-events: none;
+  cursor: default;
 }

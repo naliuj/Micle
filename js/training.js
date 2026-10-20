@@ -2332,6 +2332,15 @@
       // emptied country goes inert exactly like a mic-less one already does.
       path.classList.toggle("mic-map-country--has-mics", n > 0 || selected);
     });
+    els.referenceMap.querySelectorAll(".mic-map-marker").forEach((dot) => {
+      const n = counts.get(dot.dataset.country) || 0;
+      const selected = chosen.includes(dot.dataset.country);
+      dot.classList.toggle("mic-map-marker--active", selected);
+      // An emptied country's dot goes inert and dim, matching what its
+      // landmass already does.
+      dot.classList.toggle("mic-map-marker--empty", n === 0 && !selected);
+      dot.dataset.count = String(n);
+    });
     els.referenceMap.querySelectorAll(".mic-map-hit").forEach((hit) => {
       const n = counts.get(hit.dataset.country) || 0;
       const live = n > 0 || chosen.includes(hit.dataset.country);
@@ -2391,13 +2400,148 @@
       exact.appendChild(hit);
     });
     svg.appendChild(exact);
+    buildMarkerLayer(svg, originals);
+  }
+
+  // Some countries sit in the wrong place when computed — not because the
+  // maths is wrong, but because the "fattest part" of a shape isn't always
+  // where a reader expects the dot. Checked visually; add an entry here, in
+  // viewBox units, for any that look off.
+  const MARKER_OVERRIDES = {};
+
+  // Where to put a country's dot. A bounding-box centre is wrong for exactly
+  // the countries that matter — Russia's lands in Kazakhstan, and the USA's
+  // gets dragged toward Canada by Alaska — so this approximates the pole of
+  // inaccessibility: grid-sample the shape, keep the points actually inside
+  // it, and take the one furthest from any outside sample. That lands in the
+  // lower 48 rather than the Pacific, and on Jutland rather than in the gap
+  // between the Danish islands.
+  function markerPoint(path, svg) {
+    const override = MARKER_OVERRIDES[path.dataset.country];
+    if (override) return override;
+
+    const b = path.getBBox();
+    const STEPS = 24;
+    const dx = b.width / STEPS;
+    const dy = b.height / STEPS;
+    const pt = svg.createSVGPoint();
+    const inside = [];
+    const grid = [];
+    for (let i = 0; i <= STEPS; i++) {
+      grid[i] = [];
+      for (let j = 0; j <= STEPS; j++) {
+        pt.x = b.x + i * dx;
+        pt.y = b.y + j * dy;
+        const hit = path.isPointInFill(pt);
+        grid[i][j] = hit;
+        if (hit) inside.push({ i, j, x: pt.x, y: pt.y });
+      }
+    }
+    // A country too thin to catch any sample (possible at a coarse grid)
+    // falls back to the bbox centre — better a rough dot than none.
+    if (inside.length === 0) return { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+
+    let best = inside[0];
+    let bestScore = -1;
+    for (const p of inside) {
+      // Chebyshev distance to the nearest sample that isn't inside, capped so
+      // the scan stays cheap. Larger means deeper into the landmass.
+      let d = 0;
+      while (d < STEPS) {
+        d += 1;
+        let touchedEdge = false;
+        for (let a = -d; a <= d && !touchedEdge; a++) {
+          for (let bb = -d; bb <= d; bb++) {
+            if (Math.max(Math.abs(a), Math.abs(bb)) !== d) continue;
+            const gi = p.i + a;
+            const gj = p.j + bb;
+            if (gi < 0 || gj < 0 || gi > STEPS || gj > STEPS || !grid[gi][gj]) {
+              touchedEdge = true;
+              break;
+            }
+          }
+        }
+        if (touchedEdge) break;
+      }
+      if (d > bestScore) {
+        bestScore = d;
+        best = p;
+      }
+    }
+    return { x: best.x, y: best.y };
+  }
+
+  // One dot per pool country, all the same size. Landmass area is an accident
+  // of geography — Germany is 4.7x Denmark and no amount of enlarging the map
+  // changes that ratio — so the dot, not the shape, carries the signal.
+  function buildMarkerLayer(svg, originals) {
+    const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    layer.setAttribute("class", "mic-map-markers");
+    originals.forEach((p) => {
+      const { x, y } = markerPoint(p, svg);
+      const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      dot.setAttribute("class", "mic-map-marker");
+      dot.setAttribute("cx", String(x));
+      dot.setAttribute("cy", String(y));
+      dot.dataset.country = p.dataset.country;
+      layer.appendChild(dot);
+    });
+    svg.appendChild(layer);
+    sizeMarkers();
+    // r lives in viewBox units, so a fixed value would shrink with the map —
+    // ~3px on a phone. Recomputed from the rendered scale instead, and kept in
+    // step as the map resizes.
+    if (typeof ResizeObserver !== "undefined") {
+      new ResizeObserver(sizeMarkers).observe(els.referenceMap);
+    }
+  }
+
+  const MARKER_RADIUS_PX = 5;
+
+  function sizeMarkers() {
+    const svg = els.referenceMap.querySelector(".mic-map-svg");
+    if (!svg) return;
+    const width = svg.getBoundingClientRect().width;
+    if (!width) return;
+    const viewBoxWidth = svg.viewBox.baseVal.width || 2000;
+    const unitsPerPx = viewBoxWidth / width;
+
+    const dots = [...svg.querySelectorAll(".mic-map-marker")];
+    if (dots.length === 0) return;
+
+    // Cap the radius at just under half the tightest gap between any two
+    // markers, so they can never merge into a blob. Constant pixel size alone
+    // isn't enough: marker size holds as the map shrinks but the distance
+    // between them doesn't, and at 375px Denmark and Germany are 4.2px apart.
+    // Self-tuning rather than a breakpoint — it stays correct for whatever
+    // countries are in the pool, at any map size.
+    let minGapPx = Infinity;
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i + 1; j < dots.length; j++) {
+        const dx = (+dots[i].getAttribute("cx") - +dots[j].getAttribute("cx")) / unitsPerPx;
+        const dy = (+dots[i].getAttribute("cy") - +dots[j].getAttribute("cy")) / unitsPerPx;
+        minGapPx = Math.min(minGapPx, Math.hypot(dx, dy));
+      }
+    }
+    const radiusPx = Math.min(MARKER_RADIUS_PX, minGapPx * 0.45);
+    const r = radiusPx * unitsPerPx;
+
+    dots.forEach((dot) => {
+      dot.setAttribute("r", String(r));
+      // The separating ring has to scale with the dot or it swamps it when
+      // the map is small.
+      dot.setAttribute("stroke-width", String(r * 0.34));
+    });
   }
 
   // The hit halo makes a country clickable well outside its own coastline, so
   // without a label you can't tell which one you're about to get.
   function bindMapLabel() {
     const show = (e) => {
-      const hit = e.target.closest(".mic-map-hit");
+      // Markers sit above the hit layer, so they are the likeliest thing
+      // under the cursor — matching only .mic-map-hit left the most obvious
+      // target with no label.
+      const hit = e.target.closest(".mic-map-hit, .mic-map-marker");
       if (!hit) return hide();
       const n = hit.dataset.count || "0";
       els.referenceMapLabel.textContent = `${hit.dataset.country} · ${n}`;
