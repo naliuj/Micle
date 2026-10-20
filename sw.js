@@ -8,8 +8,16 @@
 // CACHE_VERSION is stamped by scripts/stamp-cache-version.mjs — it's a hash
 // of every file listed below, so it changes exactly when they do. Don't edit
 // it by hand; run the script (see README's "PWA" section).
-const CACHE_VERSION = "bf4a744dde1e";
+const CACHE_VERSION = "63e4224528de";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
+
+// Photos live in their own cache, deliberately NOT stamped with
+// CACHE_VERSION. CACHE_NAME changes on every content edit — a mic price, a
+// schedule rebase — and activate() below deletes every cache that isn't the
+// current one. Sharing that cache would re-download ~2MB of photos on every
+// deploy. This key only changes if the image scheme itself does.
+const PHOTO_CACHE = "micle-photos-v1";
+const PHOTO_PREFIX = "/images/mics/";
 
 const PRECACHE_URLS = [
   "/",
@@ -27,6 +35,12 @@ const PRECACHE_URLS = [
   "/js/pwa.js",
   "/training/",
   "/training/index.html",
+  // The manifest only, never the images themselves: cache.addAll is
+  // all-or-nothing, so one missing photo would kill offline entirely, and
+  // precaching ~2MB would make install slow for a feature most visitors to
+  // the daily game never open. The fetch handler caches photos as they're
+  // viewed instead.
+  "/data/photos.js",
   "/css/training.css",
   "/js/quiz.js",
   "/js/order.js",
@@ -50,7 +64,13 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME && key !== PHOTO_CACHE)
+            .map((key) => caches.delete(key))
+        )
+      )
       .then(() => self.clients.claim())
   );
 });
@@ -58,13 +78,19 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   // Only same-origin GETs — never intercept the Umami analytics beacon or
   // any other cross-origin request.
-  if (event.request.method !== "GET" || new URL(event.request.url).origin !== location.origin) return;
+  const url = new URL(event.request.url);
+  if (event.request.method !== "GET" || url.origin !== location.origin) return;
+
+  // Photos are routed to the long-lived cache, but still network-first like
+  // everything else: filenames aren't content-hashed, so cache-first would
+  // serve a re-shot photo stale forever with no way to bust it.
+  const target = url.pathname.startsWith(PHOTO_PREFIX) ? PHOTO_CACHE : CACHE_NAME;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        caches.open(target).then((cache) => cache.put(event.request, copy));
         return response;
       })
       .catch(() => caches.match(event.request))

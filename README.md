@@ -92,6 +92,39 @@ scripts/
 2. Run `node scripts/build-schedule.mjs` — new eligible mics only enter rotation in the *next* generation appended after they're added, never retroactively inserted into an already-written generation (that's what keeps past days stable). If the schedule already has enough buffer left, this is a no-op; run with `--buffer-days=0` to force a fresh top-up sooner if you want the new mic in rotation without waiting ~2 years.
 3. Commit `data/mics.js` and `data/schedule.js` together.
 
+### Photos
+
+Study Mode's Reference tab shows a photo per mic. Shooting and adding one:
+
+1. Shoot **square (1:1)**, mic centred on a white background, and edit to a
+   consistent crop — the frame is square everywhere it's used, so a tall mic
+   in a square photo wants the same vertical margin as its neighbours or the
+   grid reads unevenly.
+2. Name the file **exactly the mic's `id`** (`akg-c414.png`, not `akg-414.png`)
+   and drop it in the shared Drive folder's `Photos/Edited/Done`.
+3. Run the build, pointing it at that folder:
+   ```
+   python3 scripts/build-photos.py "~/Downloads/Micle Photos/Photos/Edited/Done"
+   ```
+   It writes `images/mics/{id}-320.webp` (list thumbnail) and `{id}-800.webp`
+   (detail panel), regenerates `data/photos.js`, and **reports any file whose
+   name matches no mic id rather than guessing** — fuzzy matching is what once
+   let two misnamed files hide while their mics looked unphotographed. Reruns
+   skip anything already newer than its source; `--force` re-encodes everything.
+4. Commit `images/mics/` and `data/photos.js` together, then run
+   `node scripts/stamp-cache-version.mjs`.
+
+A mic absent from `data/photos.js` renders a drawn placeholder and makes no
+request, so a partly-shot pool costs nothing. The masters are 2048px PNGs
+(~830 KB each); at 320/800 WebP the whole set is about 2 MB, which is why the
+originals are never committed.
+
+**Photos are cached separately.** `sw.js` puts them in `micle-photos-v1`, not
+the `CACHE_VERSION`-stamped cache, because `activate` deletes every cache that
+isn't the current one — sharing it would re-download every photo on each
+deploy. They're also deliberately **not** in `PRECACHE_URLS`: `cache.addAll` is
+all-or-nothing, so one missing photo would break offline entirely.
+
 **`needsVerification: true`** keeps a mic playable as an autocomplete/decoy option but excludes it from ever being picked as *today's answer* until you flip the flag to `false` and re-run the schedule script — this protects against a shaky release year **or MSRP** silently producing a wrong hi/lo hint for players. A `null` msrp on its own is safe and does *not* require this flag — the game just shows "Unknown" and skips the hi/lo hint for that guess (see `compareMsrp` in `js/compare.js`). Flag it when you have a *number* you're not confident in (a guessed/inferred/single-source price), not just when the price is missing entirely.
 
 **Never delete or reuse an `id`** once it has appeared in `data/schedule.js`'s `order` — that breaks the historical record of past puzzles. If an entry turns out to be wrong, correct its fields in place instead.
