@@ -221,26 +221,50 @@
            table below as you type rather than opening a listbox to pick from,
            so the combobox roles it used to carry would promise a popup that
            no longer exists. type="search" gets the native clear button. -->
-      <div class="guess-form">
-        <div class="guess-row">
-          <label for="reference-input" class="visually-hidden">Search microphones</label>
-          <input
-            id="reference-input"
-            name="reference-search"
-            type="search"
-            placeholder="Search microphones…"
-            autocomplete="off"
-            data-lpignore="true"
-            data-1p-ignore
-            data-bwignore
-            data-form-type="other"
-            data-protonpass-ignore="true"
-          />
+      <!-- Search, sort and view on one line. These were three separate strips
+           with their own uppercase labels; position carries what the labels
+           used to, and the row reads as one control surface instead of three. -->
+      <div class="mic-toolbar">
+        <label for="reference-input" class="visually-hidden">Search microphones</label>
+        <input
+          id="reference-input"
+          name="reference-search"
+          type="search"
+          placeholder="Search microphones…"
+          autocomplete="off"
+          data-lpignore="true"
+          data-1p-ignore
+          data-bwignore
+          data-form-type="other"
+          data-protonpass-ignore="true"
+        />
+        <!-- Shown only where there are no clickable column headers: gallery at
+             any width, and list below 800px. See renderReference(). -->
+        <div id="reference-sort" class="mic-sort" hidden>
+          <button type="button" id="reference-sort-btn" class="mic-sort-btn" aria-expanded="false" aria-controls="reference-sort-menu">
+            <span id="reference-sort-current">Name ↑</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div id="reference-sort-menu" class="mic-sort-menu" role="group" aria-label="Sort by" hidden></div>
+        </div>
+        <!-- Icon-only: two options with aria-pressed need no text labels. -->
+        <div id="reference-view-toggle" class="mic-view-toggle" role="group" aria-label="View">
+          <button type="button" class="mic-view-btn" data-view="list" aria-pressed="false" aria-label="List view" title="List view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          </button>
+          <button type="button" class="mic-view-btn mic-view-btn--active" data-view="gallery" aria-pressed="true" aria-label="Gallery view" title="Gallery view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
         </div>
       </div>
+      <!-- The map is the visual way into country filtering; the Country facet
+           button below is the exhaustive one. Capped in height so the controls
+           and the first mics clear the fold. -->
+      <!-- The label is a sibling of #reference-map, not a child: buildMapSvg
+           assigns innerHTML on that element and would wipe it out. -->
       <div class="mic-map">
         <div id="reference-map" class="mic-map-figure"></div>
-        <div id="reference-chips" class="country-chips" role="group" aria-label="Filter by country"></div>
+        <p id="reference-map-label" class="mic-map-label" hidden></p>
       </div>
       <div id="reference-detail">
         <!-- Both rows are filled by js/training.js: the menus from the FACETS
@@ -248,8 +272,7 @@
              stays hidden until something is on, so an unfiltered tab is one
              line of controls, not two. -->
         <div class="mic-filters">
-          <span id="reference-filter-label" class="mic-filters-label">Filter</span>
-          <div id="reference-filter-menus" class="mic-filter-menus" role="group" aria-labelledby="reference-filter-label"></div>
+          <div id="reference-filter-menus" class="mic-filter-menus" role="group" aria-label="Filter"></div>
         </div>
         <!-- Panels live outside the button strip and render as plain blocks
              under the whole bar rather than popovers anchored to their own
@@ -257,13 +280,20 @@
              clip them if the strip ever gains an overflow. -->
         <div id="reference-filter-panels" class="mic-filter-panels"></div>
         <div id="reference-active-filters" class="mic-active-filters" role="group" aria-label="Active filters" hidden></div>
-        <div id="reference-sort" class="mic-sort" hidden>
-          <span id="reference-sort-label" class="mic-sort-label">Sort</span>
-          <div id="reference-sort-pills" class="mic-sort-pills" role="group" aria-labelledby="reference-sort-label"></div>
-        </div>
         <p id="reference-status" class="visually-hidden" role="status" aria-live="polite"></p>
         <p id="reference-empty" class="mic-empty" hidden></p>
-        <div id="reference-board" class="board board--reference" hidden></div>
+        <!-- The list and the detail panel sit side by side above 900px and
+             stack below it, where the panel becomes a <dialog> sheet instead. -->
+        <div id="reference-layout" class="mic-layout">
+          <div id="reference-board" class="board board--reference" hidden></div>
+          <aside id="reference-detail-panel" class="mic-detail" hidden aria-live="polite"></aside>
+        </div>
+        <dialog id="reference-detail-sheet" class="mic-detail-sheet">
+          <button type="button" id="reference-sheet-close" class="mic-sheet-close" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+          <div id="reference-sheet-body"></div>
+        </dialog>
       </div>
     </section>
   </main>
@@ -273,6 +303,9 @@
   </footer>
 
   <script src="/data/mics.js"></script>
+  <!-- Study Mode only. The daily game has no use for photos and its payload
+       shouldn't grow for a feature it doesn't render. -->
+  <script src="/data/photos.js"></script>
   <script src="/data/worldmap.js"></script>
   <script src="/js/storage.js"></script>
   <script src="/js/compare.js"></script>

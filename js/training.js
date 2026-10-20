@@ -103,10 +103,17 @@
     referenceEmpty: document.getElementById("reference-empty"),
     referenceBoard: document.getElementById("reference-board"),
     referenceMap: document.getElementById("reference-map"),
-    referenceChips: document.getElementById("reference-chips"),
+    referenceMapLabel: document.getElementById("reference-map-label"),
     referenceSort: document.getElementById("reference-sort"),
-    referenceSortPills: document.getElementById("reference-sort-pills"),
+    referenceSortBtn: document.getElementById("reference-sort-btn"),
+    referenceSortCurrent: document.getElementById("reference-sort-current"),
+    referenceSortMenu: document.getElementById("reference-sort-menu"),
     referenceStatus: document.getElementById("reference-status"),
+    referenceViewToggle: document.getElementById("reference-view-toggle"),
+    referenceDetail: document.getElementById("reference-detail-panel"),
+    referenceSheet: document.getElementById("reference-detail-sheet"),
+    referenceSheetBody: document.getElementById("reference-sheet-body"),
+    referenceSheetClose: document.getElementById("reference-sheet-close"),
   };
 
   // Same filter as js/app.js's eligibleMics() — duplicated rather than
@@ -1710,7 +1717,16 @@
     },
     sortKey: "name",
     sortDir: "asc",
+    // "list" | "gallery" — a standing preference, restored from storage so a
+    // student who prefers photos isn't re-picking the gallery every visit.
+    mode: loadReferenceViewMode(),
+    selectedId: null,
   };
+  // 800px, not the 900px the detail panel uses — this tracks the breakpoint
+  // where css/training.css drops .board-row--header to display:none, which is
+  // a different question from where the detail panel has room to sit beside
+  // the list. Two queries because they are two independent facts.
+  const HAS_TABLE_HEADERS = window.matchMedia("(min-width: 801px)");
   let referenceMapBuilt = false;
   let openFacetKey = null;
 
@@ -1741,12 +1757,14 @@
       format: (v) => PRINCIPLE_ABBR[v] || v,
     },
     { key: "pattern", label: "Polar pattern", kind: "list", values: (m) => m.polarPatterns },
-    // Country deliberately has no dropdown button. The chips under the map are
-    // already a multi-select country control with counts, sitting directly
-    // above the table — a seventh button would be a second control for one
-    // piece of state, which is the thing the set-aside list argues against.
-    // It stays a facet here so it filters, counts and clears like the others.
-    { key: "country", label: "Country", kind: "list", values: (m) => [m.countryOfOrigin], control: "chips" },
+    // Country is an ordinary facet button like the rest. It used to be special
+    // — a strip of chips under the map — on the argument that a button would
+    // be a second control for one piece of state. That strip was heavier than
+    // the pills either side of it and read as its own system, so the button is
+    // now the control and the map is the visual way in: click a country to
+    // filter, open the facet to see all eight with counts. One state, one
+    // list, plus a shortcut.
+    { key: "country", label: "Country", kind: "list", values: (m) => [m.countryOfOrigin] },
     {
       key: "year",
       label: "Year",
@@ -1890,32 +1908,16 @@
     // data-country hook and stays clickable; syncCountryScope greys out the
     // ones the current filters empty, rather than removing them.
     els.referenceMap.innerHTML = buildWorldMapSvg(isoCountsFor(referencePool()));
+    buildHitLayer();
+    bindMapLabel();
     els.referenceMap.addEventListener("click", (e) => {
       const path = e.target.closest("[data-country]");
       if (path) selectCountry(path.dataset.country);
     });
-    buildCountryChips();
     buildFacetControls();
     renderReference();
   }
 
-  function buildCountryChips() {
-    els.referenceChips.innerHTML = "";
-    facetVocabulary(FACETS.find((f) => f.key === "country")).forEach((value) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "country-chip";
-      btn.dataset.country = value;
-      btn.setAttribute("aria-pressed", "false");
-      const name = document.createElement("span");
-      name.textContent = value;
-      const count = document.createElement("span");
-      count.className = "country-chip-count";
-      btn.append(name, " ", count);
-      btn.addEventListener("click", () => selectCountry(value));
-      els.referenceChips.appendChild(btn);
-    });
-  }
 
   // ------------------------------------------------------ Facet bar + panels
 
@@ -1926,7 +1928,7 @@
   function buildFacetControls() {
     els.referenceFilterMenus.innerHTML = "";
     els.referenceFilterPanels.innerHTML = "";
-    FACETS.filter((f) => f.control !== "chips").forEach((facet) => {
+    FACETS.forEach((facet) => {
       const btnId = `facet-btn-${facet.key}`;
       const panelId = `facet-panel-${facet.key}`;
 
@@ -2286,17 +2288,10 @@
     const counts = countFacetValues(base, facet);
     const chosen = referenceView.filters.country;
 
-    els.referenceChips.querySelectorAll(".country-chip").forEach((chip) => {
-      const value = chip.dataset.country;
-      const n = counts.get(value) || 0;
-      const selected = chosen.includes(value);
-      chip.setAttribute("aria-pressed", String(selected));
-      chip.querySelector(".country-chip-count").textContent = String(n);
-      chip.disabled = n === 0 && !selected;
-      chip.classList.toggle("country-chip--empty", n === 0);
-    });
-
-    els.referenceMap.querySelectorAll("[data-country]").forEach((path) => {
+    // .mic-map-country only — the invisible hit paths added by buildHitLayer()
+    // also carry data-country, and giving them --active would hand them the
+    // 2px --text stroke that rule paints and make them visible.
+    els.referenceMap.querySelectorAll(".mic-map-country[data-country]").forEach((path) => {
       const value = path.dataset.country;
       const n = counts.get(value) || 0;
       const selected = chosen.includes(value);
@@ -2305,6 +2300,88 @@
       // emptied country goes inert exactly like a mic-less one already does.
       path.classList.toggle("mic-map-country--has-mics", n > 0 || selected);
     });
+    els.referenceMap.querySelectorAll(".mic-map-hit").forEach((hit) => {
+      const n = counts.get(hit.dataset.country) || 0;
+      const live = n > 0 || chosen.includes(hit.dataset.country);
+      // Mirror the visible path's inertness, or a dead country would still
+      // swallow clicks through its oversized halo.
+      hit.style.pointerEvents = live ? "all" : "none";
+      hit.dataset.count = String(n);
+    });
+  }
+
+  // Denmark renders 3.5x2.3 CSS px, Austria 5.5x1.9 — far under any usable
+  // target size, and they sit on top of each other. The visible paths can't
+  // simply take a fat transparent stroke, because stroke is already spent on
+  // their borders (and on the 2px --text outline --active paints), so each
+  // clickable country gets an invisible twin whose only job is to be big.
+  //
+  // Appended after the visible map and sorted LARGEST FIRST, so the smallest
+  // country ends up last in document order. SVG hit-testing takes the topmost
+  // match, which is how Denmark keeps its halo instead of losing every pixel
+  // of it to Germany.
+  function buildHitLayer() {
+    const svg = els.referenceMap.querySelector(".mic-map-svg");
+    if (!svg) return;
+    const originals = [...svg.querySelectorAll(".mic-map-country[data-country]")];
+    const byArea = originals
+      .map((p) => {
+        const b = p.getBBox();
+        return { p, area: b.width * b.height };
+      })
+      .sort((a, b) => b.area - a.area);
+
+    const layer = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    layer.setAttribute("class", "mic-map-hits");
+    byArea.forEach(({ p }) => {
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hit.setAttribute("d", p.getAttribute("d"));
+      hit.setAttribute("class", "mic-map-hit");
+      hit.dataset.country = p.dataset.country;
+      layer.appendChild(hit);
+    });
+    svg.appendChild(layer);
+
+    // A third pass of exact, un-expanded outlines on top of the halos.
+    // Without it the halos cannibalise each other: Denmark and Austria sit on
+    // either side of Germany, and once they were topmost their halos covered
+    // Germany's actual landmass — measured, it fell from a 37px² target to
+    // 4x4px, worse than before any of this. Now a click on a country's own
+    // body always belongs to that country, and halos only claim the sea and
+    // the countries that aren't in the pool.
+    const exact = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    exact.setAttribute("class", "mic-map-exacts");
+    originals.forEach((p) => {
+      const hit = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      hit.setAttribute("d", p.getAttribute("d"));
+      hit.setAttribute("class", "mic-map-hit mic-map-hit--exact");
+      hit.dataset.country = p.dataset.country;
+      exact.appendChild(hit);
+    });
+    svg.appendChild(exact);
+  }
+
+  // The hit halo makes a country clickable well outside its own coastline, so
+  // without a label you can't tell which one you're about to get.
+  function bindMapLabel() {
+    const show = (e) => {
+      const hit = e.target.closest(".mic-map-hit");
+      if (!hit) return hide();
+      const n = hit.dataset.count || "0";
+      els.referenceMapLabel.textContent = `${hit.dataset.country} · ${n}`;
+      els.referenceMapLabel.hidden = false;
+      // Positioned against .mic-map, which is the label's offset parent.
+      const box = els.referenceMapLabel.parentElement.getBoundingClientRect();
+      els.referenceMapLabel.style.left = `${e.clientX - box.left}px`;
+      els.referenceMapLabel.style.top = `${e.clientY - box.top}px`;
+    };
+    const hide = () => {
+      els.referenceMapLabel.hidden = true;
+    };
+    els.referenceMap.addEventListener("pointermove", show);
+    els.referenceMap.addEventListener("pointerleave", hide);
+    // A tap shouldn't leave the label stranded on screen afterwards.
+    els.referenceMap.addEventListener("click", hide);
   }
 
   function renderFilterChips() {
@@ -2425,18 +2502,37 @@
     renderReference();
   }
 
+  // One dropdown rather than a strip of pills. Same SORT_PILLS table and the
+  // same constant-column suppression — only the presentation changed, so a
+  // sort that would be a no-op (Origin inside a single-country view) still
+  // never appears as an option.
   function renderSortPills(constant) {
-    els.referenceSortPills.innerHTML = "";
-    SORT_PILLS.filter(({ key }) => !constant.has(key)).forEach(({ key, label }) => {
+    const options = SORT_PILLS.filter(({ key }) => !constant.has(key));
+    const current = options.find(({ key }) => key === referenceView.sortKey);
+    const arrow = referenceView.sortDir === "asc" ? "↑" : "↓";
+    els.referenceSortCurrent.textContent = current ? `${current.label} ${arrow}` : "Sort";
+
+    els.referenceSortMenu.innerHTML = "";
+    options.forEach(({ key, label }) => {
       const btn = document.createElement("button");
       btn.type = "button";
       const active = referenceView.sortKey === key;
-      btn.className = active ? "mic-sort-pill mic-sort-pill--active" : "mic-sort-pill";
+      btn.className = active ? "mic-sort-option mic-sort-option--active" : "mic-sort-option";
       btn.setAttribute("aria-pressed", String(active));
-      btn.textContent = active ? `${label} ${referenceView.sortDir === "asc" ? "↑" : "↓"}` : label;
-      btn.addEventListener("click", () => setSort(key));
-      els.referenceSortPills.appendChild(btn);
+      // The arrow rides the active option so the menu shows direction too —
+      // clicking the active one flips it, the same as the pills did.
+      btn.textContent = active ? `${label} ${arrow}` : label;
+      btn.addEventListener("click", () => {
+        setSort(key);
+        closeSortMenu();
+      });
+      els.referenceSortMenu.appendChild(btn);
     });
+  }
+
+  function closeSortMenu() {
+    els.referenceSortMenu.hidden = true;
+    els.referenceSortBtn.setAttribute("aria-expanded", "false");
   }
 
   // No debounce on any of this. 118 rows of 7 cells is well inside the
@@ -2455,19 +2551,50 @@
     renderFilterChips();
 
     const empty = mics.length === 0;
-    // A sort control over nothing reads as a broken table.
-    els.referenceSort.hidden = empty;
     els.referenceBoard.hidden = empty;
     els.referenceEmpty.hidden = !empty;
+
+    // The sort control only appears where there is nothing clickable to sort
+    // by: gallery has no header row at any width, and list loses its header to
+    // display:none below 800px. In desktop list view buildHeaderCell already
+    // renders sortable column headers, and a second control for the same state
+    // is the duplication this tab had too much of. SORT_PILLS' own comment
+    // described exactly this rule; nothing ever enforced it.
+    const headersClickable = referenceView.mode === "list" && HAS_TABLE_HEADERS.matches;
+    // A sort control over nothing reads as a broken table.
+    els.referenceSort.hidden = empty || headersClickable;
+    if (els.referenceSort.hidden) closeSortMenu();
+
+    // A selection that the current filters have excluded would leave the panel
+    // describing a mic that isn't on screen, so drop it.
+    if (referenceView.selectedId && !mics.some((m) => m.id === referenceView.selectedId)) {
+      referenceView = { ...referenceView, selectedId: null };
+    }
+
+    const gallery = referenceView.mode === "gallery";
+    els.referenceBoard.classList.toggle("board", !gallery);
+    els.referenceBoard.classList.toggle("board--reference", !gallery);
+    els.referenceBoard.classList.toggle("mic-gallery", gallery);
+    syncViewToggle();
 
     if (empty) {
       els.referenceEmpty.textContent = emptyMessage();
       els.referenceBoard.innerHTML = "";
     } else {
       renderSortPills(constant);
-      renderMicTable(mics, constant);
+      if (gallery) renderMicGallery(mics);
+      else renderMicTable(mics, constant);
     }
+    renderMicDetail();
     announceReference(mics.length);
+  }
+
+  function syncViewToggle() {
+    [...els.referenceViewToggle.querySelectorAll(".mic-view-btn")].forEach((btn) => {
+      const on = btn.dataset.view === referenceView.mode;
+      btn.setAttribute("aria-pressed", String(on));
+      btn.classList.toggle("mic-view-btn--active", on);
+    });
   }
 
   function emptyMessage() {
@@ -2519,6 +2646,11 @@
 
     const headerRow = document.createElement("div");
     headerRow.className = "board-row board-row--header";
+    // Spacer over the thumbnail column. Not a .cell — a header cell here would
+    // draw a border and a sort affordance over a column that has neither.
+    const thumbSpacer = document.createElement("div");
+    thumbSpacer.setAttribute("aria-hidden", "true");
+    headerRow.appendChild(thumbSpacer);
     headerRow.appendChild(buildHeaderCell({ label: "Microphone", sortKey: "name" }, constant, "cell cell--guess cell--header"));
     REFERENCE_FIELDS.forEach((f) => headerRow.appendChild(buildHeaderCell(f, constant, "cell cell--header")));
     frag.appendChild(headerRow);
@@ -2539,6 +2671,147 @@
 
     els.referenceBoard.innerHTML = "";
     els.referenceBoard.appendChild(frag);
+  }
+
+  // Same filtered, sorted set as the table — only the drawing differs. Group
+  // headings are kept so a manufacturer sort still reads as grouped.
+  function renderMicGallery(mics) {
+    const frag = document.createDocumentFragment();
+    buildMicRows(mics, referenceView.sortKey, referenceView.sortDir).forEach((entry) => {
+      if (entry.type === "group") {
+        const group = document.createElement("div");
+        group.className = "mic-group mic-group--gallery";
+        group.textContent = `${entry.label} · ${entry.count}`;
+        frag.appendChild(group);
+        return;
+      }
+      const mic = entry.mic;
+      const tile = document.createElement("button");
+      tile.type = "button";
+      tile.className = "mic-tile";
+      tile.dataset.micId = mic.id;
+      if (mic.id === referenceView.selectedId) tile.classList.add("mic-tile--selected");
+      tile.appendChild(buildMicThumb(mic, "320"));
+      const name = document.createElement("span");
+      name.className = "mic-tile-name";
+      name.textContent = mic.displayName;
+      const meta = document.createElement("span");
+      meta.className = "mic-tile-meta";
+      meta.textContent = `${mic.countryOfOrigin} · ${mic.releaseYear}`;
+      tile.append(name, meta);
+      frag.appendChild(tile);
+    });
+    els.referenceBoard.innerHTML = "";
+    els.referenceBoard.appendChild(frag);
+  }
+
+  // The detail body is identical in the side panel and the small-screen sheet,
+  // so it is built once and adopted by whichever container is in play.
+  function buildMicDetail(mic) {
+    const wrap = document.createElement("div");
+    wrap.className = "mic-detail-body";
+
+    const photo = typeof MIC_PHOTOS !== "undefined" ? MIC_PHOTOS[mic.id] : null;
+    if (photo) {
+      const img = document.createElement("img");
+      img.className = "mic-detail-photo";
+      img.src = `/images/mics/${mic.id}-800.webp`;
+      img.alt = `Photo of the ${mic.displayName}`;
+      img.width = photo.w;
+      img.height = photo.h;
+      img.decoding = "async";
+      // Same fallback as the thumbnail, but to the real placeholder art —
+      // at this size its caption is legible and worth the request.
+      img.addEventListener("error", () => {
+        img.src = "/images/mics/_placeholder-light-800.webp";
+        img.alt = `No photo of the ${mic.displayName} available`;
+      }, { once: true });
+      wrap.appendChild(img);
+    } else {
+      // At this size the caption is legible, so the real placeholder art is
+      // used. <picture> picks the theme without any JS watching the scheme.
+      const pic = document.createElement("picture");
+      const dark = document.createElement("source");
+      dark.media = "(prefers-color-scheme: dark)";
+      dark.srcset = "/images/mics/_placeholder-dark-800.webp";
+      const img = document.createElement("img");
+      img.className = "mic-detail-photo";
+      img.src = "/images/mics/_placeholder-light-800.webp";
+      img.alt = `No photo of the ${mic.displayName} yet`;
+      img.width = 800;
+      img.height = 800;
+      img.decoding = "async";
+      pic.append(dark, img);
+      wrap.appendChild(pic);
+    }
+
+    const title = document.createElement("h3");
+    title.className = "mic-detail-name";
+    title.textContent = mic.displayName;
+    wrap.appendChild(title);
+
+    const dl = document.createElement("dl");
+    dl.className = "mic-detail-specs";
+    // Patterns are spelled out in full here rather than abbreviated the way
+    // the table cell does — the panel has the room, and this is the view a
+    // student reads to actually learn the mic.
+    const specs = [
+      ["Manufacturer", mic.manufacturer],
+      ["Origin", mic.countryOfOrigin],
+      ["Principle", mic.operatingPrinciple],
+      ["Polar pattern", formatPatterns(mic)],
+      ["Year", String(mic.releaseYear)],
+      ["Price", formatPrice(mic)],
+    ];
+    specs.forEach(([label, value]) => {
+      const dt = document.createElement("dt");
+      dt.textContent = label;
+      const dd = document.createElement("dd");
+      dd.textContent = value;
+      dl.append(dt, dd);
+    });
+    wrap.appendChild(dl);
+    return wrap;
+  }
+
+  // Above 900px the panel is always on screen, so an empty state is needed —
+  // otherwise the column is a blank gap until something is clicked.
+  function renderMicDetail() {
+    // Looked up against referencePool() rather than MIC_DB so a selection can
+    // never resolve to a mic the Reference tab doesn't list in the first place.
+    const mic = referenceView.selectedId
+      ? referencePool().find((m) => m.id === referenceView.selectedId) || null
+      : null;
+    const wide = window.matchMedia("(min-width: 900px)").matches;
+
+    if (wide) {
+      if (els.referenceSheet.open) els.referenceSheet.close();
+      els.referenceDetail.hidden = false;
+      els.referenceDetail.innerHTML = "";
+      if (mic) {
+        els.referenceDetail.appendChild(buildMicDetail(mic));
+      } else {
+        const hint = document.createElement("p");
+        hint.className = "mic-detail-hint";
+        hint.textContent = "Pick a mic to see its photo and full spec.";
+        els.referenceDetail.appendChild(hint);
+      }
+      return;
+    }
+
+    els.referenceDetail.hidden = true;
+    if (!mic) {
+      if (els.referenceSheet.open) els.referenceSheet.close();
+      return;
+    }
+    els.referenceSheetBody.innerHTML = "";
+    els.referenceSheetBody.appendChild(buildMicDetail(mic));
+    if (!els.referenceSheet.open) els.referenceSheet.showModal();
+  }
+
+  function selectMic(id) {
+    referenceView = { ...referenceView, selectedId: id };
+    renderReference();
   }
 
   function buildHeaderCell(field, constant, className) {
@@ -2564,9 +2837,49 @@
     return cell;
   }
 
+  // A photo when data/photos.js lists one, a CSS placeholder otherwise.
+  // `size` is "320" for list thumbnails or "800" for the detail panel.
+  //
+  // The placeholder is drawn rather than fetched at thumbnail size. Julian's
+  // _placeholder-*.webp carries a "Photo coming soon" caption sized for a
+  // 1000px canvas, which at 40px is an illegible smudge — and a CSS box costs
+  // no request, which matters when a third of the pool is still unshot.
+  function buildMicThumb(mic, size) {
+    const photo = typeof MIC_PHOTOS !== "undefined" ? MIC_PHOTOS[mic.id] : null;
+    if (!photo) {
+      const empty = document.createElement("div");
+      empty.className = "mic-thumb mic-thumb--empty";
+      empty.setAttribute("aria-hidden", "true");
+      return empty;
+    }
+    const img = document.createElement("img");
+    img.className = "mic-thumb";
+    img.src = `/images/mics/${mic.id}-${size}.webp`;
+    img.alt = "";
+    // Intrinsic dimensions up front so nothing reflows as photos arrive — the
+    // reason data/photos.js carries w/h at all.
+    img.width = photo.w;
+    img.height = photo.h;
+    img.loading = "lazy";
+    img.decoding = "async";
+    // Degrade to the drawn placeholder instead of a broken-image icon. Two
+    // real cases: offline with this particular photo not yet in the cache,
+    // and a manifest that lists a file a failed build never wrote.
+    img.addEventListener("error", () => {
+      const empty = document.createElement("div");
+      empty.className = "mic-thumb mic-thumb--empty";
+      empty.setAttribute("aria-hidden", "true");
+      if (img.parentNode) img.replaceWith(empty);
+    }, { once: true });
+    return img;
+  }
+
   function buildMicRow(mic) {
     const row = document.createElement("div");
     row.className = "board-row";
+    row.dataset.micId = mic.id;
+    if (mic.id === referenceView.selectedId) row.classList.add("board-row--selected");
+    row.appendChild(buildMicThumb(mic, "320"));
     const nameCell = document.createElement("div");
     nameCell.className = "cell cell--guess";
     nameCell.textContent = mic.displayName;
@@ -2589,6 +2902,69 @@
   // through micMatchesQuery (js/autocomplete.js), the same matcher the daily
   // game's guess input ranks with — so "ksm", "rode" and "u89" find the same
   // mics in both places and the two can't drift apart.
+  // Delegated, because the board is rebuilt wholesale on every render — per-row
+  // listeners would have to be re-attached each time and would leak.
+  els.referenceBoard.addEventListener("click", (e) => {
+    const target = e.target.closest("[data-mic-id]");
+    if (!target || !els.referenceBoard.contains(target)) return;
+    // Clicking the selected mic again clears it, so the panel can be dismissed
+    // without hunting for a close button on a wide screen.
+    selectMic(target.dataset.micId === referenceView.selectedId ? null : target.dataset.micId);
+  });
+
+  els.referenceSortBtn.addEventListener("click", () => {
+    const open = els.referenceSortMenu.hidden;
+    els.referenceSortMenu.hidden = !open;
+    els.referenceSortBtn.setAttribute("aria-expanded", String(open));
+  });
+
+  // Same guard the facet panels use: a focusout with no relatedTarget fires
+  // when a click lands on something unfocusable, and closing on it would eat
+  // the click before it reached the option.
+  els.referenceSort.addEventListener("focusout", (e) => {
+    if (!e.relatedTarget) return;
+    if (!els.referenceSort.contains(e.relatedTarget)) closeSortMenu();
+  });
+  els.referenceSort.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !els.referenceSortMenu.hidden) {
+      closeSortMenu();
+      els.referenceSortBtn.focus();
+    }
+  });
+
+  // Crossing the header breakpoint changes whether a sort control is needed
+  // at all, so re-render rather than leaving a stale one on screen.
+  HAS_TABLE_HEADERS.addEventListener("change", () => {
+    if (!els.referenceTab.hidden) renderReference();
+  });
+
+  els.referenceViewToggle.addEventListener("click", (e) => {
+    const btn = e.target.closest(".mic-view-btn");
+    if (!btn) return;
+    const mode = btn.dataset.view;
+    if (mode === referenceView.mode) return;
+    referenceView = { ...referenceView, mode };
+    saveReferenceViewMode(mode);
+    renderReference();
+  });
+
+  els.referenceSheetClose.addEventListener("click", () => selectMic(null));
+  // Covers both the Escape key and a click on the backdrop, so the selection
+  // can never stay set while the sheet that shows it is shut.
+  els.referenceSheet.addEventListener("close", () => {
+    if (referenceView.selectedId) selectMic(null);
+  });
+  els.referenceSheet.addEventListener("click", (e) => {
+    if (e.target === els.referenceSheet) els.referenceSheet.close();
+  });
+
+  // The panel and the sheet are the same selection rendered two ways, so a
+  // resize across the breakpoint has to re-render or the detail ends up in the
+  // container that is currently hidden.
+  window.matchMedia("(min-width: 900px)").addEventListener("change", () => {
+    if (!els.referenceTab.hidden) renderMicDetail();
+  });
+
   els.referenceInput.addEventListener("input", () => {
     referenceView = { ...referenceView, query: els.referenceInput.value };
     renderReference();
