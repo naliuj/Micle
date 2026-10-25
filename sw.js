@@ -41,11 +41,11 @@ const PRECACHE_URLS = [
   "/js/pwa.js",
   "/training/",
   "/training/index.html",
-  // The manifest only, never the images themselves: cache.addAll is
-  // all-or-nothing, so one missing photo would kill offline entirely, and
-  // precaching ~2MB would make install slow for a feature most visitors to
-  // the daily game never open. The fetch handler caches photos as they're
-  // viewed instead.
+  // The manifest only, never the images themselves: precaching is
+  // all-or-nothing (see precache() below), so one missing photo would kill
+  // offline entirely, and precaching ~2MB would make install slow for a
+  // feature most visitors to the daily game never open. The fetch handler
+  // caches photos as they're viewed instead.
   "/data/photos.js",
   "/css/training.css",
   "/js/quiz.js",
@@ -60,10 +60,43 @@ const PRECACHE_URLS = [
   "/icons/apple-touch-icon.png",
 ];
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)).then(() => self.skipWaiting())
+// cache.addAll() would be the obvious call here, but its fetches go through
+// the browser's ordinary HTTP cache. GitHub Pages serves this site with
+// max-age=600, so for ten minutes after a deploy a returning visitor can
+// install a brand-new CACHE_NAME and fill it with the PREVIOUS version's
+// bytes — a cache that is new by name and stale by content, which then
+// survives until the next deploy. That is not theoretical: it is why
+// js/app.js kept coming back without its newest changes during development,
+// reporting deliveryType "cache" and transferSize 0 on a fresh load.
+//
+// cache: "reload" forces each request to the network and updates the HTTP
+// cache on the way past, so the precache matches what was just deployed.
+//
+// Kept all-or-nothing like addAll in the sense that matters: a non-ok
+// response rejects, install fails, and the previous worker stays in charge
+// rather than activating over a cache with a file missing from it.
+//
+// Unlike addAll it does leave the entries it had already written behind. That
+// litter is never served — reaching the fetch handler requires a worker that
+// activated, which requires a complete install under this same CACHE_NAME —
+// and clearing it would be the worse trade: when only sw.js changed,
+// CACHE_NAME is unchanged, so the cache being written into is the live one
+// the active worker is still serving from. Its entries have just been
+// refreshed from the network, so they are good; deleting them would strip a
+// working installation of its offline copy over a transient fetch failure.
+async function precache() {
+  const cache = await caches.open(CACHE_NAME);
+  await Promise.all(
+    PRECACHE_URLS.map(async (url) => {
+      const response = await fetch(url, { cache: "reload" });
+      if (!response.ok) throw new Error(`precache ${url} → ${response.status}`);
+      await cache.put(url, response);
+    })
   );
+}
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(precache().then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (event) => {
