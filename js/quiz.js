@@ -178,9 +178,17 @@ const CONFUSABLE_GROUPS = [
   ["rode-nt2a", "rode-nt1000", "rode-ntk"],
   ["earthworks-qtc40", "earthworks-sr69", "earthworks-tc25", "earthworks-tc40k"],
   ["neumann-km184", "neumann-km84", "warmaudio-wa84"],
-  ["neumann-u87ai", "neumann-u89", "neumann-u67"],
+  // The TLM 67 is the U 67's body with the tube swapped out, down to the
+  // tapered grille and the badge position — at thumbnail size it is the U 87.
+  ["neumann-u87ai", "neumann-u89", "neumann-u67", "neumann-tlm67"],
   ["royer-r121", "royer-r122"],
   ["shure-ksm27", "shure-ksm44"],
+  // Aston's tumbled-steel pair: the same wave-mesh head and the same body,
+  // differing only in length. Nothing in a photo separates them.
+  ["aston-origin", "aston-spirit"],
+  // Blue's yoke-mounted rectangles — same silhouette, same round mesh head,
+  // and colour is the only tell, which a grey-ish thumbnail can lose.
+  ["blue-cactus", "blue-blueberry"],
 ];
 
 // id -> Set of the ids it must never share a question with. Built once at

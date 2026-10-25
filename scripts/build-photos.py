@@ -20,6 +20,8 @@ Why Python rather than a .mjs like the other build scripts: this needs an
 image library, and the project deliberately has no package.json. Pillow is
 already a dependency of scripts/parse_inventory.py's openpyxl toolchain.
 
+Two mics have no master of their own and reuse another's — see ALIASES.
+
 A file whose name doesn't match a mic id in data/mics.js is REPORTED AND
 SKIPPED, never fuzzy-matched. Fuzzy matching is exactly what let two misnamed
 files (akg-414, audiotechnica-m87r) sit unnoticed for weeks while the mics
@@ -44,6 +46,21 @@ MANIFEST = ROOT / "data" / "photos.js"
 SIZES = [("320", 320, 80), ("800", 800, 82)]
 
 SOURCE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+
+# Mics whose photo is deliberately another mic's file. The B&K 4011 and 4007
+# are the DPA ones — DPA was spun out of Brüel & Kjær's microphone division
+# and the bodies are identical — so the pair is shot once and reused instead
+# of photographed twice.
+#
+# An explicit map rather than a duplicated master in the source folder: a
+# copy in the shared Drive is one re-download away from being renamed or
+# dropped, and the alias would then vanish from the manifest with nothing to
+# say it ever existed. Both pairs are already in quiz.js's CONFUSABLE_GROUPS,
+# so a shared photo can never be offered against itself.
+ALIASES = {
+    "bk-4011": "dpa-4011",
+    "bk-4007": "dpa-4007",
+}
 
 
 def mic_ids():
@@ -82,12 +99,11 @@ def main():
                    if p.suffix.lower() in SOURCE_EXTS and not p.name.startswith("."))
 
     manifest, unmatched, written, skipped, total_bytes = {}, [], 0, 0, 0
+    sources = {}
 
-    for path in files:
-        mic_id = path.stem
-        if mic_id not in ids:
-            unmatched.append(path.name)
-            continue
+    def emit(mic_id, path):
+        """Write both sizes for one mic from one master, and record it."""
+        nonlocal written, skipped, total_bytes
         for suffix, size, quality in SIZES:
             dst = OUT_DIR / f"{mic_id}-{suffix}.webp"
             if not force and dst.exists() and dst.stat().st_mtime >= path.stat().st_mtime:
@@ -97,6 +113,28 @@ def main():
             total_bytes += encode(path, dst, size, quality)
             written += 1
         manifest[mic_id] = {"w": SIZES[-1][1], "h": SIZES[-1][1]}
+
+    for path in files:
+        mic_id = path.stem
+        if mic_id not in ids:
+            unmatched.append(path.name)
+            continue
+        sources[mic_id] = path
+        emit(mic_id, path)
+
+    # Aliases run after the main pass so their source is guaranteed resolved
+    # whatever order the folder listed it in.
+    for alias_id, source_id in sorted(ALIASES.items()):
+        if alias_id not in ids:
+            print(f"  ! alias {alias_id} is not a mic id in data/mics.js — skipped")
+            continue
+        path = sources.get(source_id)
+        if path is None:
+            print(f"  ! alias {alias_id} wants {source_id}, which has no master here "
+                  f"— skipped")
+            continue
+        emit(alias_id, path)
+        print(f"  alias {alias_id} <- {path.name}")
 
     # The placeholder ships at detail size only. At a 40px thumbnail its
     # "Photo coming soon" caption is an illegible smudge, so the list draws a
