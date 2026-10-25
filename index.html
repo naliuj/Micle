@@ -134,6 +134,10 @@
     </div>
 
     <p id="status-banner" class="status-banner" role="alert" hidden></p>
+    <!-- Filled only once the round is over — the photo is the answer. Stays
+         hidden for a mic with no photo rather than showing a placeholder at
+         the one moment the player is paying most attention. -->
+    <div id="answer-reveal" class="answer-reveal" hidden></div>
     <button id="share-btn-page" type="button" class="share-btn share-btn--page" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg>
       Share Results
@@ -156,18 +160,29 @@
     </div>
   </dialog>
 
+  <!-- Outside <main> on purpose: a <dialog> nested in anything that can be
+       hidden still inherits display:none and opens at 0x0. -->
+  <dialog id="photo-lightbox" class="photo-lightbox">
+    <button type="button" id="photo-lightbox-close" class="icon-btn" aria-label="Close">✕</button>
+    <img id="photo-lightbox-img" class="photo-lightbox-img" alt="" />
+    <p id="photo-lightbox-caption" class="photo-lightbox-caption"></p>
+  </dialog>
+
   <footer class="site-footer">
     <p>Mic pool sourced from the Berklee College of Music microphone inventory. Price data is sourced from MSRP, the <a href="https://reverb.com/price-guide/">Reverb Price Guide</a>, and, for some rare mics, educated guesstimations.</p>
     <p>Planning a session? Try <a href="https://setupsheethelper.julianro.se/">Setup Sheet Helper</a>, a free Mac app for mic assignments, channel routing, and room layouts.</p>
   </footer>
 
   <script src="data/mics.js"></script>
+  <!-- Needed by the end-of-round reveal. -->
+  <script src="data/photos.js"></script>
   <script src="data/schedule.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/compare.js"></script>
   <script src="js/autocomplete.js"></script>
   <script src="js/schedule.js"></script>
   <script src="js/devtools.js"></script>
+  <script src="js/lightbox.js"></script>
   <script src="js/app.js"></script>
   <script src="js/pwa.js"></script>
 </body>

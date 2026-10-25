@@ -229,6 +229,7 @@
     statsBtn: document.getElementById("stats-btn"),
     statsModal: document.getElementById("stats-modal"),
     statsBody: document.getElementById("stats-body"),
+    answerReveal: document.getElementById("answer-reveal"),
     statsClose: document.getElementById("stats-close"),
     shareBtnModal: document.getElementById("share-btn"),
     shareBtnPage: document.getElementById("share-btn-page"),
@@ -483,6 +484,7 @@
         `Solved in ${s.state.guesses.length} guess${s.state.guesses.length === 1 ? "" : "es"}! It was the ${target.displayName}.`,
         "win"
       );
+      renderAnswerReveal();
       track("round_complete", { mode, outcome: "win", guesses: s.state.guesses.length });
       if (isDaily) openStats();
       return;
@@ -498,6 +500,7 @@
       updateGuessesLeft();
       lockInput();
       showStatus(`Out of guesses. The answer was the ${target.displayName}.`, "loss");
+      renderAnswerReveal();
       track("round_complete", { mode, outcome: "loss", guesses: s.state.guesses.length });
       if (isDaily) openStats();
       return;
@@ -535,6 +538,72 @@
     }
 
     if (isDaily) saveDayState(daily.dayIndex, daily.state);
+  }
+
+  // The answer mic's photo, shown once the round is over. Reads session()
+  // rather than taking a mic, so Daily and Random both get it from one place
+  // — the only mode-specific thing around here is openStats().
+  //
+  // Guarded on solved/exhausted because the photo IS the answer: rendering it
+  // a moment early would put the mic in the DOM for anyone to read.
+  function renderAnswerReveal() {
+    const s = session();
+    const done = s.state.solved || s.state.exhausted;
+    const photo = done && typeof MIC_PHOTOS !== "undefined" ? MIC_PHOTOS[s.target.id] : null;
+
+    // No photo, no card. About a third of the pool is unshot, and a
+    // "Photo coming soon" panel at the moment of reveal is an anticlimax —
+    // better that the round ends exactly as it did before.
+    if (!photo) {
+      els.answerReveal.hidden = true;
+      els.answerReveal.innerHTML = "";
+      return;
+    }
+
+    const mic = s.target;
+    els.answerReveal.innerHTML = "";
+
+    const img = document.createElement("img");
+    img.className = "answer-reveal-photo";
+    img.src = `/images/mics/${mic.id}-320.webp`;
+    img.alt = `Photo of the ${mic.displayName}`;
+    img.width = photo.w;
+    img.height = photo.h;
+    img.decoding = "async";
+    // If the photo fails, drop the whole card rather than leaving a broken
+    // image in the result area.
+    img.addEventListener("error", () => {
+      els.answerReveal.hidden = true;
+    }, { once: true });
+    els.answerReveal.appendChild(img);
+    // The round is over, so naming it in the caption gives nothing away —
+    // unlike the quiz, where the lightbox stays captionless.
+    // The card shows the 320px file; the lightbox gets the 800px one, fetched
+    // only if the player actually opens it.
+    makeZoomable(
+      img,
+      `View a larger photo of the ${mic.displayName}`,
+      mic.displayName,
+      `/images/mics/${mic.id}-800.webp`
+    );
+
+    const text = document.createElement("div");
+    text.className = "answer-reveal-text";
+    const name = document.createElement("p");
+    name.className = "answer-reveal-name";
+    name.textContent = mic.displayName;
+    const spec = document.createElement("p");
+    spec.className = "answer-reveal-spec";
+    spec.textContent = [
+      mic.countryOfOrigin,
+      PRINCIPLE_ABBR[mic.operatingPrinciple] || mic.operatingPrinciple,
+      String(mic.releaseYear),
+      msrpLabel(mic),
+    ].join(" · ");
+    text.append(name, spec);
+    els.answerReveal.appendChild(text);
+
+    els.answerReveal.hidden = false;
   }
 
   function openStats() {
@@ -606,6 +675,7 @@
     } else {
       unlockInput();
     }
+    renderAnswerReveal();
   }
 
   function switchMode(newMode) {
@@ -773,5 +843,8 @@
     refreshView,
   };
 
+  // Without this the reveal card's photo is wrapped in a zoom button that
+  // does nothing: openLightbox returns early until the dialog is bound.
+  bindLightbox();
   refreshView();
 })();

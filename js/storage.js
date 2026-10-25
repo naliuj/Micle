@@ -234,3 +234,26 @@ function recordMatchAnswer(dimensionKey, fullyCorrect) {
   writeJSON(matchStatsKey(), stats);
   return stats;
 }
+
+// Reference tab's list/gallery choice. A standing preference rather than
+// per-session state: a student who prefers photos should land in the gallery
+// every visit without re-picking it.
+function referenceViewModeKey() {
+  return `micle_${STORAGE_VERSION}_reference_view`;
+}
+
+// Gallery is the default: identifying a mic by sight is the thing the spec
+// table can't teach, and most of the pool is photographed. Anyone who wants
+// the spec columns picks List once and it sticks.
+// Stored as { mode } rather than a bare string: readJSON above rejects any
+// JSON that isn't an object, so a bare "gallery" writes fine and then reads
+// back as the fallback forever — a silent no-op. Every other helper in this
+// file stores an object for the same reason.
+function loadReferenceViewMode() {
+  const stored = readJSON(referenceViewModeKey(), {});
+  return stored.mode === "list" || stored.mode === "gallery" ? stored.mode : "gallery";
+}
+
+function saveReferenceViewMode(mode) {
+  writeJSON(referenceViewModeKey(), { mode: mode === "list" ? "list" : "gallery" });
+}

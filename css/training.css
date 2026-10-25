@@ -744,113 +744,32 @@
    different colour tokens: --hint (#8fb0f0) and --accent (#7fa0e0) are almost
    the same blue in dark mode, so a token swap left the active country
    invisible. Opacity differentiates reliably in both schemes. */
+/* Dimmed to context. The markers below carry which countries are in the
+   pool; the shapes just say where in the world you are looking. */
 .mic-map-country--has-mics {
   fill: var(--accent);
-  fill-opacity: 0.4;
+  fill-opacity: 0.15;
   pointer-events: auto;
   cursor: pointer;
   transition: fill-opacity 120ms ease;
 }
 
-.mic-map-country--has-mics:hover { fill-opacity: 0.7; }
+.mic-map-country--has-mics:hover { fill-opacity: 0.32; }
 
 .mic-map-country--active {
-  fill-opacity: 1;
+  fill-opacity: 0.45;
   stroke: var(--text);
   stroke-width: 2;
 }
 
-/* The real control. Denmark is roughly 5x3 CSS px on a phone and Austria 8x3,
-   so the map alone can't be the way you pick a country — these chips are
-   keyboard-navigable, screen-reader-legible and comfortably tappable at every
-   width, and they carry the per-country counts the map can't show. */
-.country-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-
-.country-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 2.75rem;
-  padding: var(--space-2) var(--space-4);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease;
-}
-
-.country-chip:hover { background: var(--bg); }
-
-.country-chip[aria-pressed="true"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-
-.country-chip-count {
-  font-size: var(--fs-2xs);
-  color: var(--muted);
-}
-
-.country-chip[aria-pressed="true"] .country-chip-count { color: #fff; }
-
 /* --------------------------------------------------------- Sorting + table */
 
-/* Pills are the only sort control that survives card mode: below 800px
-   .board-row--header is display:none, so the clickable column headers
-   genuinely don't exist there. Both controls drive the same state. */
+/* Only rendered where no clickable column header exists — gallery at any
+   width, list below 800px. js/training.js owns that decision; this is just
+   the dropdown's shell. position: relative so the menu can hang off it. */
 .mic-sort {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-3);
-}
-
-.mic-sort-label {
-  font-size: var(--fs-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.mic-sort-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.mic-sort-pill {
-  min-height: 2.25rem;
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: background-color 120ms ease, color 120ms ease;
-}
-
-.mic-sort-pill:hover { background: var(--bg); }
-
-/* :hover listed so .mic-sort-pill:hover can't replace the fill and leave
-   white text on --bg (unreadable in light mode). */
-.mic-sort-pill--active,
-.mic-sort-pill--active:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  position: relative;
+  flex: none;
 }
 
 /* Column headers become buttons so they're keyboard-operable. Styled to still
@@ -1086,23 +1005,15 @@ main:has(#reference-tab:not([hidden])) {
    can clip them — the trap .board documents in css/styles.css, where an
    overflow on one axis silently makes the element a scrollport on both.
 
-   Visual language is borrowed wholesale from the controls either side of it
-   (.country-chip below the map, .mic-sort-pill under it) so the tab reads as
-   one set of controls rather than three. */
+   Every facet is one of these buttons now, Country included — it used to be
+   a heavier strip of chips under the map, which read as its own system. One
+   row, one weight, one set of controls. */
 .mic-filters {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
   margin-bottom: var(--space-3);
-}
-
-.mic-filters-label {
-  font-size: var(--fs-2xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-weight: 600;
-  color: var(--muted);
 }
 
 .mic-filter-menus {
@@ -1398,11 +1309,6 @@ main:has(#reference-tab:not([hidden])) {
 
 .mic-clear-all:hover { color: var(--text); }
 
-/* A country the current filters have emptied. It keeps its place so the row
-   doesn't reflow as you filter, but stops being a live control. */
-.country-chip--empty { opacity: 0.4; }
-.country-chip:disabled { cursor: not-allowed; }
-
 .mic-empty {
   margin: var(--space-7) 0;
   text-align: center;
@@ -1418,8 +1324,7 @@ main:has(#reference-tab:not([hidden])) {
 
 @media (prefers-reduced-motion: reduce) {
   .mic-map-country--has-mics,
-  .country-chip,
-  .mic-sort-pill,
+  .mic-map-marker,
   .facet-btn,
   .facet-option input {
     transition: none;
@@ -1428,16 +1333,13 @@ main:has(#reference-tab:not([hidden])) {
 
 /* The map is decoration below the card-mode breakpoint: at 375px Denmark is
    about 5x3 CSS px and Austria 8x3, so it can't be a usable control there.
-   It stays visible as orientation — which country lit up when you tapped a
-   chip — but the chips do the work. */
+   It stays visible as orientation — which country lit up when you picked one
+   — but the Country facet does the work. The markers shrink to stay separable
+   at that width (see sizeMarkers), which makes them small rather than
+   tappable, and that is the right trade here. */
 @media (max-width: 520px) {
   .mic-map-figure {
     padding: var(--space-2);
-  }
-
-  .country-chip {
-    flex: 1 1 calc(50% - var(--space-2));
-    justify-content: center;
   }
 }
 
@@ -1837,3 +1739,403 @@ main:has(#reference-tab:not([hidden])) {
   .quiz-actions { flex-direction: column; align-items: stretch; }
   .quiz-actions .share-btn--page { width: 100%; }
 }
+
+/* ---------------------------------------------------------------- Photos */
+
+/* The thumbnail column leads every Reference row. Sized in rem so it tracks
+   the row's own text scale rather than pinning the row to a pixel height. */
+.mic-thumb {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: none;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--bg);
+  display: block;
+}
+
+/* Drawn, not fetched. The real _placeholder-*.webp carries a caption sized
+   for a 1000px canvas; at 2.5rem it is an illegible smudge, and a CSS box
+   costs no request — which matters while a third of the pool is unshot. */
+.mic-thumb--empty {
+  border: 1px dashed var(--border);
+  background: var(--bg) center / 55% no-repeat
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b74' stroke-width='1.6' stroke-linecap='round'%3E%3Crect x='9' y='2' width='6' height='11' rx='3'/%3E%3Cpath d='M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  .mic-thumb--empty {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9aa3' stroke-width='1.6' stroke-linecap='round'%3E%3Crect x='9' y='2' width='6' height='11' rx='3'/%3E%3Cpath d='M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8'/%3E%3C/svg%3E");
+  }
+}
+
+/* Thumbnail column added ahead of the seven existing ones. */
+.board--reference > .board-row {
+  grid-template-columns: 2.5rem 1.7fr 0.85fr 1.2fr 2.1fr 1.15fr 0.6fr 0.8fr;
+  align-items: center;
+  cursor: pointer;
+}
+.board--reference > .board-row--header { cursor: default; }
+.board--reference > .board-row:hover > .cell { border-color: var(--accent); }
+.board--reference > .board-row--selected > .cell {
+  border-color: var(--accent);
+  background: var(--hint-bg);
+}
+
+/* ------------------------------------------------------- view toggle */
+
+.mic-view-toggle {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+.mic-view-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.mic-view-btn svg { width: 0.9rem; height: 0.9rem; }
+.mic-view-btn:hover { color: var(--text); }
+.mic-view-btn--active {
+  color: var(--surface);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ------------------------------------------------------- layout + panel */
+
+.mic-layout { display: block; }
+
+@media (min-width: 900px) {
+  .mic-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 17rem;
+    gap: var(--space-5);
+    align-items: start;
+  }
+  /* Sticky so the photo stays put while a long list scrolls past it. */
+  .mic-detail {
+    position: sticky;
+    top: var(--space-4);
+  }
+}
+
+.mic-detail {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  padding: var(--space-4);
+}
+.mic-detail-hint {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+}
+.mic-detail-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+}
+.mic-detail-name {
+  margin: var(--space-3) 0 0;
+  font-size: var(--fs-md);
+}
+.mic-detail-specs {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-3) 0 0;
+  font-size: var(--fs-xs);
+}
+.mic-detail-specs dt { color: var(--muted); }
+.mic-detail-specs dd { margin: 0; }
+
+/* ------------------------------------------------------- small-screen sheet */
+
+.mic-detail-sheet {
+  width: min(22rem, calc(100vw - 2 * var(--space-5)));
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+}
+.mic-detail-sheet::backdrop { background: rgb(0 0 0 / 0.45); }
+.mic-sheet-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: grid;
+  place-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+.mic-sheet-close svg { width: 0.9rem; height: 0.9rem; }
+.mic-detail-sheet .mic-detail-body { margin: 0; }
+
+/* ------------------------------------------------------- gallery */
+
+.mic-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+  gap: var(--space-4);
+}
+/* A group heading has to span the whole grid or it becomes another tile. */
+.mic-group--gallery { grid-column: 1 / -1; }
+.mic-tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.mic-tile:hover { border-color: var(--accent); }
+.mic-tile--selected {
+  border-color: var(--accent);
+  background: var(--hint-bg);
+}
+/* The tile's own photo fills its width instead of the fixed row thumbnail. */
+.mic-tile .mic-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+}
+.mic-tile-name {
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+}
+.mic-tile-meta {
+  font-size: var(--fs-2xs);
+  color: var(--muted);
+}
+
+@media (max-width: 800px) {
+  /* Card mode turns the row into a wrapping flex container, where a fixed
+     thumbnail would be stretched by align-items: stretch. */
+  .board--reference > .board-row > .mic-thumb {
+    align-self: flex-start;
+  }
+}
+
+/* ------------------------------------------------------------- Toolbar */
+
+/* Search, sort and view on one line. These were three stacked strips, each
+   with its own uppercase micro-label; the row's position says what the
+   labels did, and it reads as one surface instead of three. */
+.mic-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+/* The search box takes whatever the two fixed controls leave. min-width: 0
+   because a flex item's auto minimum would otherwise refuse to shrink past
+   the input's default size and push the toggle off the row. */
+.mic-toolbar input[type="search"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.mic-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  padding: var(--space-3) var(--space-4);
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.mic-sort-btn:hover { border-color: var(--accent); }
+.mic-sort-btn svg { width: 0.85rem; height: 0.85rem; color: var(--muted); }
+
+/* Anchored to .mic-sort rather than rendered inline: this one is a short list
+   in a toolbar with nothing to clip it, unlike the facet panels, which sit in
+   a wrapping strip and render as blocks underneath for that reason. */
+.mic-sort-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.mic-sort-option {
+  padding: var(--space-2) var(--space-3);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  white-space: nowrap;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.mic-sort-option:hover { background: var(--bg); }
+.mic-sort-option--active,
+.mic-sort-option--active:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+/* Icon-only segmented pair. Two options carrying aria-pressed don't need
+   text, and dropping it is what lets the whole toolbar fit one line. */
+.mic-view-toggle {
+  display: flex;
+  flex: none;
+  gap: 0;
+  margin-bottom: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.mic-view-btn {
+  display: grid;
+  place-content: center;
+  padding: var(--space-3);
+  border: none;
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--muted);
+}
+.mic-view-btn svg { width: 1rem; height: 1rem; }
+.mic-view-btn + .mic-view-btn { border-left: 1px solid var(--border); }
+
+@media (max-width: 560px) {
+  /* Search drops to its own line before the two controls start truncating. */
+  .mic-toolbar { flex-wrap: wrap; }
+  .mic-toolbar input[type="search"] { flex: 1 0 100%; }
+}
+
+/* ----------------------------------------------------------------- Map */
+
+/* main is capped at 920px, so the map's 2.58:1 viewBox already tops out near
+   340px tall — this trims a little off that without stranding it.
+   Don't lower it much: the aspect ratio is preserved, so a shorter cap
+   shrinks the map in BOTH directions and leaves it marooned between two
+   empty gutters. At 20rem the gutters are ~25px a side; at 11rem, which is
+   what this first shipped as, they were over 200px and the map looked tiny. */
+.mic-map { margin: var(--space-4) 0; }
+.mic-map-figure { padding: var(--space-2); }
+.mic-map-svg {
+  display: block;
+  width: 100%;
+  max-height: 20rem;
+}
+
+/* Invisible twins of the clickable countries, sized for fingers rather than
+   geography. stroke-width is in viewBox units: the map renders ~0.45 CSS px
+   per unit, so 27 units is ~12 CSS px of stroke, half of it outside the
+   outline — roughly +6px of target on every side. Denmark goes from 3.5x2.3
+   to about 15x14. pointer-events: all hit-tests fill and stroke whatever
+   their paint, which is what makes a transparent halo clickable. */
+.mic-map-hit {
+  fill: transparent;
+  stroke: transparent;
+  stroke-width: 27;
+  stroke-linejoin: round;
+  pointer-events: none; /* syncCountryScope() turns on the live ones */
+  cursor: pointer;
+}
+
+/* Which country a halo belongs to isn't obvious once it reaches well past
+   the coastline, so the label says. Offset down-right of the cursor and
+   never hit-testable, or it would fight the thing it describes. */
+.mic-map-label {
+  position: absolute;
+  z-index: 4;
+  margin: 0;
+  transform: translate(0.75rem, 0.75rem);
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-2xs);
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+}
+
+.mic-map { position: relative; }
+
+/* The exact-outline pass: no halo, so it reclaims a country's own landmass
+   from a smaller neighbour's halo sitting above it. */
+.mic-map-hit--exact {
+  stroke-width: 0;
+}
+
+/* The image prompt for "Identify the mic". Capped well below the options
+   column so the four answers stay on screen with it — the photo is the
+   question, but the answers are what you act on. */
+.quiz-photo {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 var(--space-4);
+}
+.quiz-photo-img {
+  display: block;
+  width: 100%;
+  max-width: 14rem;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+/* One dot per pool country, identical for all of them. Landmass area is an
+   accident of geography — Germany is 4.7x Denmark's and that ratio holds at
+   every map size — so size here would encode nothing but acreage. r and
+   stroke-width are set in JS from the rendered scale, because viewBox units
+   would shrink these to specks on a phone. */
+.mic-map-marker {
+  fill: var(--accent);
+  /* A ring in the page background, so two dots that nearly touch in the
+     Denmark/Germany/Austria cluster still read as two. */
+  stroke: var(--surface);
+  cursor: pointer;
+  pointer-events: all;
+  transition: fill-opacity 120ms ease;
+}
+.mic-map-marker--active {
+  fill: var(--text);
+}
+/* A country the current filters have emptied: still placed, clearly inert. */
+.mic-map-marker--empty {
+  fill-opacity: 0.25;
+  pointer-events: none;
+  cursor: default;
+}
+

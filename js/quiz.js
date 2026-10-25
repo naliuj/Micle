@@ -127,7 +127,87 @@ const QUIZ_CATEGORIES = [
     getLabel: priceBucket,
     prompt: (m) => `What price bracket is the ${m.displayName} in?`,
   },
+  // Show the photo, name the mic. The one thing the six categories above
+  // can't teach: a student has to recognise the mic on the stand, not recite
+  // its polar pattern.
+  //
+  // getValue is the mic id, which is unique per mic, so buildMcOptions'
+  // dedupe-by-value yields exactly one option per mic with no extra work.
+  {
+    key: "identify",
+    label: "Identify the mic",
+    getValue: (m) => m.id,
+    getLabel: (m) => m.displayName,
+    prompt: () => "Which microphone is this?",
+    // Read by js/training.js's renderQuestion to render an image prompt.
+    photo: true,
+    // Only a photographed mic can be the answer. MIC_PHOTOS comes from
+    // data/photos.js, which training/index.html loads before this file; the
+    // guard keeps this harmless anywhere it isn't loaded.
+    canAsk: (m) => typeof MIC_PHOTOS !== "undefined" && Boolean(MIC_PHOTOS[m.id]),
+    conflictsWith: confusableWith,
+  },
 ];
+
+// Mics that look so alike in a photo that offering two of them as separate
+// answers to one question has no defensible right answer. A group bars its
+// members from appearing as distractors for each other — nothing else.
+//
+// Membership is about appearance, not lineage or spec. The AT4041 is absent
+// from the Audio-Technica group because it is a slim pencil mic; it only
+// looked like the 4040/4050 while its photo file was accidentally the
+// 4060's. The DPA 4011C is absent from the 4011 group for the opposite
+// reason: it shares the 4011's capsule but its compact body reads as clearly
+// different, so telling them apart is a fair question.
+//
+// A member with no photo still matters. It can never be the answer, but it
+// must still be barred as a distractor when a groupmate is asked — which is
+// most of the point, since several of these groups are half unphotographed.
+const CONFUSABLE_GROUPS = [
+  ["at-at4040", "at-at4050", "at-at4060"],
+  ["schoeps-cmc6-mk4", "schoeps-cmc6-mk2"],
+  ["bk-4011", "dpa-4011"],
+  ["bk-4007", "dpa-4007"],
+  ["audix-d2", "audix-d4", "audix-d6", "audix-d6x"],
+  ["austrianaudio-oc7", "austrianaudio-od5"],
+  ["austrianaudio-cc8", "austrianaudio-cc8-sc"],
+  // Long shotgun tubes. The Sennheiser MKH 40 is deliberately absent — it is
+  // a short cardioid pencil and reads as a different shape entirely.
+  ["sennheiser-mkh816", "sennheiser-mkh418s", "rode-ntg2"],
+  // RODE's large-diaphragm bodies.
+  ["rode-nt2a", "rode-nt1000", "rode-ntk"],
+  ["earthworks-qtc40", "earthworks-sr69", "earthworks-tc25", "earthworks-tc40k"],
+  ["neumann-km184", "neumann-km84", "warmaudio-wa84"],
+  // The TLM 67 is the U 67's body with the tube swapped out, down to the
+  // tapered grille and the badge position — at thumbnail size it is the U 87.
+  ["neumann-u87ai", "neumann-u89", "neumann-u67", "neumann-tlm67"],
+  ["royer-r121", "royer-r122"],
+  ["shure-ksm27", "shure-ksm44"],
+  // Aston's tumbled-steel pair: the same wave-mesh head and the same body,
+  // differing only in length. Nothing in a photo separates them.
+  ["aston-origin", "aston-spirit"],
+  // Blue's yoke-mounted rectangles — same silhouette, same round mesh head,
+  // and colour is the only tell, which a grey-ish thumbnail can lose.
+  ["blue-cactus", "blue-blueberry"],
+];
+
+// id -> Set of the ids it must never share a question with. Built once at
+// load rather than scanned per question.
+const CONFUSABLE_BY_ID = (() => {
+  const map = new Map();
+  CONFUSABLE_GROUPS.forEach((group) => {
+    group.forEach((id) => {
+      map.set(id, new Set(group.filter((other) => other !== id)));
+    });
+  });
+  return map;
+})();
+
+const NO_CONFUSABLES = new Set();
+
+function confusableWith(id) {
+  return CONFUSABLE_BY_ID.get(id) || NO_CONFUSABLES;
+}
 
 // Builds the option list for a multiple-choice question: one correct value
 // plus up to `want - 1` distractors drawn from `distractorPool`'s *distinct*
@@ -143,7 +223,13 @@ const QUIZ_CATEGORIES = [
 // filter narrows which mic gets *asked about*, distractor variety must still
 // come from the whole eligible pool, or a filter like "Neumann only" (all
 // German) would leave the Country category with zero valid wrong answers.
-function buildMcOptions(distractorPool, getValue, getLabel, correctValue, want = 4) {
+//
+// `conflictsWith(value)` returns the Set of values that may not share a
+// question with it. It is checked against every option already chosen, not
+// just the correct one: two look-alikes offered as two WRONG answers is the
+// same defect as one offered against the right one. Omit it and selection is
+// a plain shuffle-and-take, exactly as before.
+function buildMcOptions(distractorPool, getValue, getLabel, correctValue, want = 4, conflictsWith = null) {
   const seen = new Map(); // value -> label, first-seen label wins
   for (const mic of distractorPool) {
     const v = getValue(mic);
@@ -151,10 +237,23 @@ function buildMcOptions(distractorPool, getValue, getLabel, correctValue, want =
     // bracket, so it must never surface as a selectable distractor.
     if (v != null && !seen.has(v)) seen.set(v, getLabel(mic));
   }
-  const alternatives = [...seen.entries()].filter(([v]) => v !== correctValue);
-  const distractors = sample(alternatives, Math.min(want - 1, alternatives.length));
   const correctLabel = seen.get(correctValue);
-  return shuffle([[correctValue, correctLabel], ...distractors]).map(([value, label]) => ({ value, label }));
+  const alternatives = [...seen.entries()].filter(([v]) => v !== correctValue);
+
+  if (!conflictsWith) {
+    const distractors = sample(alternatives, Math.min(want - 1, alternatives.length));
+    return shuffle([[correctValue, correctLabel], ...distractors]).map(([value, label]) => ({ value, label }));
+  }
+
+  // Greedy over a shuffled list rather than sample(): each pick has to be
+  // checked against what's already in, so they can't all be drawn at once.
+  const chosen = [[correctValue, correctLabel]];
+  for (const entry of shuffle(alternatives)) {
+    if (chosen.length >= want) break;
+    if (chosen.some(([v]) => conflictsWith(v).has(entry[0]))) continue;
+    chosen.push(entry);
+  }
+  return shuffle(chosen).map(([value, label]) => ({ value, label }));
 }
 
 // `asked` is a Set of "micId:categoryKey" strings already used this session,
@@ -166,17 +265,25 @@ function buildMcOptions(distractorPool, getValue, getLabel, correctValue, want =
 // are separate on purpose — see buildMcOptions' comment above.
 function buildMcQuestion(category, targetPool, distractorPool, asked) {
   const candidates = targetPool.filter(
-    (m) => !asked.has(`${m.id}:${category.key}`) && category.getValue(m) != null
+    (m) =>
+      !asked.has(`${m.id}:${category.key}`) &&
+      category.getValue(m) != null &&
+      // canAsk narrows which mics a category can be built around at all —
+      // "Identify the mic" needs a photo, and most of the pool has one.
+      (!category.canAsk || category.canAsk(m))
   );
   if (candidates.length === 0) return null;
   const mic = candidates[randomInt(candidates.length)];
   asked.add(`${mic.id}:${category.key}`);
   const correctValue = category.getValue(mic);
-  const options = buildMcOptions(distractorPool, category.getValue, category.getLabel, correctValue);
+  const options = buildMcOptions(
+    distractorPool, category.getValue, category.getLabel, correctValue, 4, category.conflictsWith || null
+  );
   return {
     categoryKey: category.key,
     prompt: category.prompt(mic),
     mic,
+    photo: Boolean(category.photo),
     options, // [{value, label}], shuffled, includes the correct one
     correctValue,
   };
