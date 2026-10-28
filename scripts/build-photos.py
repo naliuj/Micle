@@ -20,7 +20,9 @@ Why Python rather than a .mjs like the other build scripts: this needs an
 image library, and the project deliberately has no package.json. Pillow is
 already a dependency of scripts/parse_inventory.py's openpyxl toolchain.
 
-Two mics have no master of their own and reuse another's — see ALIASES.
+Some mics deliberately share another's photo — see ALIASES. An alias wins
+even when a master of its own is sitting in the source folder; that master is
+reported and ignored, never encoded.
 
 A file whose name doesn't match a mic id in data/mics.js is REPORTED AND
 SKIPPED, never fuzzy-matched. Fuzzy matching is exactly what let two misnamed
@@ -50,16 +52,21 @@ SOURCE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 # Mics whose photo is deliberately another mic's file. The B&K 4011 and 4007
 # are the DPA ones — DPA was spun out of Brüel & Kjær's microphone division
 # and the bodies are identical — so the pair is shot once and reused instead
-# of photographed twice.
+# of photographed twice. The EV N/D408 is the N/D308's housing in the same
+# clip; the two shots were indistinguishable once cropped square, so the 308
+# frame serves both.
 #
 # An explicit map rather than a duplicated master in the source folder: a
 # copy in the shared Drive is one re-download away from being renamed or
 # dropped, and the alias would then vanish from the manifest with nothing to
-# say it ever existed. Both pairs are already in quiz.js's CONFUSABLE_GROUPS,
-# so a shared photo can never be offered against itself.
+# say it ever existed. Every pair here is also in quiz.js's CONFUSABLE_GROUPS,
+# so a shared photo can never be offered against itself — add the group there
+# before adding an alias here, or the quiz can ask a question whose photo
+# matches two of its own options.
 ALIASES = {
     "bk-4011": "dpa-4011",
     "bk-4007": "dpa-4007",
+    "ev-nd408": "ev-nd308",
 }
 
 
@@ -118,6 +125,12 @@ def main():
         mic_id = path.stem
         if mic_id not in ids:
             unmatched.append(path.name)
+            continue
+        if mic_id in ALIASES:
+            # Encoding it would stamp a fresh mtime on the output, and the
+            # alias pass below would then skip it as already up to date — so
+            # the alias would silently never apply. Say so and move on.
+            print(f"  ! {path.name} is aliased to {ALIASES[mic_id]} — master ignored")
             continue
         sources[mic_id] = path
         emit(mic_id, path)

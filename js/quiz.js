@@ -189,6 +189,10 @@ const CONFUSABLE_GROUPS = [
   // Blue's yoke-mounted rectangles — same silhouette, same round mesh head,
   // and colour is the only tell, which a grey-ish thumbnail can lose.
   ["blue-cactus", "blue-blueberry"],
+  // Same N/DYM housing in the same clip. These two share one photo outright
+  // (see ALIASES in scripts/build-photos.py), so grouping them is not a
+  // nicety — without it the quiz can show that photo against both names.
+  ["ev-nd308", "ev-nd408"],
 ];
 
 // id -> Set of the ids it must never share a question with. Built once at
