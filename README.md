@@ -142,6 +142,8 @@ No server needed — just open `index.html` directly in a browser (double-click 
 
 No GitHub Actions workflow is needed since there's no build step.
 
+**Keep the empty `.nojekyll` file in the repo root.** Without it, GitHub Pages runs the site through Jekyll, which silently drops every file whose name starts with an underscore. That's how `images/mics/_placeholder-*-800.webp` went missing: it was in the repo and worked locally, but returned 404 on the live site, so Study Mode showed the image's alt text instead of the "Photo coming soon" art. The site uses no Jekyll features, so turning Jekyll off changes nothing else.
+
 ## Icons
 
 `favicon.svg` is the source of truth for the mic mark (a flat rounded-square
