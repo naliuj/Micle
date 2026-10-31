@@ -64,6 +64,10 @@
   </header>
 
   <main>
+    <!-- Filled and shown by renderMilestoneBanner() in js/app.js, only on a
+         milestone puzzle; hidden every other day. -->
+    <div id="milestone-banner" class="milestone-banner" role="status" hidden></div>
+
     <div id="instructions" class="instructions" hidden>
       <p>Guess the studio microphone in 6 tries. Each guess is compared against the answer across six categories. In Random Mic mode, toggle Infinity to drop the guess limit entirely.</p>
       <ul class="legend">

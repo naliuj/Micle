@@ -241,6 +241,7 @@
     randomGuessBtn: document.getElementById("random-guess-btn"),
     helpBtn: document.getElementById("help-btn"),
     instructions: document.getElementById("instructions"),
+    milestoneBanner: document.getElementById("milestone-banner"),
   };
 
   // Two independent game sessions living side by side: the persistent daily
@@ -843,8 +844,55 @@
     refreshView,
   };
 
+  // A one-day celebration banner on a milestone puzzle. Keyed to the puzzle
+  // number rather than a calendar date: daily.dayIndex comes from the same
+  // player-local date that picks today's mic, so the banner appears and
+  // disappears at each player's own midnight, in step with the puzzle, and
+  // switches itself off tomorrow with no follow-up deploy. Testable on any
+  // day with ?debug=1&date=2026-10-31.
+  //
+  // Only #100 for now. Changing the test to `% 100 === 0` would bring it back
+  // for #200, #300 and so on (the copy already uses the number).
+  function renderMilestoneBanner() {
+    const puzzleNumber = daily.dayIndex + 1;
+    if (puzzleNumber !== 100) return;
+    const dismissKey = `micle_milestone_${puzzleNumber}`;
+    if (readJSON(dismissKey, {}).dismissed) return;
+
+    const banner = els.milestoneBanner;
+    banner.innerHTML = "";
+
+    // Confetti is decoration only: CSS shapes, hidden from screen readers.
+    const confetti = document.createElement("span");
+    confetti.className = "milestone-banner__confetti";
+    confetti.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 14; i++) {
+      const bit = document.createElement("i");
+      bit.style.setProperty("--i", i);
+      confetti.appendChild(bit);
+    }
+
+    const text = document.createElement("p");
+    text.className = "milestone-banner__text";
+    text.innerHTML = `<span class="milestone-banner__emoji" aria-hidden="true">🎉</span> <strong>Puzzle #${puzzleNumber}!</strong> Thanks for ${puzzleNumber} days of guessing mics.`;
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "milestone-banner__close";
+    close.setAttribute("aria-label", "Dismiss celebration banner");
+    close.textContent = "✕";
+    close.addEventListener("click", () => {
+      banner.hidden = true;
+      writeJSON(dismissKey, { dismissed: true });
+    });
+
+    banner.append(confetti, text, close);
+    banner.hidden = false;
+  }
+
   // Without this the reveal card's photo is wrapped in a zoom button that
   // does nothing: openLightbox returns early until the dialog is bound.
   bindLightbox();
+  renderMilestoneBanner();
   refreshView();
 })();
