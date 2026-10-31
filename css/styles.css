@@ -792,7 +792,8 @@ main {
   align-items: center;
   gap: var(--space-4);
   margin: 0 0 var(--space-5);
-  padding: var(--space-4) var(--space-5);
+  /* Top padding leaves room for the bunting: the sag plus a flag's height. */
+  padding: calc(var(--space-4) + 4.4rem) var(--space-5) var(--space-4);
   border: 1px solid var(--accent);
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
@@ -835,6 +836,67 @@ main {
 .milestone-banner__close:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+.milestone-banner__bunting {
+  /* --sag-px is read by JS to tilt each flag to the string's slope, so it
+     must stay in px and match the 1.1rem sag drawn below. */
+  --sag: 1.6rem;
+  --sag-px: 25.6;
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-5);
+  right: var(--space-5);
+  height: calc(var(--sag) + 2.6rem);
+  pointer-events: none;
+}
+
+.milestone-banner__string {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  height: calc(var(--sag) * 2);
+  overflow: visible;
+}
+
+.milestone-banner__string path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
+/* Each pennant hangs from the string at its own point on the parabola and
+   swings about that point, staggered so the row ripples instead of moving
+   in lockstep. */
+.milestone-banner__flag {
+  position: absolute;
+  top: calc(var(--sag) * 4 * var(--x) * (1 - var(--x)) - 1px);
+  left: calc(var(--x) * 100%);
+  /* Shrinks with the banner so 13 flags never crowd each other on a phone. */
+  width: min(1.9rem, calc(100% / 14));
+  aspect-ratio: 4 / 5;
+  padding-top: 0.2rem;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: var(--accent);
+  /* --surface, not #fff: the dark theme's accent is pale enough that white
+     digits wash out, while --surface flips to near-black there. */
+  color: var(--surface);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  transform-origin: 50% 0;
+  transform: translateX(-50%) rotate(var(--tilt, 0deg));
+  animation: milestone-sway 2.6s ease-in-out calc(var(--i) * -0.2s) infinite alternate;
+}
+
+.milestone-banner__flag:nth-child(3n + 2) { background: var(--match); }
+.milestone-banner__flag:nth-child(3n + 3) { background: var(--partial); }
+.milestone-banner__flag.milestone-banner__flag--label { background: var(--accent); }
+
+@keyframes milestone-sway {
+  from { transform: translateX(-50%) rotate(calc(var(--tilt, 0deg) - 4deg)); }
+  to { transform: translateX(-50%) rotate(calc(var(--tilt, 0deg) + 4deg)); }
 }
 
 .milestone-banner__confetti {

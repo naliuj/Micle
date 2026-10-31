@@ -872,6 +872,48 @@
       confetti.appendChild(bit);
     }
 
+    // Bunting: a string sagging across the top with pennants hung along it.
+    // The string is a quadratic curve and each flag sits on it at
+    // y = sag * 4x(1 - x), the same parabola, tilted to the curve's slope at
+    // that point. The slope depends on the banner's real width, so it's
+    // measured and re-measured on resize instead of guessed. The middle three
+    // flags carry the number.
+    const FLAGS = 13;
+    const label = String(puzzleNumber);
+    const firstLabelFlag = Math.floor((FLAGS - label.length) / 2);
+    const bunting = document.createElement("div");
+    bunting.className = "milestone-banner__bunting";
+    bunting.setAttribute("aria-hidden", "true");
+    bunting.innerHTML =
+      '<svg class="milestone-banner__string" viewBox="0 0 100 22" preserveAspectRatio="none">' +
+      '<path d="M0 0 Q50 22 100 0" vector-effect="non-scaling-stroke"/></svg>';
+    const flags = [];
+    for (let i = 0; i < FLAGS; i++) {
+      const x = i / (FLAGS - 1);
+      const flag = document.createElement("span");
+      flag.className = "milestone-banner__flag";
+      flag.style.setProperty("--x", x);
+      flag.style.setProperty("--i", i);
+      const ch = label[i - firstLabelFlag];
+      if (ch) {
+        flag.classList.add("milestone-banner__flag--label");
+        flag.textContent = ch;
+      }
+      bunting.appendChild(flag);
+      flags.push(flag);
+    }
+    const tiltFlags = () => {
+      const width = bunting.clientWidth;
+      if (!width) return;
+      const sag = parseFloat(getComputedStyle(bunting).getPropertyValue("--sag-px")) || 18;
+      for (const flag of flags) {
+        const x = Number(flag.style.getPropertyValue("--x"));
+        const slope = (4 * sag * (1 - 2 * x)) / width;
+        flag.style.setProperty("--tilt", `${(Math.atan(slope) * 180) / Math.PI}deg`);
+      }
+    };
+    if (typeof ResizeObserver !== "undefined") new ResizeObserver(tiltFlags).observe(bunting);
+
     const text = document.createElement("p");
     text.className = "milestone-banner__text";
     text.innerHTML = `<span class="milestone-banner__emoji" aria-hidden="true">🎉</span> <strong>Puzzle #${puzzleNumber}!</strong> Thanks for ${puzzleNumber} days of guessing mics.`;
@@ -886,8 +928,9 @@
       writeJSON(dismissKey, { dismissed: true });
     });
 
-    banner.append(confetti, text, close);
+    banner.append(bunting, confetti, text, close);
     banner.hidden = false;
+    tiltFlags();
   }
 
   // Without this the reveal card's photo is wrapped in a zoom button that
