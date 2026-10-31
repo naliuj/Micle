@@ -177,7 +177,7 @@ const MIC_DB = [
     manufacturer: "AKG",
     model: "C460B",
     displayName: "AKG C460B",
-    aliases: ["C460B (CK1 Capsule)", "C460B with CK 1", "C460B CK1", "C460B (CK61-ULS Capsule)", "C460B with CK 61-ULS", "C460B CK61-ULS"],
+    aliases: ["C460B with CK 1", "C460B CK1", "C460B with CK 61-ULS", "C460B CK61-ULS"],
     countryOfOrigin: "Austria",
     operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Cardioid"],
