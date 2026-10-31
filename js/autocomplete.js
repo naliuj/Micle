@@ -63,11 +63,17 @@ function micCompact(s) {
   return micFold(s).replace(/[^a-z0-9]/g, "");
 }
 
+// Word starts split on punctuation too, so "voice" and "technica" are word
+// starts in "electro-voice" and "audio-technica". The mid-word fallback exists
+// for model numbers typed without their prefix ("57" -> SM57, "89" -> U89);
+// letter-only fragments that short are noise, not intent — "su" found the
+// C460B via "Capsule", "di" found every alias ending "Cardioid", "ure" found
+// every Shure. So it needs a digit, or enough letters to be deliberate.
 function micRank(candidate, q) {
   if (candidate === q) return 0;
   if (candidate.startsWith(q)) return 1;
-  if (candidate.split(/\s+/).some((word) => word.startsWith(q))) return 2;
-  if (candidate.includes(q)) return 3;
+  if (candidate.split(/[^a-z0-9]+/).some((word) => word.startsWith(q))) return 2;
+  if ((/\d/.test(q) || q.length >= 4) && candidate.includes(q)) return 3;
   return Infinity;
 }
 
