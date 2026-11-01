@@ -54,17 +54,17 @@ const MIC_DB = [
   {
     id: "adk-berlin-47",
     manufacturer: "ADK",
-    model: "Berlin 47",
-    displayName: "ADK Berlin 47",
-    aliases: ["A-51 Berlin 47"],
+    model: "Berlin 47 Au",
+    displayName: "ADK Berlin 47 Au",
+    aliases: ["Berlin 47-Au", "Berlin 47AU", "47AU", "47 Au"],
     countryOfOrigin: "USA",
     operatingPrinciple: "Condenser (Large-Diaphragm)",
     polarPatterns: ["Cardioid"],
     switchable: false,
     releaseYear: 2009,
-    msrp: 798, // Base Berlin 47 street/MSRP (the 1499 figure was the multipattern 47-T custom shop).
+    msrp: 1499, // Original list price (recordinghacks). Discontinued 2013, so no current street price.
     needsVerification: false,
-    verificationNote: "Spreadsheet listed as 'ADK Berlin 47'; ADK's catalog has both 'Berlin 47' and a multipattern 'Berlin 47-T' — assumed fixed-cardioid base model.",
+    verificationNote: "Confirmed by the maintainer as the Custom Shop Berlin 47 Au: cardioid-only FET with a GK47 (K47-style) capsule and Oxford/OEP output transformer, released 2009 and replaced in 2013 by the multipattern Berlin 47-T (T-FET). Specs per recordinghacks.com.",
   },
 
   // ---------------------------------------------------------------- AEA
