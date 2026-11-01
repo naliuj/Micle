@@ -61,6 +61,7 @@ const MIC_PHOTOS = {
   "dpa-4011c": { w: 800, h: 800 },
   "dpa-4055": { w: 800, h: 800 },
   "earthworks-sr69": { w: 800, h: 800 },
+  "earthworks-tc25": { w: 800, h: 800 },
   "earthworks-tc40k": { w: 800, h: 800 },
   "ev-cardinal": { w: 800, h: 800 },
   "ev-nd308": { w: 800, h: 800 },
