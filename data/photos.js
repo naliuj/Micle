@@ -12,6 +12,7 @@
 // w/h are the detail image's intrinsic pixels, set on the <img> so the
 // layout reserves the right space before the photo loads.
 const MIC_PHOTOS = {
+  "adk-berlin-47": { w: 800, h: 800 },
   "aea-r84": { w: 800, h: 800 },
   "aea-r88": { w: 800, h: 800 },
   "akg-c414": { w: 800, h: 800 },
