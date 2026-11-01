@@ -39,9 +39,9 @@ const MIC_DB = [
   {
     id: "adk-vienna-12au",
     manufacturer: "ADK",
-    model: "Custom Vienna 12-AU",
-    displayName: "ADK Custom Vienna 12-AU",
-    aliases: ["Vienna 12AU", "Custom Vienna"],
+    model: "Vienna 12-AU",
+    displayName: "ADK Vienna 12-AU",
+    aliases: ["Vienna 12AU", "Custom Vienna", "Custom Vienna 12-AU"],
     countryOfOrigin: "USA",
     operatingPrinciple: "Tube",
     polarPatterns: ["Cardioid"],
