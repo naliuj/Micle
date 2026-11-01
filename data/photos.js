@@ -84,6 +84,7 @@ const MIC_PHOTOS = {
   "neumann-u47fet": { w: 800, h: 800 },
   "neumann-u67": { w: 800, h: 800 },
   "neumann-u87ai": { w: 800, h: 800 },
+  "neumann-u89": { w: 800, h: 800 },
   "neumann-usm69i": { w: 800, h: 800 },
   "pearlman-tm1": { w: 800, h: 800 },
   "peluso-cemc6": { w: 800, h: 800 },
