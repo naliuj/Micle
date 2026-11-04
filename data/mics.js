@@ -384,8 +384,13 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1997,
     msrp: 325, // Audio-Technica's last list price for the model, now discontinued.
-    needsVerification: false,
-    verificationNote: "Discontinued handheld back-electret condenser, built on the capsule assembly of the earlier 873R - hence small-diaphragm. Year is inferred: Sound on Sound reviewed it in September 1997 and no launch date is documented anywhere, so 1997 is the best available anchor; a year either side lands in the same 1990s quiz bucket. Price is Audio-Technica's own last list figure, corroborated by that review calling it the best sub-GBP-200 back-electret at then-current rates. Cardioid, subcardioid and omnidirectional elements were sold separately, but swapping them is a physical capsule change, so per the modular-capsule rule this is entered at its stock hypercardioid element and is not marked switchable.",
+    needsVerification: true,
+    retired: true,
+    verificationNote:
+      "Retired: the studio doesn't actually own one. needsVerification keeps it out of the daily " +
+      "rotation and retired pulls it from search and Study Mode, same as mxl-v69. Never played as a daily answer; the entry stays so " +
+      "any id reference keeps resolving. Original note: " +
+      "Discontinued handheld back-electret condenser, built on the capsule assembly of the earlier 873R - hence small-diaphragm. Year is inferred: Sound on Sound reviewed it in September 1997 and no launch date is documented anywhere, so 1997 is the best available anchor; a year either side lands in the same 1990s quiz bucket. Price is Audio-Technica's own last list figure, corroborated by that review calling it the best sub-GBP-200 back-electret at then-current rates. Cardioid, subcardioid and omnidirectional elements were sold separately, but swapping them is a physical capsule change, so per the modular-capsule rule this is entered at its stock hypercardioid element and is not marked switchable.",
   },
   // ---------------------------------------------------------------- Audix
   {
@@ -1364,7 +1369,12 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 2001,
     msrp: 331, // Sweetwater regular price, Sept 2026 (was $599).
-    needsVerification: false,
+    needsVerification: true,
+    retired: true,
+    verificationNote:
+      "Retired: the studio doesn't actually own one. needsVerification keeps it out of the daily " +
+      "rotation and retired pulls it from search and Study Mode, same as mxl-v69. It was puzzle #27 " +
+      "(day 26, 2026-08-19), so the entry has to stay resolvable for that already-played day.",
   },
   {
     id: "rode-nt3",

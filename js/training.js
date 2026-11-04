@@ -1709,9 +1709,10 @@
   // map, the table and the search box above them all agree. Clicking Germany
   // and getting a mic the search can't find would read as a bug.
   //
-  // Both predicates return 118 today, which makes them look interchangeable.
-  // They aren't: they coincide only because ONE mic (mxl-v69) happens to carry
-  // needsVerification AND retired at once. A mic that's retired but verified,
+  // Both predicates return the same set today, which makes them look
+  // interchangeable. They aren't: they coincide only because every retired mic
+  // (mxl-v69, at-atm89r, rode-nt1000) happens to carry needsVerification AND
+  // retired at once. A mic that's retired but verified,
   // or quarantined but still live, splits the two counts immediately.
   function referencePool() {
     return SELECTABLE_MICS;
