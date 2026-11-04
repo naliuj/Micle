@@ -75,6 +75,7 @@ const MIC_PHOTOS = {
   "neumann-km184": { w: 800, h: 800 },
   "neumann-km84": { w: 800, h: 800 },
   "neumann-km86": { w: 800, h: 800 },
+  "neumann-kms105": { w: 800, h: 800 },
   "neumann-m149tube": { w: 800, h: 800 },
   "neumann-sm23c": { w: 800, h: 800 },
   "neumann-tlm103": { w: 800, h: 800 },
