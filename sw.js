@@ -8,7 +8,7 @@
 // CACHE_VERSION is stamped by scripts/stamp-cache-version.mjs — it's a hash
 // of every file listed below, so it changes exactly when they do. Don't edit
 // it by hand; run the script (see README's "PWA" section).
-const CACHE_VERSION = "0bbb52286ab9";
+const CACHE_VERSION = "474dfc1529a9";
 const CACHE_NAME = `micle-${CACHE_VERSION}`;
 
 // Photos live in their own cache, deliberately NOT stamped with
@@ -115,7 +115,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Only same-origin GETs — never intercept the Umami analytics beacon or
+  // Only same-origin GETs — never intercept the GoatCounter analytics beacon or
   // any other cross-origin request.
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== location.origin) return;

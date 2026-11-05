@@ -114,17 +114,7 @@ function micMatchesQuery(query, mic) {
   return !query.trim() || micScore(query, mic) < Infinity;
 }
 
-// browseAllOnEmpty: opt-in, defaults false so the main game's guess input is
-// unaffected.
-//
-// NOTE: nothing passes true any more. The Reference tab was its only caller,
-// and it no longer builds an autocomplete at all — its search box filters the
-// table directly through micMatchesQuery above. So browseAllOnEmpty and
-// browseAll() below are currently unreachable. They're left in place rather
-// than deleted because this file is the daily game's guess input and the
-// signature change isn't worth the blast radius for ten dead lines; delete
-// them if nothing has claimed them by the next time this file is touched.
-function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmpty = false }) {
+function createAutocomplete({ input, listEl, onSelect, isGuessed }) {
   let activeIndex = -1;
   let currentResults = [];
 
@@ -136,18 +126,8 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmp
   // scrolls rather than overflowing.
   const MAX_RESULTS = 50;
 
-  // Offers the full pool alphabetically instead of an empty dropdown when
-  // there's no query to rank against, letting players browse rather than
-  // only search. Unlike a ranked search this isn't capped at MAX_RESULTS:
-  // the whole point is every mic being reachable by scrolling. Only reached
-  // when browseAllOnEmpty is true (see search() below) — the main game's
-  // guess input leaves it off, so this stays inert there.
-  function browseAll() {
-    return [...SELECTABLE_MICS].sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { numeric: true }));
-  }
-
   function search(query) {
-    if (!query.trim()) return browseAllOnEmpty ? browseAll() : [];
+    if (!query.trim()) return [];
     return SELECTABLE_MICS.map((mic) => ({ mic, s: micScore(query, mic) }))
       .filter((r) => r.s < Infinity)
       // numeric so model numbers read naturally: KM 84 before KM 184.
@@ -217,15 +197,6 @@ function createAutocomplete({ input, listEl, onSelect, isGuessed, browseAllOnEmp
   }
 
   input.addEventListener("input", () => render(search(input.value)));
-
-  if (browseAllOnEmpty) {
-    // A click (not focus) is what opens the list — the input never blurs on
-    // selection, so a "focus" listener wouldn't refire on a second pick; a
-    // click always does, giving the user an explicit, repeatable way to
-    // reopen the browse-all list between picks without it popping open on
-    // its own.
-    input.addEventListener("click", () => render(search(input.value)));
-  }
 
   input.addEventListener("keydown", (e) => {
     if (listEl.hidden) return;

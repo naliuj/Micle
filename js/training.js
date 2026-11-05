@@ -117,13 +117,7 @@
     referenceSheetClose: document.getElementById("reference-sheet-close"),
   };
 
-  // Same filter as js/app.js's eligibleMics() — duplicated rather than
-  // shared, since this page doesn't load app.js (it's private to that
-  // file's IIFE). Keeps quarantined (needsVerification: true) mics out of
-  // quiz questions the same way they're kept out of the daily/random pool.
-  function eligibleMics() {
-    return MIC_DB.filter((m) => m.needsVerification !== true);
-  }
+  // eligibleMics(), PRINCIPLE_ABBR and formatPrice come from js/compare.js.
 
   // Mirrors app.js's private CATEGORIES list (label + getValue), just for
   // the reference detail card — also not shared, for the same reason above.
@@ -134,18 +128,10 @@
   // and the 7-column .board-row grid is sized to REFERENCE_FIELDS.length + 1.
   // The order mirrors app.js's CATEGORIES so a mic reads the same in the
   // reference as it does on the daily board.
-  // Mirrors app.js's own PRINCIPLE_ABBR, deliberately including the wording:
-  // "Condenser (LDC)" is what a player sees on the daily board, so the
-  // reference contracting it the same way keeps one vocabulary across the
-  // site. It also keeps the column to one line in ~90 of 118 rows, since the
-  // full "Condenser (Large-Diaphragm)" wraps at every sensible column width.
-  // Polar Pattern is deliberately NOT abbreviated the way the board does it:
-  // pattern names are the thing being learned here, and only a handful of
-  // multi-pattern mics run long.
-  const PRINCIPLE_ABBR = {
-    "Condenser (Large-Diaphragm)": "Condenser (LDC)",
-    "Condenser (Small-Diaphragm)": "Condenser (SDC)",
-  };
+  // Principle uses the board's shared PRINCIPLE_ABBR, so a player sees one
+  // vocabulary across the site and the column stays on one line. Polar Pattern
+  // is deliberately NOT abbreviated the way the board does it: pattern names
+  // are the thing being learned here, and only a handful run long.
 
   const REFERENCE_FIELDS = [
     { label: "Origin", getValue: (m) => m.countryOfOrigin, sortKey: "country" },
@@ -1705,15 +1691,10 @@
   // ----------------------------------------------------------- Reference tab
 
   // The Reference tab draws from SELECTABLE_MICS (js/autocomplete.js —
-  // retired !== true), NOT eligibleMics() (needsVerification !== true), so the
-  // map, the table and the search box above them all agree. Clicking Germany
-  // and getting a mic the search can't find would read as a bug.
-  //
-  // Both predicates return the same set today, which makes them look
-  // interchangeable. They aren't: they coincide only because every retired mic
-  // (mxl-v69, at-atm89r, rode-nt1000) happens to carry needsVerification AND
-  // retired at once. A mic that's retired but verified,
-  // or quarantined but still live, splits the two counts immediately.
+  // retired !== true), NOT eligibleMics() (also needsVerification !== true), so
+  // the map, the table and the search box above them all agree. Clicking
+  // Germany and getting a mic the search can't find would read as a bug. The
+  // two sets differ as soon as a mic is quarantined but not retired.
   function referencePool() {
     return SELECTABLE_MICS;
   }
@@ -1817,7 +1798,7 @@
       from: "priceFrom",
       to: "priceTo",
       get: (m) => m.msrp,
-      // Matches formatPrice in js/quiz.js so a chip reads like the column.
+      // Matches formatPrice in js/compare.js so a chip reads like the column.
       format: (n) => `$${n.toLocaleString("en-US")}`,
     },
     { key: "switchable", label: "Switchable", kind: "bool" },

@@ -2,27 +2,7 @@
 // design: takes its data pool as a parameter rather than reading MIC_DB
 // itself, so it's hand-testable in isolation.
 
-// crypto.getRandomValues draws fresh OS entropy on every call, rather than
-// relying on a single engine-seeded state the way Math.random() does — same
-// approach as js/app.js's randomInt (duplicated here since this page doesn't
-// load app.js). Falls back to Math.random() only if the Web Crypto API is
-// unavailable (very old browsers).
-function randomInt(n) {
-  if (n <= 0) return 0;
-  if (window.crypto && window.crypto.getRandomValues) {
-    // Rejection sampling: without it, `raw % n` is biased toward the low end
-    // whenever n doesn't evenly divide 2^32.
-    const range = Math.floor(0x100000000 / n) * n;
-    const buf = new Uint32Array(1);
-    let raw;
-    do {
-      window.crypto.getRandomValues(buf);
-      raw = buf[0];
-    } while (raw >= range);
-    return raw % n;
-  }
-  return Math.floor(Math.random() * n);
-}
+// randomInt and formatPrice live in js/compare.js, loaded first.
 
 function shuffle(arr) {
   const a = [...arr];
@@ -49,10 +29,6 @@ function patternSignature(mic) {
 function formatPatterns(mic) {
   const base = mic.polarPatterns.join(", ");
   return mic.switchable ? `${base} (switchable)` : base;
-}
-
-function formatPrice(mic) {
-  return mic.msrp == null ? "Unknown" : `$${mic.msrp.toLocaleString("en-US")}`;
 }
 
 // Bucket edges chosen against the real pool (checked via a one-off node -e

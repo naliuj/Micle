@@ -1,5 +1,5 @@
 // Pure round-builders for Order mode — no DOM. Mirrors js/quiz.js's shape
-// (and reuses its randomInt/shuffle/sample/formatPrice, loaded first).
+// (and reuses its shuffle/sample, plus randomInt/formatPrice from js/compare.js).
 
 const ORDER_DIMENSIONS = [
   { key: "price", label: "Price (MSRP)", getValue: (m) => m.msrp, format: formatPrice },

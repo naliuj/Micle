@@ -33,11 +33,6 @@
     "Wide Cardioid": "Wide",
   };
 
-  const PRINCIPLE_ABBR = {
-    "Condenser (Large-Diaphragm)": "Condenser (LDC)",
-    "Condenser (Small-Diaphragm)": "Condenser (SDC)",
-  };
-
   const CATEGORIES = [
     { key: "country", label: "Origin", getValue: (m) => m.countryOfOrigin },
     {
@@ -49,7 +44,7 @@
     { key: "pattern", label: "Polar Pattern", getValue: patternLabel, getFullValue: patternLabelFull },
     { key: "manufacturer", label: "Manufacturer", getValue: (m) => m.manufacturer },
     { key: "year", label: "Year", getValue: (m) => String(m.releaseYear) },
-    { key: "price", label: "Price", getValue: msrpLabel },
+    { key: "price", label: "Price", getValue: formatPrice },
   ];
 
   // Screen-reader phrasing for each cell state. Without these the icon glyph is
@@ -74,10 +69,6 @@
 
   function patternLabelFull(mic) {
     return withSwitchable(mic, mic.polarPatterns.join(" / "));
-  }
-
-  function msrpLabel(mic) {
-    return mic.msrp == null ? "Unknown" : `$${mic.msrp.toLocaleString("en-US")}`;
   }
 
   const SHARE_EMOJI = {
@@ -137,13 +128,9 @@
     }
   }
 
-  // Both Umami and GoatCounter are loaded via <script> tags in index.html and
-  // can be ad-blocked or slow to load, so every call site guards on presence
-  // rather than assuming window.umami/window.goatcounter exist. Umami fires
-  // alongside GoatCounter temporarily so counts can be cross-validated before
-  // Umami's script tag (index.html) and the window.umami line below are removed.
+  // GoatCounter loads via a <script> tag in index.html and can be ad-blocked
+  // or slow to load, so this guards on presence rather than assuming it exists.
   function track(name, data) {
-    if (window.umami) window.umami.track(name, data);
     if (window.goatcounter) window.goatcounter.count(toGoatCounterEvent(name, data));
   }
 
@@ -173,31 +160,7 @@
     return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
   }
 
-  function eligibleMics() {
-    return MIC_DB.filter((m) => m.needsVerification !== true);
-  }
-
-  // crypto.getRandomValues draws fresh OS entropy on every call, rather than
-  // relying on a single engine-seeded state the way Math.random() does — so
-  // there's no way for two devices' picks to correlate, even if they load the
-  // page in the same instant. Falls back to Math.random() only if the Web
-  // Crypto API is unavailable (very old browsers).
-  function randomInt(n) {
-    if (n <= 0) return 0;
-    if (window.crypto && window.crypto.getRandomValues) {
-      // Rejection sampling: without it, `raw % n` is biased toward the low end
-      // whenever n doesn't evenly divide 2^32.
-      const range = Math.floor(0x100000000 / n) * n;
-      const buf = new Uint32Array(1);
-      let raw;
-      do {
-        window.crypto.getRandomValues(buf);
-        raw = buf[0];
-      } while (raw >= range);
-      return raw % n;
-    }
-    return Math.floor(Math.random() * n);
-  }
+  // eligibleMics, randomInt, formatPrice and PRINCIPLE_ABBR come from js/compare.js.
 
   // Excludes today's daily answer (so Random Mic can't hand out a free look at
   // it) and the last RANDOM_HISTORY_LIMIT random targets (so back-to-back
@@ -461,6 +424,17 @@
     const s = session();
     const target = s.target;
     const isDaily = mode === "daily";
+    // Another tab may have finished today since this one loaded; adopt its
+    // result rather than overwrite it.
+    if (isDaily) {
+      const saved = loadDayState(daily.dayIndex);
+      if (saved.solved || saved.exhausted) {
+        daily.state = saved;
+        daily.guessedIds = new Set(saved.guesses);
+        refreshView();
+        return;
+      }
+    }
     if (s.state.solved || s.state.exhausted) return;
     if (s.guessedIds.has(mic.id)) return;
 
@@ -599,7 +573,7 @@
       mic.countryOfOrigin,
       PRINCIPLE_ABBR[mic.operatingPrinciple] || mic.operatingPrinciple,
       String(mic.releaseYear),
-      msrpLabel(mic),
+      formatPrice(mic),
     ].join(" · ");
     text.append(name, spec);
     els.answerReveal.appendChild(text);
@@ -610,11 +584,14 @@
   function openStats() {
     const stats = loadStats();
     const winPct = stats.gamesPlayed ? Math.round((100 * stats.gamesWon) / stats.gamesPlayed) : 0;
+    // The saved streak only resets on the next finished game, so a missed day
+    // has to be applied here or the box keeps showing a streak that's over.
+    const streak = stats.lastCompletedDayIndex >= daily.dayIndex - 1 ? stats.currentStreak : 0;
     els.statsBody.innerHTML = `
       <div class="stats-grid">
         <div><strong>${stats.gamesPlayed}</strong><span>Played</span></div>
         <div><strong>${winPct}%</strong><span>Win rate</span></div>
-        <div><strong>${stats.currentStreak}</strong><span>Streak</span></div>
+        <div><strong>${streak}</strong><span>Streak</span></div>
         <div><strong>${stats.maxStreak}</strong><span>Max streak</span></div>
       </div>
     `;
@@ -938,4 +915,10 @@
   bindLightbox();
   renderMilestoneBanner();
   refreshView();
+
+  // An installed app can sit suspended for days; `daily` was fixed at load, so
+  // coming back after midnight must reload to pick up the new puzzle.
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && todayDayIndex() !== daily.dayIndex) location.reload();
+  });
 })();

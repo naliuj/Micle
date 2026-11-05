@@ -45,7 +45,7 @@ function sortGroupsByManufacturer(sortKey) {
 }
 
 // localeCompare with numeric:true so model numbers read naturally — KM 84
-// before KM 184, matching browseAll() in js/autocomplete.js.
+// before KM 184, matching the guess autocomplete's sort in js/autocomplete.js.
 function compareText(a, b) {
   return String(a).localeCompare(String(b), undefined, { numeric: true });
 }

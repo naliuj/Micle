@@ -1,5 +1,5 @@
 // Pure round-builders for Match mode — no DOM. Mirrors js/quiz.js's and
-// js/order.js's shape (and reuses their randomInt/shuffle/sample, loaded
+// js/order.js's shape (and reuses their shuffle/sample and js/compare.js's randomInt, loaded
 // first).
 
 const MATCH_DIMENSIONS = [

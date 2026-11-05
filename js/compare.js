@@ -1,4 +1,40 @@
 // Pure comparison functions — no DOM, no state. Easy to hand-test in a console.
+// Also home to the few helpers both pages need (the game and Study Mode),
+// since this is the one file both load before their own scripts.
+
+// The daily/random/quiz pool. scripts/build-schedule.mjs's loadMicIds() applies
+// the same rule and must stay in step with it (a node script can't load this).
+function eligibleMics() {
+  return MIC_DB.filter((m) => m.needsVerification !== true && m.retired !== true);
+}
+
+const PRINCIPLE_ABBR = {
+  "Condenser (Large-Diaphragm)": "Condenser (LDC)",
+  "Condenser (Small-Diaphragm)": "Condenser (SDC)",
+};
+
+function formatPrice(mic) {
+  return mic.msrp == null ? "Unknown" : `$${mic.msrp.toLocaleString("en-US")}`;
+}
+
+// crypto.getRandomValues draws fresh OS entropy on every call, so two devices'
+// picks can't correlate. Math.random() only if Web Crypto is missing.
+function randomInt(n) {
+  if (n <= 0) return 0;
+  if (window.crypto && window.crypto.getRandomValues) {
+    // Rejection sampling: without it, `raw % n` is biased toward the low end
+    // whenever n doesn't evenly divide 2^32.
+    const range = Math.floor(0x100000000 / n) * n;
+    const buf = new Uint32Array(1);
+    let raw;
+    do {
+      window.crypto.getRandomValues(buf);
+      raw = buf[0];
+    } while (raw >= range);
+    return raw % n;
+  }
+  return Math.floor(Math.random() * n);
+}
 
 function comparePatterns(guessPatterns, targetPatterns) {
   const setA = new Set(guessPatterns);

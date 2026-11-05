@@ -15,7 +15,9 @@ function debugDayIndexOverride() {
   if (params.get("debug") !== "1") return null;
   const dateStr = params.get("date");
   if (!dateStr) return null;
-  return dayIndexFor(SCHEDULE.launchDate, new Date(dateStr + "T00:00:00Z"));
+  // Local midnight, not UTC: dayIndexFor reads local date parts, so a "Z" here
+  // lands on the previous day anywhere west of UTC.
+  return dayIndexFor(SCHEDULE.launchDate, new Date(dateStr + "T00:00:00"));
 }
 
 function todayDayIndex(now = new Date()) {

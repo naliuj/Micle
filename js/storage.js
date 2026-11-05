@@ -83,6 +83,8 @@ function recordRandomTarget(id) {
 
 function recordCompletion(dayIndex, won, guessCount) {
   const stats = loadStats();
+  // A second tab finishing the same day must not count it twice.
+  if (stats.lastCompletedDayIndex === dayIndex) return stats;
   stats.gamesPlayed += 1;
   if (won) {
     stats.gamesWon += 1;
