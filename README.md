@@ -65,9 +65,9 @@ scripts/
 
 `data/schedule.js` is precomputed by `scripts/build-schedule.mjs` and holds a flat `order` array — one mic id per day, starting at `launchDate`. `js/schedule.js` just indexes into it: `order[dayIndex]`, where `dayIndex` is the number of days since `launchDate` (player's local calendar date). No live randomness, no dependency on the eligible pool's current size — so past days are permanently stable no matter what gets added to `data/mics.js` later.
 
-**Avoiding the obvious flaw with that approach:** a naive version of this (single shuffle, then `order[dayIndex % order.length]` once you run past the end) would make every cycle through the pool identical — day 40 would always mirror day 1, day 41 would always mirror day 2, and so on, forever. That pattern is detectable by an attentive player. Instead, `order` is a concatenation of **generations** — each generation is one full shuffled pass through every eligible mic (covering all of them exactly once before any repeat), but every generation gets its *own independent* shuffle seed. Generation 2 has no relationship to generation 1's order; a player who plays long enough to see the pool cycle won't see the sequence repeat. `build-schedule.mjs` also checks that a generation's first pick never matches the previous generation's last pick, so there's no same-mic-two-days-in-a-row seam at the boundary either.
+Days are picked one at a time, each with its own seed, under two rules: a mic can't come back within **30 days** (the cooldown), and a mic that has gone unseen long enough is forced to the front so every mic appears at least once a **year** (the coverage window). Seeding per day rather than shuffling once and looping is what keeps the sequence from repeating in a pattern a player could spot. The arithmetic behind both guarantees is in the comment above `pickDay()`. "Eligible" means `needsVerification !== true` and `retired !== true` — the same rule as `eligibleMics()` in `js/compare.js`.
 
-`build-schedule.mjs` keeps roughly two years of runway ahead of "today" and is safe to re-run any time (cron, or just whenever you remember) — it only ever *appends* new generations, so it's a no-op if there's already enough buffer, and it never rewrites anything already written.
+Plain `node scripts/build-schedule.mjs` keeps about two years of runway past today and only ever *appends* days, so it's a no-op if there's enough buffer. `--rebase-from-today` keeps every day through **tomorrow** (UTC+14 is already on tomorrow while UTC is on today) and rebuilds everything after it from the current pool. Every run checks the result before writing: written days are unchanged, every day from the day after tomorrow on is still eligible, and the cooldown and coverage rules hold for all future days. If a check fails it exits without writing.
 
 ## Adding a new microphone
 
@@ -89,7 +89,7 @@ scripts/
      verificationNote: null
    }
    ```
-2. Run `node scripts/build-schedule.mjs` — new eligible mics only enter rotation in the *next* generation appended after they're added, never retroactively inserted into an already-written generation (that's what keeps past days stable). If the schedule already has enough buffer left, this is a no-op; run with `--buffer-days=0` to force a fresh top-up sooner if you want the new mic in rotation without waiting ~2 years.
+2. Run `node scripts/build-schedule.mjs --rebase-from-today` to bring the new mic into rotation from the day after tomorrow. A plain run only appends at the end of the ~2-year buffer, so the mic would wait that long. The same applies when you **retire or flag a mic that's already scheduled**: a plain run refuses, because it would leave that mic as a future answer, so rebase instead.
 3. Commit `data/mics.js` and `data/schedule.js` together.
 
 ### Photos
@@ -131,7 +131,13 @@ all-or-nothing, so one missing photo would break offline entirely.
 
 ## Running locally
 
-No server needed — just open `index.html` directly in a browser (double-click it, or `open index.html` on macOS). Everything loads via classic `<script>` tags, so there's no CORS/`fetch()` issue with `file://`.
+Serve the repo root with any static server, then open http://localhost:8000:
+
+```bash
+python3 -m http.server 8000
+```
+
+Opening `index.html` from `file://` is not enough: the answer photos and all of Study Mode use root-absolute paths (`/images/…`, `/js/…`), which resolve to the filesystem root there.
 
 ## Deploying to GitHub Pages
 
@@ -234,10 +240,9 @@ copy goes stale, and only until the next successful fetch rewrites it.
 Micle uses [GoatCounter](https://www.goatcounter.com) for traffic analytics —
 it's cookieless (no consent banner needed), free for a personal/non-commercial
 site at this scale, and its script domain is less commonly adblocked than
-Umami Cloud's (the previous analytics provider, being phased out — its script
-tag is still present in `index.html` temporarily so counts can be
-cross-validated before it's removed). The tracking script is a single
-`<script>` tag in `index.html`; there's no build step or server involved.
+Umami Cloud's (the previous provider, removed in November 2026). The tracking
+script is a single `<script>` tag in `index.html` (and `training/index.html`);
+there's no build step or server involved.
 
 Beyond automatic pageviews/visitors, a few custom events are tracked from
 `js/app.js`, all through a small `track(name, data)` wrapper that no-ops if the
