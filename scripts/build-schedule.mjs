@@ -29,14 +29,15 @@
 // A newly-added or newly-verified mic only ever enters days written by the
 // *next* top-up, which — with the default 2-year buffer — could be years
 // away. --rebase-from-today exists for when a mic needs to enter rotation
-// soon rather than at the tail: it keeps days [0, today] exactly as
-// committed (today included, since that's the live answer), discards
-// everything after today, and rebuilds from there with the current
-// eligible pool. This is safe under the same rule as top-up mode — nothing
-// a real player has already been shown ever changes — because a day only
-// becomes an actual shown answer once its calendar date arrives; nothing
-// past today has been surfaced to anyone yet, peeking via MicleDebug
-// notwithstanding.
+// soon rather than at the tail: it keeps days [0, tomorrow] exactly as
+// committed, discards everything after, and rebuilds from there with the
+// current eligible pool. Tomorrow is kept because "today" here is a UTC
+// date, while players get their puzzle by local date, and UTC+14 is already
+// on tomorrow. Nothing past that has been shown to anyone yet, peeking via
+// MicleDebug notwithstanding.
+//
+// Every run ends in verify(), which refuses to write a schedule that breaks
+// any of the promises above.
 //
 // Usage: node scripts/build-schedule.mjs [--launch-date=YYYY-MM-DD] [--buffer-days=N] [--rebase-from-today]
 
@@ -66,7 +67,8 @@ function loadMicIds() {
   const fn = new Function("module", "exports", src + "\n;module.exports = { MIC_DB };");
   fn(sandbox.module, sandbox.module.exports);
   const { MIC_DB } = sandbox.module.exports;
-  return MIC_DB.filter((m) => m.needsVerification !== true).map((m) => m.id);
+  // Same rule as eligibleMics() in js/compare.js — keep the two in step.
+  return MIC_DB.filter((m) => m.needsVerification !== true && m.retired !== true).map((m) => m.id);
 }
 
 function loadExistingSchedule() {
@@ -100,16 +102,6 @@ function hashStringToSeed(str) {
     h = Math.imul(h, 16777619);
   }
   return h >>> 0;
-}
-
-function seededShuffle(arr, seed) {
-  const rng = mulberry32(seed);
-  const out = [...arr];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
 }
 
 // Picks one mic for a single day: random among everything off cooldown,
@@ -189,6 +181,53 @@ function extendTo(order, targetLength, eligibleIds) {
   return order;
 }
 
+// Checks the promises above on the finished order and returns every problem
+// found. Cooldown and coverage are only checked from tomorrow on: days 41-46
+// predate the current algorithm and break the cooldown, and can't change.
+// Coverage counts from today, so a newly eligible mic that a plain top-up
+// would only reach years out fails here too — that's a job for a rebase.
+function verify(order, existingOrder, keptLength, todayIndex, eligibleIds) {
+  const problems = [];
+  for (let i = 0; i < Math.min(keptLength, existingOrder.length); i++) {
+    if (order[i] !== existingOrder[i]) problems.push(`day ${i} changed: ${existingOrder[i]} -> ${order[i]}`);
+  }
+
+  const eligible = new Set(eligibleIds);
+  const tomorrow = todayIndex + 1;
+  if (tomorrow >= 0 && tomorrow < order.length && !eligible.has(order[tomorrow])) {
+    console.warn(
+      `Warning: tomorrow (day ${tomorrow}) is ${order[tomorrow]}, which is no longer eligible. ` +
+        `Players east of UTC may already have it, so it stays.`
+    );
+  }
+  for (let i = Math.max(0, todayIndex + 2); i < order.length; i++) {
+    if (!eligible.has(order[i])) {
+      problems.push(`day ${i} is ${order[i]}, which is no longer eligible — run with --rebase-from-today`);
+    }
+  }
+
+  const lastSeen = new Map();
+  order.forEach((id, i) => {
+    if (i > todayIndex && lastSeen.has(id) && i - lastSeen.get(id) < COOLDOWN_DAYS) {
+      problems.push(`${id} repeats on day ${i}, only ${i - lastSeen.get(id)} days after day ${lastSeen.get(id)}`);
+    }
+    lastSeen.set(id, i);
+  });
+
+  for (const id of eligibleIds) {
+    let prev = todayIndex;
+    for (let i = todayIndex + 1; i <= order.length; i++) {
+      if (i < order.length && order[i] !== id) continue;
+      if (i - prev > COVERAGE_WINDOW) {
+        problems.push(`${id} goes unscheduled for ${i - prev} days after day ${prev} — run with --rebase-from-today`);
+        break;
+      }
+      prev = i;
+    }
+  }
+  return problems;
+}
+
 function main() {
   const args = Object.fromEntries(
     process.argv.slice(2).map((a) => {
@@ -220,23 +259,28 @@ function main() {
   // Top up until we've got `bufferDays` of runway past today.
   const todayIndex = Math.floor((Date.now() - Date.parse(launchDate + "T00:00:00Z")) / 86400000);
 
+  // Days that must come out of this run unchanged: all of them on a top-up.
+  let keptLength = order.length;
+
   if (args["rebase-from-today"]) {
     if (!existing) {
       console.error("--rebase-from-today has nothing to rebase — no existing schedule found.");
       process.exit(1);
     }
-    if (todayIndex >= order.length) {
+    // Through tomorrow: UTC+14 is already on it while UTC is still on today.
+    const kept = todayIndex + 2;
+    if (kept >= order.length) {
       console.error(
-        `--rebase-from-today: today (day ${todayIndex}) is past the end of the current schedule ` +
-          `(${order.length} days) — nothing to discard. Run without the flag to top up instead.`
+        `--rebase-from-today: the schedule ends at day ${order.length - 1}, before day ${kept} ` +
+          `— nothing to discard. Run without the flag to top up instead.`
       );
       process.exit(1);
     }
-    const kept = todayIndex + 1;
     const discarded = order.length - kept;
     order = order.slice(0, kept);
+    keptLength = kept;
     console.log(
-      `Rebasing: kept days 0-${todayIndex} (${kept} days, through today), discarded ${discarded} ` +
+      `Rebasing: kept days 0-${kept - 1} (through tomorrow), discarded ${discarded} ` +
         `not-yet-live day(s). Rebuilding from day ${kept} with the current ${eligibleIds.length}-mic pool.`
     );
     // Re-seeded per day from the day index, so a rebuild is only different
@@ -256,6 +300,12 @@ function main() {
   }
 
   extendTo(order, targetLength, eligibleIds);
+
+  const problems = verify(order, existing ? existing.order : [], keptLength, todayIndex, eligibleIds);
+  if (problems.length > 0) {
+    console.error(`Refusing to write ${schedulePath}:\n` + problems.map((p) => `  ${p}`).join("\n"));
+    process.exit(1);
+  }
 
   if (order.length === startingLength) {
     console.log("Schedule already has enough runway — nothing to do.");
