@@ -900,6 +900,27 @@ const MIC_DB = [
     needsVerification: false,
   },
   {
+    id: "earthworks-tc30",
+    manufacturer: "Earthworks",
+    model: "TC30",
+    displayName: "Earthworks TC30",
+    aliases: ["TC30K"],
+    countryOfOrigin: "USA",
+    operatingPrinciple: "Condenser (Small-Diaphragm)",
+    polarPatterns: ["Omnidirectional"],
+    switchable: false,
+    releaseYear: 1996,
+    msrp: 500, // 1997 review: "The TC30K goes for $500, the TC40K for $800" (same source as the TC40K).
+    needsVerification: false,
+    verificationNote:
+      "Earthworks' catalog lists the TC30 as 'same as TC30K'; the K was dropped later, so the TC30K's " +
+      "1996 introduction is the year (Mix, Jan 1999: 'In 1996, Earthworks came seemingly out of nowhere " +
+      "with the TC30K'). Pre-polarized pressure condenser on a 22 mm pencil body; capsule size isn't " +
+      "published, small-diaphragm per retailers and Earthworks' 'tiny diaphragm' wording. Price is " +
+      "the launch-era figure from the same 1997 review as the TC40K's $800 and may be a street price; " +
+      "retailers later showed a $961 'Retail' list. Discontinued, no named successor.",
+  },
+  {
     id: "earthworks-tc40k",
     manufacturer: "Earthworks",
     model: "TC40K",

@@ -152,7 +152,7 @@ const CONFUSABLE_GROUPS = [
   ["sennheiser-mkh816", "sennheiser-mkh418s", "rode-ntg2"],
   // RODE's large-diaphragm bodies.
   ["rode-nt2a", "rode-nt1000", "rode-ntk"],
-  ["earthworks-qtc40", "earthworks-sr69", "earthworks-tc25", "earthworks-tc40k"],
+  ["earthworks-qtc40", "earthworks-sr69", "earthworks-tc25", "earthworks-tc30", "earthworks-tc40k"],
   ["neumann-km184", "neumann-km84", "warmaudio-wa84"],
   // The TLM 67 is the U 67's body with the tube swapped out, down to the
   // tapered grille and the badge position — at thumbnail size it is the U 87.
