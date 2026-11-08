@@ -363,13 +363,19 @@ const MIC_DB = [
     displayName: "Audio-Technica ATM87R",
     aliases: ["ATM-87R"],
     countryOfOrigin: "Japan",
-    operatingPrinciple: "Condenser (Large-Diaphragm)",
+    operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Half-Cardioid"],
     switchable: false,
     releaseYear: 1993,
     msrp: 120,
     needsVerification: false,
-    verificationNote: "A boundary/PZM-style condenser, not a handheld mic as its name might suggest.",
+    verificationNote:
+      "A boundary/PZM-style condenser, not a handheld mic as its name might suggest. Was listed as " +
+      "large-diaphragm with no source behind it; moved to small-diaphragm in Nov 2026. A-T publishes " +
+      "no element size (product profile, docs.audio-technica.com/us/atm87rprodpro.pdf, says only " +
+      "'Element: Condenser'), so this rests on the design class: a 135 g low-profile boundary mic, " +
+      "whose A-T siblings (U841R, AT871R) use small fixed-charge elements. Pattern is hemi-cardioid " +
+      "per Sound On Sound; A-T's sheet says only 'Unidirectional'.",
   },
 
   {
