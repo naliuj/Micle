@@ -863,6 +863,13 @@ const MIC_DB = [
     switchable: false,
     releaseYear: 1998,
     msrp: 999, // Consistent across SoundPro, Sweetwater, Atlas Pro Audio.
+    needsVerification: true,
+    retired: true,
+    verificationNote:
+      "Retired Nov 2026, same treatment as mxl-v69: needsVerification keeps it out of the daily " +
+      "rotation and retired pulls it from search and Study Mode. Never played as a daily answer " +
+      "(its first scheduled day was 169, removed by the rebase); the entry stays so any id " +
+      "reference keeps resolving.",
   },
   {
     id: "earthworks-sr69",
