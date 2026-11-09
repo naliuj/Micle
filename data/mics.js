@@ -1653,9 +1653,10 @@ const MIC_DB = [
     operatingPrinciple: "Condenser (Small-Diaphragm)",
     polarPatterns: ["Lobar (Shotgun)"],
     switchable: false,
-    releaseYear: 1996,
-    msrp: 500, // Long-discontinued shotgun mic predating most retailer archives; no MSRP found.
+    releaseYear: 1975,
+    msrp: 500, // Current used-market value, maintainer-confirmed against eBay sold listings.
     needsVerification: false,
+    verificationNote: "Year corrected from 1996, which no source supports. Sennheiser's own MKH Story whitepaper (Manfred Hibbing) states that 'in the mid 1970s' each powering method had an omni (MKH 106), cardioid (MKH 406), short shotgun (MKH 416) and long shotgun (MKH 816); the same paper describes the MKH 60 and MKH 70 'both launched in 1991' as companions to the 416 and 816, 'not intended to replace the older types'. The 1983 micro-revue (11th ed.) lists nine orderable 816 SKUs across T (12 V Tonaderspeisung) and P 48 powering, with U = XLR and -3 = matte black. The mic is absent from the complete priced A-Z index of Sennheiser Electronic Corp. of America's US Consumer Net Price List effective 1 June 1971, where the longest shotgun is the MKH 815, so the line is bracketed to 1971-1983; 1975 is the defensible value. The bogus 1996 probably came from the whitepaper's note that the MKH 416 T and 416 P48 were redesigned at the end of the 1990s - a 416 fact misfiled onto the 816. On price: no period list price for the 816 exists in any primary document checked - not the 1971 US list, the whitepaper, or the 1983 micro-revue (a free explanatory catalog, not a price list) - so $500 is current used-market value, maintainer-confirmed against eBay sold listings. Live asks corroborate the order of magnitude: Reverb carried ten 816s between $349 and $1,099 for working bare mics, median near $450, with repeated price drops from the $950-1,100 end showing the top of that range was not clearing, plus a non-functioning parts mic at $249 and a 1976 full set with KAT15 amp at $1,499; European classifieds ran EUR 329-699. Do NOT 'confirm' this entry with $493 - that is the MKH 815's 1971 US consumer net price, and its closeness to $500 makes it a dangerous false match. Reverb's price guide has no 816 entry at all, and eBay and HifiShark both gate completed-sale data behind sign-in, so the figure rests on the maintainer's own check rather than a citable record.",
   },
 
   {
