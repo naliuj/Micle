@@ -884,6 +884,7 @@ const MIC_DB = [
     releaseYear: 2000,
     msrp: 515, // List price with windscreen ($450 without); now discontinued/renamed SR20.
     needsVerification: false,
+    verificationNote: "Year rechecked and held at 2000. Sweetwater's inSync of 25 Apr 2000 announces it as new ('ported them into a new vocal mic'); the patent covering its cardioid housing, US 6,091,829, was granted July 2000; and the earliest review found is ProAudioReview, Jan 2001, with Tape Op #27 following. Later renamed SR20, under which name RecordingHacks files both. Reverb listings dating this mic to the 1980s are a seller's decade field and not evidence - Earthworks existed from 1986, but this design postdates that by well over a decade.",
   },
   {
     id: "earthworks-tc25",
